@@ -1,72 +1,72 @@
 ---
 name: create-issue
-description: Create a GitHub issue interactively with title, body, labels, and assignees
+shortDescription: タイトル、本文、ラベル、担当者を指定してGitHub issueをインタラクティブに作成する
+type: user-invocable
 ---
 
-# GitHub Issue Creation Skill
+# GitHub Issue作成スキル
 
-You are helping the user create a GitHub issue for this repository.
+このリポジトリのGitHub issueを作成するお手伝いをします。
 
-## Steps
+## ステップ
 
-1. **Gather information** - Ask the user for the following in a single, friendly question:
-   - Issue title (required)
-   - Issue description/body (required)
-   - Labels (optional) - comma-separated
-   - Assignees (optional) - comma-separated or GitHub usernames
-   - Milestone (optional)
+1. **情報収集** - 以下の情報をユーザーに尋ねます：
+   - Issueタイトル（必須）
+   - Issue本文/説明（必須）
+   - ラベル（任意） - カンマ区切り
+   - 担当者（任意） - カンマ区切りまたはGitHubユーザー名
+   - マイルストーン（任意）
 
-   Present this as a structured question using AskUserQuestion tool with multiple questions.
+   AskUserQuestionツールを使用して、構造化された質問として提示します。
 
-2. **Create the issue** - Once you have the required information (at minimum title and body), use the `gh issue create` command:
+2. **Issueの作成** - 必要な情報（最低限タイトルと本文）が揃ったら、`gh issue create`コマンドを使用します：
 
    ```bash
-   gh issue create --title "TITLE" --body "$(cat <<'EOF'
-   BODY
+   gh issue create --title "タイトル" --body "$(cat <<'EOF'
+   本文
    EOF
-   )" [OPTIONS]
+   )" [オプション]
    ```
 
-3. **Return the result** - Show the user:
-   - The created issue URL
-   - A confirmation message
-   - Option to open in browser if desired
+3. **結果の返却** - ユーザーに以下を表示します：
+   - 作成されたIssueのURL
+   - 確認メッセージ
+   - 必要に応じてブラウザで開くオプション
 
-## GitHub CLI Commands
+## GitHub CLIコマンド
 
-Primary command:
+主要コマンド：
 ```bash
 gh issue create [flags]
 ```
 
-Available flags:
-- `-t, --title <string>`: Issue title (required)
-- `-b, --body <string>`: Issue body/description (required)
-- `-l, --label <name>`: Add label (can be used multiple times)
-- `-a, --assignee <login>`: Assign person (can be used multiple times)
-- `-m, --milestone <name>`: Add to milestone
-- `-w, --web`: Open in web browser after creation
+利用可能なフラグ：
+- `-t, --title <string>`: Issueタイトル（必須）
+- `-b, --body <string>`: Issue本文/説明（必須）
+- `-l, --label <name>`: ラベルを追加（複数回使用可能）
+- `-a, --assignee <login>`: 担当者を割り当て（複数回使用可能）
+- `-m, --milestone <name>`: マイルストーンに追加
+- `-w, --web`: 作成後にWebブラウザで開く
 
 ## Tips
 
-- For multi-line bodies, always use heredoc syntax to properly handle newlines and special characters
-- Validate that title is not empty before creating
-- If user provides labels/assignees as comma-separated, split them into multiple flags
-- After creation, offer to open the issue in the browser if the user wants
+- 複数行の本文には、改行や特殊文字を適切に処理するため、必ずheredoc構文を使用する
+- 作成前にタイトルが空でないことを検証する
+- ユーザーがラベル/担当者をカンマ区切りで提供した場合、複数のフラグに分割する
+- 作成後、ユーザーが希望する場合はブラウザでIssueを開くことを提案する
 
-## Example
+## 例
 
 ```bash
 gh issue create \
-  --title "Add user authentication" \
+  --title "ユーザー認証機能の追加" \
   --body "$(cat <<'EOF'
-We need to implement user authentication with the following features:
-- Login/logout
-- Password reset
-- Session management
+以下の機能を含むユーザー認証を実装する必要があります：
+- ログイン/ログアウト
+- パスワードリセット
+- セッション管理
 EOF
 )" \
   --label "enhancement" \
   --label "priority-high" \
   --assignee "username"
-```
