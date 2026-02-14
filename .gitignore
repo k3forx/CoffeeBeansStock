@@ -30,3 +30,34 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Frontend (React Native / Expo)
+frontend/node_modules/
+frontend/.expo/
+frontend/.expo-shared/
+frontend/dist/
+frontend/web-build/
+frontend/expo-env.d.ts
+frontend/npm-debug.*
+frontend/yarn-debug.*
+frontend/yarn-error.*
+frontend/*.jks
+frontend/*.p8
+frontend/*.p12
+frontend/*.key
+frontend/*.mobileprovision
+frontend/*.orig.*
+frontend/*.tsbuildinfo
+
+# Frontend environment variables
+frontend/.env
+frontend/.env.local
+frontend/.env*.local
+
+# Frontend native builds (generated)
+frontend/ios/
+frontend/android/
+
+# macOS (if not already present)
+.DS_Store
+*.pem
