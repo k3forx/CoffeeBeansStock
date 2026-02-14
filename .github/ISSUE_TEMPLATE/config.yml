@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: プロジェクトドキュメント
+    url: https://github.com/YOUR_USERNAME/CoffeeBeansStock/blob/main/CLAUDE.md
+    about: プロジェクトの詳細な仕様はCLAUDE.mdを参照してください

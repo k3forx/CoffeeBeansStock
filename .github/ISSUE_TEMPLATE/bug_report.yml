@@ -1,0 +1,108 @@
+name: バグ報告
+description: バグや不具合の報告
+title: "[Bug] "
+labels: ["type: bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        バグ報告用テンプレートです。
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 発生領域
+      description: バグが発生している場所は？
+      options:
+        - バックエンド
+        - フロントエンド
+        - データベース
+        - インフラ
+        - 不明
+      multiple: true
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 優先度
+      description: このバグの深刻度は？
+      options:
+        - Critical（緊急）
+        - High（高）
+        - Medium（中）
+        - Low（低）
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: バグの説明
+      description: 何が起きているかを説明してください
+      placeholder: ログイン後、トークンが正しく保存されずに再ログインが必要になる
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 再現手順
+      description: バグを再現するための手順
+      placeholder: |
+        1. ログイン画面でメールアドレスとパスワードを入力
+        2. ログインボタンをタップ
+        3. ホーム画面に遷移
+        4. アプリを再起動
+        5. ログイン画面に戻ってしまう
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待される動作
+      description: 本来どうあるべきか
+      placeholder: アプリ再起動後もログイン状態が維持されるべき
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動作
+      description: 実際に何が起きているか
+      placeholder: アプリ再起動後にログイン画面に戻ってしまう
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 環境情報
+      description: バグが発生している環境
+      placeholder: |
+        - OS: iOS 17.0
+        - デバイス: iPhone 14
+        - Expoバージョン: 50.0.0
+        - バックエンド: Go 1.26.0
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: ログ・エラーメッセージ
+      description: 関連するログやエラーメッセージがあれば記載
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: 追加情報
+      description: スクリーンショットなど、その他参考になる情報
+    validations:
+      required: false

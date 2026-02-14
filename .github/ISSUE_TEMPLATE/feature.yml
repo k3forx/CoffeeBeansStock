@@ -1,0 +1,105 @@
+name: 機能追加
+description: 新しい機能の実装
+title: "[Feature] "
+labels: ["type: feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        新しい機能の実装用テンプレートです。
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: フェーズ
+      description: どのフェーズの機能ですか？
+      options:
+        - MVP
+        - Phase 2
+        - Phase 3
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 実装領域
+      description: どの領域の実装ですか？
+      options:
+        - バックエンド
+        - フロントエンド
+        - 両方
+        - インフラ
+      multiple: true
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 優先度
+      description: この機能の優先度は？
+      options:
+        - High（高）
+        - Medium（中）
+        - Low（低）
+    validations:
+      required: true
+
+  - type: textarea
+    id: overview
+    attributes:
+      label: 概要
+      description: 実装する機能の概要を記載してください
+      placeholder: |
+        例：ユーザーがコーヒー豆の使用量を記録できる機能を実装する
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: 受け入れ条件
+      description: この機能が完成したと言えるための具体的な条件
+      placeholder: |
+        - [ ] 使用量入力フォームが表示される
+        - [ ] 入力した使用量がデータベースに保存される
+        - [ ] 在庫量が自動的に更新される
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical_details
+    attributes:
+      label: 技術的詳細
+      description: 実装時の注意点、使用する技術、参考情報など
+      placeholder: |
+        ## バックエンド
+        - エンドポイント: POST /api/v1/usage-history
+        - 使用するsqlcクエリ: CreateUsageHistory, UpdateCoffeeBeanStock
+
+        ## フロントエンド
+        - 画面: UsageRecordScreen
+        - 使用するコンポーネント: Input, Button
+        - API呼び出し: useMutation from TanStack Query
+    validations:
+      required: false
+
+  - type: textarea
+    id: related_issues
+    attributes:
+      label: 関連Issue
+      description: 関連するissue番号があれば記載（例：#1, #2）
+      placeholder: |
+        - Blocks: #123
+        - Related: #456
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: 追加情報
+      description: その他、参考になる情報があれば記載
+    validations:
+      required: false
