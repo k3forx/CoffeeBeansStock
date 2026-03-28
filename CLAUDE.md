@@ -12,18 +12,24 @@ Coffee Beans Stockは、複数ユーザー対応のコーヒー豆在庫管理�
 
 ### バックエンド (Go)
 
-- **フレームワーク**: Chi ルーター（net/http互換）
+- **Go**: 1.26.0
+- **モジュール**: `github.com/k3forx/CoffeeBeansStock/backend`
+- **フレームワーク**: Chi ルーター（net/http互換、使用予定）
 - **データベース**: PostgreSQL 15 + sqlc（型安全なクエリ生成）
+- **マイグレーション**: golang-migrate（`backend/migrations/`）
 - **アーキテクチャパターン**: クリーンアーキテクチャ + ドメイン駆動設計
   - `cmd/server/` - アプリケーションエントリーポイント
   - `internal/domain/` - ドメインエンティティとリポジトリインターフェース
   - `internal/application/` - アプリケーションサービス（ビジネスロジック）
+  - `internal/services/` - ドメインサービス
   - `internal/database/` - sqlcが生成するデータベースコード（**手動編集厳禁**）
   - `internal/api/` - HTTPハンドラーとミドルウェア
-  - `internal/auth/` - JWT認証実装
+  - `internal/auth/` - JWT認証（使用予定）
   - `internal/config/` - 設定管理
-- **認証**: JWT（アクセストークン: 1時間、リフレッシュトークン: 7日間）
+- **認証**: JWT（アクセストークン: 1時間、リフレッシュトークン: 7日間、使用予定）
 - **ログ**: 標準ライブラリのslog
+
+**現状**: ディレクトリ構造・SQLスキーマ・sqlc設定・Makefile・マイグレーションファイルは作成済み。Goソースコード（.goファイル）は未実装。
 
 **重要**: `internal/database/` ディレクトリにはsqlcが生成したコードが含まれます。修正する場合は `sql/schema.sql` または `sql/queries.sql` を編集し、`sqlc generate` で再生成してください。
 
@@ -53,25 +59,33 @@ Coffee Beans Stockは、複数ユーザー対応のコーヒー豆在庫管理�
 
 ### バックエンド
 
+Makefileにより主要な操作はすべて `make` コマンドで実行可能（`backend/` ディレクトリで実行）:
+
 ```bash
-# SQLからコード生成（sql/*.sql 修正後に実行）
 cd backend
-sqlc generate
 
-# サーバー起動（.env設定が必要）
-go run cmd/server/main.go
+make run              # サーバー起動
+make sqlc-generate    # sqlcコード生成
+make migrate-up       # マイグレーション実行
+make migrate-down     # マイグレーション1ステップ戻し
+make test             # テスト実行（go test -v ./...）
+make build            # バイナリビルド（bin/server）
+make clean            # ビルド成果物削除
+make help             # 利用可能なターゲット一覧
+```
 
-# テスト実行
-go test ./... -v
-go test ./... -cover
-
+直接実行する場合:
+```bash
 # コードフォーマット
 gofmt -w .
+
+# テストカバレッジ
+go test ./... -cover
 ```
 
 **sqlcワークフロー**:
 1. `sql/schema.sql` または `sql/queries.sql` を編集
-2. `sqlc generate` を実行
+2. `make sqlc-generate`（または `sqlc generate`）を実行
 3. 生成されたコードが `internal/database/` に出力される
 4. サービス層でインポートして使用
 
@@ -104,16 +118,24 @@ npx tsc --noEmit
 
 ### データベース
 
-**現状**: SQLファイル（`backend/sql/schema.sql`、`backend/sql/queries.sql`）は存在しますが、Docker Compose設定は未作成。マイグレーション戦略は未定です。
-
-Docker設定追加後:
 ```bash
 # PostgreSQL起動
 docker-compose up -d
 
 # データベース状態確認
 docker-compose ps
+
+# マイグレーション実行（backend/ ディレクトリで）
+make migrate-up
+
+# マイグレーション1ステップ戻し
+make migrate-down
 ```
+
+**マイグレーションワークフロー**:
+1. `backend/migrations/` に新しいマイグレーションファイルを作成（`NNNNNN_description.up.sql` / `.down.sql`）
+2. `make migrate-up` で適用
+3. スキーマ変更後は `sql/schema.sql` も同期し、`sqlc generate` を再実行
 
 ## API設計
 
@@ -183,6 +205,18 @@ feat(auth): JWT認証機能を実装
 - 本番環境用のCORS設定が必要
 - シークレットは環境変数で管理: `DB_PASSWORD`, `JWT_SECRET`, `SMTP_PASSWORD`（フェーズ2）
 
+## 現在のプロジェクト状態
+
+| コンポーネント | 状態 |
+|---|---|
+| DBスキーマ・マイグレーション | 作成済み（4テーブル） |
+| sqlc設定・クエリ定義 | 作成済み |
+| Docker Compose (PostgreSQL) | 作成済み |
+| Makefile | 作成済み |
+| バックエンド Goコード | 未実装（ディレクトリ構造のみ） |
+| フロントエンド | Expoテンプレートのみ（カスタムコードなし） |
+| CI/CD | 未設定 |
+
 ## 開発フェーズ
 
 **MVP**（現在）: 認証、コーヒー豆CRUD、使用履歴、消費ペース計算
@@ -191,11 +225,10 @@ feat(auth): JWT認証機能を実装
 
 ## Issueワークフロー
 
-このプロジェクトでは構造化されたGitHub issueテンプレート（`.github/ISSUE_TEMPLATE/feature.yml`）を使用:
-- **フェーズ**: MVP、Phase 2、Phase 3
-- **実装領域**: バックエンド、フロントエンド、両方、インフラ
-- **優先度**: High、Medium、Low
-- **受け入れ条件**: チェックリスト形式で検証
+このプロジェクトでは構造化されたGitHub issueテンプレート（`.github/ISSUE_TEMPLATE/`）を使用:
+- **feature.yml** - 機能追加（フェーズ、実装領域、優先度、受け入れ条件）
+- **bug_report.yml** - バグ報告
+- **local_environment.yml** - ローカル環境セットアップ
 
 Issue管理用のカスタムスキル:
 - `/create-issue` - インタラクティブなissue作成
