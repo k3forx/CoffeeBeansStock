@@ -49,6 +49,8 @@ func main() {
 	jwtManager := auth.NewJWTManager(cfg.JWTSecret)
 	authService := services.NewAuthService(queries, jwtManager)
 	authHandler := handlers.NewAuthHandler(authService)
+	coffeeBeansService := services.NewCoffeeBeansService(queries)
+	coffeeBeansHandler := handlers.NewCoffeeBeansHandler(coffeeBeansService)
 
 	r := chi.NewRouter()
 	r.Use(chimiddleware.RequestID)
@@ -75,6 +77,17 @@ func main() {
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.Auth(jwtManager))
 				r.Get("/me", authHandler.GetMe)
+			})
+		})
+
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Auth(jwtManager))
+			r.Route("/coffee-beans", func(r chi.Router) {
+				r.Get("/", coffeeBeansHandler.List)
+				r.Post("/", coffeeBeansHandler.Create)
+				r.Get("/{id}", coffeeBeansHandler.Get)
+				r.Put("/{id}", coffeeBeansHandler.Update)
+				r.Delete("/{id}", coffeeBeansHandler.Delete)
 			})
 		})
 	})
