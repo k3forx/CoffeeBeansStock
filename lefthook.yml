@@ -1,0 +1,15 @@
+pre-commit:
+  parallel: true
+  commands:
+    backend-lint:
+      root: backend/
+      glob: "*.go"
+      run: golangci-lint run {staged_files}
+    frontend-lint:
+      root: frontend/
+      glob: "*.{ts,tsx}"
+      run: npx eslint {staged_files}
+    frontend-typecheck:
+      root: frontend/
+      glob: "*.{ts,tsx}"
+      run: npx tsc --noEmit
