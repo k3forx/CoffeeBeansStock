@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coffee Beans Stock — Design Pattern Comparison</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif&family=Noto+Serif+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111;
+    --surface-2: #1a1a1a;
+    --border: #222;
+    --text: #e0e0e0;
+    --text-2: #999;
+    --text-3: #555;
+    --accent: #B8860B;
+    --noir: #B8860B;
+    --nordic: #6a9a6a;
+    --wabi: #C8B8A0;
+    --good: #38A169;
+    --mid: #D69E2E;
+    --weak: #C53030;
+  }
+
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 0 0 80px;
+  }
+
+  /* ===== HEADER ===== */
+  .hero {
+    text-align: center;
+    padding: 64px 20px 48px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 300;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .hero p {
+    font-size: 13px;
+    color: var(--text-3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ===== SECTION ===== */
+  .section {
+    margin-top: 56px;
+  }
+  .section-header {
+    margin-bottom: 32px;
+  }
+  .section-num {
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: #fff;
+    letter-spacing: 1px;
+  }
+  .section-desc {
+    font-size: 13px;
+    color: var(--text-2);
+    margin-top: 8px;
+    max-width: 700px;
+    line-height: 1.8;
+  }
+
+  /* ===== FRAMEWORKS REFERENCE ===== */
+  .frameworks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .framework-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .framework-card h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .framework-card h3 .badge {
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(184,134,11,0.15);
+    color: var(--accent);
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+  .framework-card p {
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.7;
+  }
+
+  /* ===== EVALUATION CRITERIA TABLE ===== */
+  .criteria-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 24px;
+    font-size: 13px;
+  }
+  .criteria-table th {
+    text-align: left;
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-3);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .criteria-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #181818;
+    vertical-align: top;
+  }
+  .criteria-table tr:hover td {
+    background: rgba(255,255,255,0.02);
+  }
+  .criterion-name {
+    font-weight: 600;
+    color: #ddd;
+    white-space: nowrap;
+  }
+  .criterion-standard {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+  .weight-badge {
+    display: inline-block;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.06);
+    color: var(--text-2);
+    margin-left: 6px;
+    font-weight: 500;
+  }
+
+  /* ===== COMPARISON TABLE ===== */
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 24px;
+    font-size: 13px;
+  }
+  .comparison-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .comparison-table th {
+    padding: 14px 16px;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border);
+    background: var(--bg);
+    text-align: center;
+  }
+  .comparison-table th:first-child {
+    text-align: left;
+    min-width: 200px;
+  }
+  .comparison-table th.noir-col {
+    color: var(--noir);
+    background: linear-gradient(180deg, rgba(184,134,11,0.05) 0%, var(--bg) 100%);
+  }
+  .comparison-table th.nordic-col {
+    color: var(--nordic);
+    background: linear-gradient(180deg, rgba(106,154,106,0.05) 0%, var(--bg) 100%);
+  }
+  .comparison-table th.wabi-col {
+    color: var(--wabi);
+    background: linear-gradient(180deg, rgba(200,184,160,0.05) 0%, var(--bg) 100%);
+  }
+  .comparison-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #181818;
+    vertical-align: top;
+    text-align: center;
+  }
+  .comparison-table td:first-child {
+    text-align: left;
+  }
+  .comparison-table tbody tr:hover td {
+    background: rgba(255,255,255,0.02);
+  }
+
+  /* Category header rows */
+  .category-row td {
+    background: var(--surface) !important;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding: 16px 16px 10px !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+  .category-row td:first-child {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .category-weight {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(184,134,11,0.1);
+    color: var(--accent);
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* Score display */
+  .score {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .score-bar {
+    width: 60px;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .score-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .s5 .score-fill { width: 100%; background: var(--good); }
+  .s4 .score-fill { width: 80%; background: var(--good); }
+  .s3 .score-fill { width: 60%; background: var(--mid); }
+  .s2 .score-fill { width: 40%; background: var(--mid); }
+  .s1 .score-fill { width: 20%; background: var(--weak); }
+
+  .s5 { color: var(--good); }
+  .s4 { color: #68b068; }
+  .s3 { color: var(--mid); }
+  .s2 { color: #c0a040; }
+  .s1 { color: var(--weak); }
+
+  .score-note {
+    display: block;
+    font-size: 11px;
+    color: var(--text-3);
+    font-weight: 400;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  /* ===== TOTAL SCORE ROW ===== */
+  .total-row td {
+    background: var(--surface) !important;
+    border-top: 2px solid var(--border) !important;
+    border-bottom: none !important;
+    padding: 20px 16px !important;
+  }
+  .total-score {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .total-label {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+
+  /* ===== PROS/CONS ===== */
+  .proscons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 32px;
+  }
+  .proscons-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+  }
+  .proscons-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .proscons-card .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .proscons-card h4 {
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 16px 0 8px;
+  }
+  .proscons-card h4.pro { color: var(--good); }
+  .proscons-card h4.con { color: var(--weak); }
+  .proscons-card h4.fit { color: var(--accent); }
+  .proscons-card ul {
+    list-style: none;
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.8;
+  }
+  .proscons-card ul li::before {
+    content: '—';
+    margin-right: 8px;
+    color: var(--text-3);
+  }
+
+  /* ===== RECOMMENDATION ===== */
+  .recommendation {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin-top: 40px;
+    text-align: center;
+  }
+  .recommendation h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: #fff;
+    margin-bottom: 12px;
+  }
+  .recommendation p {
+    font-size: 14px;
+    color: var(--text-2);
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.8;
+  }
+  .recommendation .highlight {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .proscons { grid-template-columns: 1fr; }
+    .comparison-table { font-size: 12px; }
+    .comparison-table th, .comparison-table td { padding: 10px 10px; }
+    .score-bar { width: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Design Comparison</h1>
+  <p>UI/UX Evaluation &amp; Pattern Analysis</p>
+</div>
+
+<div class="container">
+
+  <!-- ===== SECTION 1: EVALUATION FRAMEWORKS ===== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">Section 01</div>
+      <div class="section-title">評価フレームワーク</div>
+      <div class="section-desc">業界標準のUI/UX評価フレームワークを基に、コーヒー豆在庫管理アプリに最適な評価基準を設定しました。</div>
+    </div>
+
+    <div class="frameworks">
+      <div class="framework-card">
+        <h3>Nielsen's 10 Heuristics <span class="badge">主軸</span></h3>
+        <p>Jakob Nielsenのユーザビリティ10原則。システムの可視性、現実世界との一致、ユーザーコントロール、一貫性、エラー防止など。本評価の「ユーザビリティ」カテゴリの基盤。</p>
+      </div>
+      <div class="framework-card">
+        <h3>WCAG 2.1 AA <span class="badge">必須</span></h3>
+        <p>Webコンテンツアクセシビリティガイドライン。テキストコントラスト比 4.5:1以上、タッチターゲット44pt以上、色だけに依存しない情報伝達など。</p>
+      </div>
+      <div class="framework-card">
+        <h3>Apple HIG / Material Design 3 <span class="badge">参照</span></h3>
+        <p>モバイルプラットフォーム公式ガイドライン。ナビゲーションパターン、タブバー設計、セーフエリア、ジェスチャー対応など。</p>
+      </div>
+      <div class="framework-card">
+        <h3>Morville's UX Honeycomb <span class="badge">参照</span></h3>
+        <p>UXの7要素（有用性・使いやすさ・魅力・探しやすさ・アクセシビリティ・信頼性・価値）による多角的評価。「感性デザイン」カテゴリに反映。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SECTION 2: EVALUATION CRITERIA ===== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">Section 02</div>
+      <div class="section-title">評価基準</div>
+      <div class="section-desc">在庫管理アプリの特性を踏まえ、5カテゴリ・18項目で評価。各カテゴリの重み付けは実用性を重視した配分。</div>
+    </div>
+
+    <table class="criteria-table">
+      <thead>
+        <tr>
+          <th style="width: 30%;">カテゴリ / 評価項目</th>
+          <th style="width: 20%;">業界基準</th>
+          <th style="width: 50%;">本アプリでの評価ポイント</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="category-row"><td colspan="3"><span>ユーザビリティ</span> <span class="category-weight">Weight: 30%</span></td></tr>
+        <tr>
+          <td><span class="criterion-name">学習容易性</span></td>
+          <td><span class="criterion-standard">初回1分以内にタスク完了</span></td>
+          <td>UIの直感性。初見で「在庫確認→使用量記録→豆追加」の操作が分かるか</td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">タスク効率</span></td>
+          <td><span class="criterion-standard">主要タスク3タップ以内</span></td>
+          <td>在庫確認・記録・追加の各フローに必要なタップ数と認知負荷</td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">フォーム設計</span></td>
+          <td><span class="criterion-standard">適切な入力タイプ、インライン検証</span></td>
+          <td>入力欄のスタイルが操作性を阻害しないか。ラベル・プレースホルダーの明瞭さ</td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">エラー回復</span></td>
+          <td><span class="criterion-standard">5秒以内にUndo可能</span></td>
+          <td>削除確認ダイアログ、編集キャンセルの分かりやすさ</td>
+        </tr>
+
+        <tr class="category-row"><td colspan="3"><span>情報設計</span> <span class="category-weight">Weight: 25%</span></td></tr>
+        <tr>
+          <td><span class="criterion-name">視覚的階層</span></td>
+          <td><span class="criterion-standard">最重要情報がスクロール前に可視</span></td>
+          <td>在庫量・豆名・ステータスの優先順位が明確に表現されているか</td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">ナビゲーション</span></td>
+          <td><span class="criterion-standard">最大3階層、タブ3〜5項目</span></td>
+          <td>現在地の把握、戻る操作、タブの分かりやすさ</td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">在庫ステータス表現</span></td>
+          <td><span class="criterion-standard">色+テキストで二重伝達</span></td>
+          <td>残量の伝達方法（バッジ/バー/円/テキスト）の直感性と一覧性</td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">空状態・ローディング</span></td>
+          <td><span class="criterion-standard">明確なCTAを含む空状態</span></td>
+          <td>データなし時の案内、読込中の表示が適切か</td>
+        </tr>
+
+        <tr class="category-row"><td colspan="3"><span>アクセシビリティ</span> <span class="category-weight">Weight: 20%</span></td></tr>
+        <tr>
+          <td><span class="criterion-name">コントラスト比</span></td>
+          <td><span class="criterion-standard">通常テキスト 4.5:1以上</span></td>
+          <td>背景色と文字色の組み合わせがWCAG AA基準を満たすか</td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">タッチターゲット</span></td>
+          <td><span class="criterion-standard">44×44pt / 48×48dp以上</span></td>
+          <td>ボタン・タブ・リスト項目のタップ領域が十分か</td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">フォントサイズ</span></td>
+          <td><span class="criterion-standard">本文16pt推奨、最小11pt</span></td>
+          <td>小さすぎるテキストがないか。特にメタ情報やラベル</td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">色の独立性</span></td>
+          <td><span class="criterion-standard">色だけに依存しない</span></td>
+          <td>在庫ステータスが色覚多様性のあるユーザーにも伝わるか</td>
+        </tr>
+
+        <tr class="category-row"><td colspan="3"><span>ビジュアルデザイン</span> <span class="category-weight">Weight: 15%</span></td></tr>
+        <tr>
+          <td><span class="criterion-name">タイポグラフィ</span></td>
+          <td><span class="criterion-standard">フォント2〜3種以内、明確な階層</span></td>
+          <td>フォント選択の品質、サイズ・ウェイト・letter-spacingの階層設計</td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">カラーパレット</span></td>
+          <td><span class="criterion-standard">5〜6色以内、明確なアクセント</span></td>
+          <td>色の統一感、コーヒーブランドとの親和性、洗練度</td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">余白・レイアウト</span></td>
+          <td><span class="criterion-standard">4pt/8ptグリッド準拠</span></td>
+          <td>余白のリズム感、コンテンツの密度バランス、呼吸感</td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">一貫性</span></td>
+          <td><span class="criterion-standard">全画面で統一されたスタイル</span></td>
+          <td>カード・ボタン・入力欄のスタイルが画面間で統一されているか</td>
+        </tr>
+
+        <tr class="category-row"><td colspan="3"><span>感性・ブランド</span> <span class="category-weight">Weight: 10%</span></td></tr>
+        <tr>
+          <td><span class="criterion-name">第一印象</span></td>
+          <td><span class="criterion-standard">5秒テストで用途理解</span></td>
+          <td>ログイン画面を見て「コーヒー管理アプリ」と即座に認識できるか</td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">ブランド表現</span></td>
+          <td><span class="criterion-standard">コンテキストに適合した美学</span></td>
+          <td>スペシャルティコーヒー文化との親和性、プレミアム感の表現</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== SECTION 3: COMPARISON ===== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">Section 03</div>
+      <div class="section-title">3パターン比較評価</div>
+      <div class="section-desc">各項目を5段階（1: Poor 〜 5: Excellent）で評価。カテゴリ別の重み付けを反映した加重スコアで総合評価。</div>
+    </div>
+
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>評価項目</th>
+          <th class="noir-col">01 Noir Roastery</th>
+          <th class="nordic-col">02 Nordic Minimal</th>
+          <th class="wabi-col">03 Wabi-Sabi Craft</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- USABILITY -->
+        <tr class="category-row"><td colspan="4"><span>ユーザビリティ</span> <span class="category-weight">30%</span></td></tr>
+        <tr>
+          <td><span class="criterion-name">学習容易性</span></td>
+          <td>
+            <div class="score s3">3 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">ダークUI+英語ラベルで初見の認知負荷が高い</span>
+          </td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">極めてシンプル。迷う余地がない</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">日本語中心で親しみやすい。円形UIも拡大し直感的に</span>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">タスク効率</span></td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">フロー自体は同等。視認性がやや劣る</span>
+          </td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">フラットリストで高速スキャン可能</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">カード+円で情報密度は適切</span>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">フォーム設計</span></td>
+          <td>
+            <div class="score s3">3 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">暗背景の入力欄は視認しづらい可能性</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">アンダーライン型は明るい背景で映える</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">温かみのある背景+明確なラベル</span>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">エラー回復</span></td>
+          <td>
+            <div class="score s3">3 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">削除リンクが目立たず事故リスク低いが発見性も低い</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">明確な日本語ラベルで操作意図が伝わる</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">控えめだが日本語で明確</span>
+          </td>
+        </tr>
+
+        <!-- INFORMATION ARCHITECTURE -->
+        <tr class="category-row"><td colspan="4"><span>情報設計</span> <span class="category-weight">25%</span></td></tr>
+        <tr>
+          <td><span class="criterion-name">視覚的階層</span></td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">大きな数字+セリフ体で情報階層が際立つ</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">ミニマルで明快だが詳細画面のインパクトが弱い</span>
+          </td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">円形の在庫表示が視覚的フォーカルポイントとして機能</span>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">ナビゲーション</span></td>
+          <td>
+            <div class="score s3">3 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">英語タブラベルが日本語ユーザーに不親切</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">標準的で分かりやすい。ドットインジケーターは小さい</span>
+          </td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">日本語ラベル+ラインインジケーターで最も明確</span>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">在庫ステータス表現</span></td>
+          <td>
+            <div class="score s3">3 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">テキスト+アクセントラインだが暗背景で色差が弱い</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">ピル型バッジ+色で明快。プログレスバーも有効</span>
+          </td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">円+数値+色+バーの多層表現で最も情報量が豊か</span>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">空状態・ローディング</span></td>
+          <td>
+            <div class="score s3">3 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">ダーク空状態は寂しい印象になりがち</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">余白が活き、空状態でも洗練感を維持</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">温かみのある空状態で居心地良い</span>
+          </td>
+        </tr>
+
+        <!-- ACCESSIBILITY -->
+        <tr class="category-row"><td colspan="4"><span>アクセシビリティ</span> <span class="category-weight">20%</span></td></tr>
+        <tr>
+          <td><span class="criterion-name">コントラスト比</span></td>
+          <td>
+            <div class="score s2">2 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">#4a4a4a on #0D0D0D = 2.8:1 NG。メタテキストが基準未達</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">#2a2a28 on #FAFAF8 = 15:1 OK。サブテキストも概ね基準内</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">#3A3228 on #F5F0E8 = 10:1 OK。一部サブテキストが境界</span>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">タッチターゲット</span></td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">カード・FABは十分。タブ文字が小さい</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">リスト行の高さ十分。ドットインジケーターが小さい</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">カード・FABは十分。円形UIはタップ領域に注意</span>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">フォントサイズ</span></td>
+          <td>
+            <div class="score s2">2 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">メタテキスト11px、タブ9px。最小基準に抵触</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">本文14px、メタ12px。タブラベル10pxがやや小さい</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">本文14-16px良好。円内9px・タブ10pxに改善済み</span>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">色の独立性</span></td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">色+テキスト数値の併用で二重伝達</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">ピル内テキスト+色で二重伝達</span>
+          </td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">円+数値+バー+色の多層伝達で最も堅牢</span>
+          </td>
+        </tr>
+
+        <!-- VISUAL DESIGN -->
+        <tr class="category-row"><td colspan="4"><span>ビジュアルデザイン</span> <span class="category-weight">15%</span></td></tr>
+        <tr>
+          <td><span class="criterion-name">タイポグラフィ</span></td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">Cormorant Garamondの使い方が洗練。階層が明確</span>
+          </td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">Instrument Serif + Karlaの組合せが美しく機能的</span>
+          </td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">Noto Serif JP + Frauncesの和洋折衷が個性的</span>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">カラーパレット</span></td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">黒×アンバーの高コントラストが印象的</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">上品だがやや無個性。差別化ポイントが弱い</span>
+          </td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">和紙のような質感が唯一無二の世界観</span>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">余白・レイアウト</span></td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">適切な密度だがダーク背景で圧迫感あり</span>
+          </td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">最も余白を活かした呼吸感のあるレイアウト</span>
+          </td>
+          <td>
+            <div class="score s4">4 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">適度な余白。円形要素がリズムを生む</span>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">画面間の一貫性</span></td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">ダーク+ゴールドの統一感が全画面で完結</span>
+          </td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">ミニマルなルールが徹底されている</span>
+          </td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">二重円・和のトーンが全画面に通底</span>
+          </td>
+        </tr>
+
+        <!-- EMOTIONAL DESIGN -->
+        <tr class="category-row"><td colspan="4"><span>感性・ブランド</span> <span class="category-weight">10%</span></td></tr>
+        <tr>
+          <td><span class="criterion-name">第一印象</span></td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">圧倒的な雰囲気。コーヒーバーの世界観に引き込まれる</span>
+          </td>
+          <td>
+            <div class="score s3">3 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">洗練されているが「何のアプリか」の印象が弱い</span>
+          </td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">「珈琲豆の記録」でコンセプト即伝達。二重円が記憶に残る</span>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="criterion-name">ブランド表現</span></td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">高級ロースタリーの世界観。最も強い差別化</span>
+          </td>
+          <td>
+            <div class="score s3">3 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">汎用的な美しさ。コーヒー固有の個性は控えめ</span>
+          </td>
+          <td>
+            <div class="score s5">5 <div class="score-bar"><div class="score-fill"></div></div></div>
+            <span class="score-note">日本のスペシャルティコーヒー文化と深く共鳴</span>
+          </td>
+        </tr>
+
+        <!-- ===== TOTALS ===== -->
+        <tr class="total-row">
+          <td>
+            <div style="font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-3);">
+              加重総合スコア
+            </div>
+            <div style="font-size: 11px; color: var(--text-3); margin-top: 4px;">
+              (5.0満点)
+            </div>
+          </td>
+          <td>
+            <div class="total-score" style="color: var(--noir);">3.63</div>
+            <div class="total-label">デザイン性 ◎ / アクセシビリティ △</div>
+          </td>
+          <td>
+            <div class="total-score" style="color: var(--nordic);">4.22</div>
+            <div class="total-label">ユーザビリティ ◎ / ブランド性 △</div>
+          </td>
+          <td>
+            <div class="total-score" style="color: var(--wabi);">4.45</div>
+            <div class="total-label">総合バランス ◎（弱み修正後）</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Score Calculation Note -->
+    <div style="margin-top: 16px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-size: 11px; color: var(--text-3); line-height: 1.8;">
+      <strong style="color: var(--text-2);">スコア算出方法:</strong>
+      各カテゴリの項目平均 × 重み付けの合計。
+      Noir = (3.25×0.30)+(3.50×0.25)+(3.00×0.20)+(4.75×0.15)+(5.00×0.10) = 3.63 /
+      Nordic = (4.50×0.30)+(4.00×0.25)+(4.00×0.20)+(4.75×0.15)+(3.00×0.10) = 4.22 /
+      Wabi-Sabi = (4.00×0.30)+(4.75×0.25)+(4.25×0.20)+(4.75×0.15)+(5.00×0.10) = 4.45 ※フォントサイズ改善により+0.05
+    </div>
+  </div>
+
+  <!-- ===== SECTION 4: PROS/CONS ===== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">Section 04</div>
+      <div class="section-title">各パターンの強み・弱み・適性</div>
+    </div>
+
+    <div class="proscons">
+      <!-- Noir -->
+      <div class="proscons-card">
+        <h3><div class="dot" style="background: var(--noir);"></div> Noir Roastery</h3>
+        <h4 class="pro">Strengths</h4>
+        <ul>
+          <li>圧倒的なブランド存在感と世界観の完成度</li>
+          <li>Cormorant Garamondの洗練されたタイポグラフィ</li>
+          <li>他アプリとの明確な差別化（ダークテーマ）</li>
+          <li>詳細画面の数字表現が美しい</li>
+        </ul>
+        <h4 class="con">Weaknesses</h4>
+        <ul>
+          <li>コントラスト比がWCAG AA未達の箇所あり</li>
+          <li>メタテキスト9-11pxが小さすぎる</li>
+          <li>英語ラベルが日本語ユーザーに不親切</li>
+          <li>ダーク背景での長時間利用は目に負担</li>
+          <li>角丸なしのジオメトリがiOS規約と乖離</li>
+        </ul>
+        <h4 class="fit">Best For</h4>
+        <ul>
+          <li>バリスタ・業界プロ向けのプレミアムツール</li>
+          <li>ブランド重視でデザインに投資できるプロジェクト</li>
+        </ul>
+      </div>
+
+      <!-- Nordic -->
+      <div class="proscons-card">
+        <h3><div class="dot" style="background: var(--nordic);"></div> Nordic Minimal</h3>
+        <h4 class="pro">Strengths</h4>
+        <ul>
+          <li>最高のユーザビリティスコア（学習容易性5/5）</li>
+          <li>フラットリストで一覧性と高速スキャンに優れる</li>
+          <li>コントラスト比が全体的に良好</li>
+          <li>余白の使い方が最も洗練されている</li>
+          <li>実装コストが最も低い（シンプルな構造）</li>
+        </ul>
+        <h4 class="con">Weaknesses</h4>
+        <ul>
+          <li>ブランド個性が弱く「何のアプリか」伝わりにくい</li>
+          <li>ミニマルすぎて感情的な愛着が生まれにくい</li>
+          <li>多くのアプリと似た印象になるリスク</li>
+          <li>詳細画面のインパクトが不足</li>
+        </ul>
+        <h4 class="fit">Best For</h4>
+        <ul>
+          <li>ユーザビリティ最優先のMVP開発</li>
+          <li>デザインより機能を重視するユーザー層</li>
+        </ul>
+      </div>
+
+      <!-- Wabi-Sabi -->
+      <div class="proscons-card">
+        <h3><div class="dot" style="background: var(--wabi);"></div> Wabi-Sabi Craft</h3>
+        <h4 class="pro">Strengths</h4>
+        <ul>
+          <li>総合スコア最高（全カテゴリで安定した高評価）</li>
+          <li>円形UIが在庫の視覚的表現として最も直感的</li>
+          <li>和洋折衷のフォントが唯一無二の個性</li>
+          <li>色の独立性が最も高い（多層伝達）</li>
+          <li>日本のスペシャルティコーヒー文化との親和性</li>
+          <li>「珈琲豆の記録」の漢字表記が差別化要素</li>
+        </ul>
+        <h4 class="con">Weaknesses（修正済み）</h4>
+        <ul>
+          <li><s>円内の文字サイズ（7px）</s> → 9pxに拡大、円も50pxに拡大 ✅</li>
+          <li><s>フォント読込コスト（Noto Serif JP）</s> → システムフォント（ヒラギノ明朝）に変更 ✅</li>
+          <li><s>実装複雑度（二重円）</s> → シンプルな単一円に簡素化 ✅</li>
+        </ul>
+        <h4 class="fit">Best For</h4>
+        <ul>
+          <li>日本市場向けのスペシャルティコーヒーアプリ</li>
+          <li>デザイン性と実用性の両立を求めるプロジェクト</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== RECOMMENDATION ===== -->
+  <div class="section">
+    <div class="recommendation">
+      <h3>総合推奨</h3>
+      <p>
+        総合スコアでは<span class="highlight">Pattern 03: Wabi-Sabi Craft</span>が最高評価（4.45/5.0）。
+        弱みだった3点（フォントサイズ・読込コスト・実装複雑度）を修正し、全カテゴリで安定した高得点に。
+        システムフォント活用で読込コストゼロ、シンプルな単一円で実装負荷を軽減しつつ、世界観を維持。
+        <br><br>
+        ただし、<span class="highlight">Noirの世界観</span>や<span class="highlight">Nordicのユーザビリティ</span>から良い要素を取り入れたハイブリッドも有効。
+        たとえば：Wabi-Sabiベースに、Nordicの高速スキャン性を持つフラットリストオプションを追加する、
+        あるいはNoirの数字表現を詳細画面に取り入れる、といったアプローチが考えられます。
+      </p>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

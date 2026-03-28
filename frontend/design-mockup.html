@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coffee Beans Stock - Design Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #FAF7F4;
+    --surface: #FFFFFF;
+    --primary: #4A3728;
+    --primary-light: #6B5344;
+    --accent: #B8860B;
+    --accent-light: #C4A882;
+    --text-primary: #2C1810;
+    --text-secondary: #8B7D75;
+    --text-tertiary: #B5AAA3;
+    --text-inverse: #FFFFFF;
+    --border: #E8E2DC;
+    --border-light: #F0ECE8;
+    --danger: #C53030;
+    --danger-light: #FED7D7;
+    --warning: #D69E2E;
+    --warning-light: #FEFCBF;
+    --success: #38A169;
+    --success-light: #C6F6D5;
+    --shadow: #1A0E08;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+
+  h1.page-title {
+    color: #fff;
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .page-subtitle {
+    color: #888;
+    font-size: 14px;
+    letter-spacing: 1px;
+    margin-bottom: 48px;
+  }
+
+  .screens-row {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 60px;
+  }
+
+  .screen-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .screen-label {
+    color: #aaa;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+    border: 8px solid #333;
+  }
+
+  .status-bar {
+    height: 54px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 28px 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .status-bar .time { font-weight: 700; }
+  .status-bar .icons { display: flex; gap: 4px; font-size: 12px; }
+
+  /* ========== LOGIN SCREEN ========== */
+  .login-screen {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 40px 80px;
+  }
+  .login-icon {
+    font-size: 56px;
+    color: var(--accent-light);
+    margin-bottom: 32px;
+    filter: grayscale(20%);
+  }
+  .login-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .login-subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 48px;
+    line-height: 1.5;
+  }
+  .login-btn {
+    background: var(--primary);
+    color: var(--text-inverse);
+    border: none;
+    padding: 16px 48px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(26,14,8,0.15);
+    width: 100%;
+    text-align: center;
+  }
+  .login-footer {
+    position: absolute;
+    bottom: 48px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.5px;
+  }
+
+  /* ========== HEADER ========== */
+  .header {
+    background: var(--surface);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--border-light);
+    position: relative;
+  }
+  .header-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0.3px;
+  }
+  .header-back {
+    position: absolute;
+    left: 16px;
+    font-size: 14px;
+    color: var(--primary);
+    font-weight: 500;
+  }
+  .header-action {
+    position: absolute;
+    right: 20px;
+    font-size: 14px;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  /* ========== TAB BAR ========== */
+  .tab-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0 28px;
+    box-shadow: 0 -2px 8px rgba(26,14,8,0.04);
+  }
+  .tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+  }
+  .tab-icon {
+    font-size: 22px;
+    color: var(--text-tertiary);
+  }
+  .tab-icon.active {
+    color: var(--primary);
+  }
+  .tab-label {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.3px;
+    font-weight: 500;
+  }
+  .tab-label.active {
+    color: var(--primary);
+  }
+  .tab-indicator {
+    width: 20px;
+    height: 2px;
+    background: var(--primary);
+    border-radius: 1px;
+    position: absolute;
+    top: -8px;
+  }
+
+  /* ========== BEANS LIST ========== */
+  .beans-list {
+    padding: 20px;
+    overflow-y: auto;
+    height: calc(100% - 54px - 45px - 70px);
+  }
+  .bean-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 20px 20px 20px 28px;
+    margin-bottom: 16px;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(26,14,8,0.06);
+  }
+  .bean-card .accent-bar {
+    position: absolute;
+    left: 0;
+    top: 16px;
+    bottom: 16px;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+  }
+  .bean-card .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .bean-name {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.2px;
+  }
+  .bean-stock {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  .bean-detail {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .bean-detail span {
+    margin-right: 12px;
+  }
+
+  .fab {
+    position: absolute;
+    bottom: 90px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    background: var(--primary);
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-inverse);
+    font-size: 28px;
+    font-weight: 300;
+    box-shadow: 0 4px 16px rgba(26,14,8,0.2);
+    cursor: pointer;
+  }
+
+  /* ========== DETAIL SCREEN ========== */
+  .detail-screen {
+    padding: 24px 20px;
+    overflow-y: auto;
+    height: calc(100% - 54px - 45px);
+  }
+  .detail-hero {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .detail-bean-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+    margin-bottom: 16px;
+  }
+  .detail-stock-number {
+    font-size: 48px;
+    font-weight: 300;
+    color: var(--text-primary);
+    letter-spacing: -1px;
+  }
+  .detail-stock-unit {
+    font-size: 16px;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-left: 2px;
+  }
+  .stock-bar-container {
+    width: 200px;
+    height: 3px;
+    background: var(--border-light);
+    border-radius: 2px;
+    margin: 12px auto 0;
+    overflow: hidden;
+  }
+  .stock-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .detail-info-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 4px 20px;
+    box-shadow: 0 1px 3px rgba(26,14,8,0.05);
+    margin-bottom: 24px;
+  }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 0.5px solid var(--border-light);
+  }
+  .info-row:last-child {
+    border-bottom: none;
+  }
+  .info-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .info-value {
+    font-size: 15px;
+    color: var(--text-primary);
+  }
+  .delete-link {
+    text-align: center;
+    color: var(--danger);
+    font-size: 14px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    margin-top: 16px;
+  }
+
+  /* ========== CREATE FORM ========== */
+  .create-screen {
+    padding: 24px 24px;
+    overflow-y: auto;
+    height: calc(100% - 54px - 45px);
+  }
+  .form-group {
+    margin-bottom: 28px;
+  }
+  .form-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .form-label .required {
+    color: var(--danger);
+    font-size: 8px;
+    vertical-align: super;
+    margin-left: 2px;
+  }
+  .form-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+    font-size: 16px;
+    color: var(--text-primary);
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+  }
+  .form-input::placeholder {
+    color: var(--text-tertiary);
+  }
+  .form-input:focus {
+    border-bottom-color: var(--primary);
+  }
+  .form-textarea {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+    font-size: 16px;
+    color: var(--text-primary);
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+    resize: none;
+    min-height: 60px;
+  }
+  .submit-btn {
+    background: var(--primary);
+    color: var(--text-inverse);
+    border: none;
+    padding: 16px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    width: 100%;
+    cursor: pointer;
+    margin-top: 20px;
+    box-shadow: 0 4px 16px rgba(26,14,8,0.12);
+  }
+
+  /* ========== PROFILE SCREEN ========== */
+  .profile-screen {
+    padding: 20px;
+    overflow-y: auto;
+    height: calc(100% - 54px - 45px - 70px);
+  }
+  .profile-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 32px 20px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(26,14,8,0.05);
+    margin-bottom: 24px;
+  }
+  .profile-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 44px;
+    background: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    color: var(--text-inverse);
+    font-size: 36px;
+    font-weight: 300;
+  }
+  .profile-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  .profile-role {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.5px;
+  }
+  .settings-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+    padding-left: 4px;
+  }
+  .settings-card {
+    background: var(--surface);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(26,14,8,0.05);
+    overflow: hidden;
+  }
+  .settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 0.5px solid var(--border-light);
+  }
+  .settings-row:last-child {
+    border-bottom: none;
+  }
+  .settings-row-label {
+    font-size: 15px;
+    color: var(--text-primary);
+  }
+  .settings-row-value {
+    font-size: 15px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chevron {
+    color: var(--text-tertiary);
+    font-size: 16px;
+  }
+  .logout-link {
+    text-align: center;
+    color: var(--danger);
+    font-size: 15px;
+    margin-top: 40px;
+    cursor: pointer;
+  }
+
+  /* ========== COMPARISON SECTION ========== */
+  .section-title {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 48px 0 8px;
+    letter-spacing: 0.5px;
+  }
+  .section-desc {
+    color: #888;
+    font-size: 13px;
+    margin-bottom: 32px;
+  }
+
+  /* Color Palette Display */
+  .palette {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 48px;
+    justify-content: center;
+  }
+  .swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .swatch-color {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .swatch-name {
+    font-size: 10px;
+    color: #aaa;
+    letter-spacing: 0.5px;
+  }
+  .swatch-hex {
+    font-size: 10px;
+    color: #666;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">Coffee Beans Stock</h1>
+<p class="page-subtitle">Design Mockup — Espresso Luxe Theme</p>
+
+<!-- Color Palette -->
+<p class="section-desc" style="margin-top: 0;">COLOR PALETTE</p>
+<div class="palette">
+  <div class="swatch">
+    <div class="swatch-color" style="background: #FAF7F4; border: 1px solid #ddd;"></div>
+    <span class="swatch-name">Background</span>
+    <span class="swatch-hex">#FAF7F4</span>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background: #4A3728;"></div>
+    <span class="swatch-name">Primary</span>
+    <span class="swatch-hex">#4A3728</span>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background: #6B5344;"></div>
+    <span class="swatch-name">Primary Light</span>
+    <span class="swatch-hex">#6B5344</span>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background: #B8860B;"></div>
+    <span class="swatch-name">Accent</span>
+    <span class="swatch-hex">#B8860B</span>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background: #C4A882;"></div>
+    <span class="swatch-name">Accent Light</span>
+    <span class="swatch-hex">#C4A882</span>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background: #2C1810;"></div>
+    <span class="swatch-name">Text</span>
+    <span class="swatch-hex">#2C1810</span>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background: #8B7D75;"></div>
+    <span class="swatch-name">Text Sec</span>
+    <span class="swatch-hex">#8B7D75</span>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background: #E8E2DC;"></div>
+    <span class="swatch-name">Border</span>
+    <span class="swatch-hex">#E8E2DC</span>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background: #C53030;"></div>
+    <span class="swatch-name">Danger</span>
+    <span class="swatch-hex">#C53030</span>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background: #D69E2E;"></div>
+    <span class="swatch-name">Warning</span>
+    <span class="swatch-hex">#D69E2E</span>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background: #38A169;"></div>
+    <span class="swatch-name">Success</span>
+    <span class="swatch-hex">#38A169</span>
+  </div>
+</div>
+
+<!-- Screen Mockups -->
+<div class="screens-row">
+
+  <!-- LOGIN SCREEN -->
+  <div class="screen-wrapper">
+    <span class="screen-label">Login</span>
+    <div class="phone">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <span class="icons">● ● ●</span>
+      </div>
+      <div class="login-screen">
+        <div class="login-icon">☕</div>
+        <div class="login-title">Coffee Beans Stock</div>
+        <div class="login-subtitle">コーヒー豆の在庫を簡単管理</div>
+        <div class="login-btn">はじめる</div>
+      </div>
+      <div class="login-footer">Specialty Coffee Management</div>
+    </div>
+  </div>
+
+  <!-- BEANS LIST SCREEN -->
+  <div class="screen-wrapper">
+    <span class="screen-label">Beans List</span>
+    <div class="phone">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <span class="icons">● ● ●</span>
+      </div>
+      <div class="header">
+        <span class="header-title">コーヒー豆</span>
+      </div>
+      <div class="beans-list">
+        <!-- Card 1 - Good stock -->
+        <div class="bean-card">
+          <div class="accent-bar" style="background: var(--success);"></div>
+          <div class="card-top">
+            <span class="bean-name">エチオピア イルガチェフェ</span>
+            <span class="bean-stock" style="color: var(--success);">250g</span>
+          </div>
+          <div class="bean-detail">
+            <span>エチオピア</span>
+            <span>浅煎り</span>
+          </div>
+        </div>
+
+        <!-- Card 2 - Warning stock -->
+        <div class="bean-card">
+          <div class="accent-bar" style="background: var(--warning);"></div>
+          <div class="card-top">
+            <span class="bean-name">グアテマラ アンティグア</span>
+            <span class="bean-stock" style="color: var(--warning);">80g</span>
+          </div>
+          <div class="bean-detail">
+            <span>グアテマラ</span>
+            <span>中煎り</span>
+          </div>
+        </div>
+
+        <!-- Card 3 - Danger stock -->
+        <div class="bean-card">
+          <div class="accent-bar" style="background: var(--danger);"></div>
+          <div class="card-top">
+            <span class="bean-name">ブラジル サントス</span>
+            <span class="bean-stock" style="color: var(--danger);">30g</span>
+          </div>
+          <div class="bean-detail">
+            <span>ブラジル</span>
+            <span>深煎り</span>
+          </div>
+        </div>
+
+        <!-- Card 4 - Good stock -->
+        <div class="bean-card">
+          <div class="accent-bar" style="background: var(--success);"></div>
+          <div class="card-top">
+            <span class="bean-name">コロンビア スプレモ</span>
+            <span class="bean-stock" style="color: var(--success);">180g</span>
+          </div>
+          <div class="bean-detail">
+            <span>コロンビア</span>
+            <span>中煎り</span>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="bean-card">
+          <div class="accent-bar" style="background: var(--success);"></div>
+          <div class="card-top">
+            <span class="bean-name">ケニア AA</span>
+            <span class="bean-stock" style="color: var(--success);">320g</span>
+          </div>
+          <div class="bean-detail">
+            <span>ケニア</span>
+            <span>浅煎り</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAB -->
+      <div class="fab">+</div>
+
+      <!-- Tab Bar -->
+      <div class="tab-bar">
+        <div class="tab-item">
+          <div class="tab-indicator"></div>
+          <span class="tab-icon active">☕</span>
+          <span class="tab-label active">コーヒー豆</span>
+        </div>
+        <div class="tab-item">
+          <span class="tab-icon">👤</span>
+          <span class="tab-label">プロフィール</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL SCREEN -->
+  <div class="screen-wrapper">
+    <span class="screen-label">Bean Detail</span>
+    <div class="phone">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <span class="icons">● ● ●</span>
+      </div>
+      <div class="header">
+        <span class="header-back">‹ 戻る</span>
+        <span class="header-title">詳細</span>
+        <span class="header-action">編集</span>
+      </div>
+      <div class="detail-screen">
+        <div class="detail-hero">
+          <div class="detail-bean-name">エチオピア イルガチェフェ</div>
+          <div>
+            <span class="detail-stock-number">250</span>
+            <span class="detail-stock-unit">g</span>
+          </div>
+          <div class="stock-bar-container">
+            <div class="stock-bar-fill" style="width: 50%; background: var(--success);"></div>
+          </div>
+        </div>
+
+        <div class="detail-info-card">
+          <div class="info-row">
+            <span class="info-label">産地</span>
+            <span class="info-value">エチオピア</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">焙煎度</span>
+            <span class="info-value">浅煎り</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">メモ</span>
+            <span class="info-value">フルーティーで華やかな香り</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">登録日</span>
+            <span class="info-value">2026-03-20</span>
+          </div>
+        </div>
+
+        <div class="delete-link">この豆を削除する</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="screens-row">
+
+  <!-- CREATE FORM SCREEN -->
+  <div class="screen-wrapper">
+    <span class="screen-label">Create Bean</span>
+    <div class="phone">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <span class="icons">● ● ●</span>
+      </div>
+      <div class="header">
+        <span class="header-back">‹ 戻る</span>
+        <span class="header-title">新しいコーヒー豆</span>
+      </div>
+      <div class="create-screen">
+        <div class="form-group">
+          <label class="form-label">名前 <span class="required">●</span></label>
+          <input class="form-input" placeholder="例: エチオピア イルガチェフェ" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">産地</label>
+          <input class="form-input" placeholder="例: エチオピア" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">焙煎度</label>
+          <input class="form-input" placeholder="例: 浅煎り" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">在庫量 (g) <span class="required">●</span></label>
+          <input class="form-input" placeholder="例: 200" type="number" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">メモ</label>
+          <textarea class="form-textarea" placeholder="コーヒー豆についてのメモ"></textarea>
+        </div>
+        <button class="submit-btn">追加する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE SCREEN -->
+  <div class="screen-wrapper">
+    <span class="screen-label">Profile</span>
+    <div class="phone">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <span class="icons">● ● ●</span>
+      </div>
+      <div class="header">
+        <span class="header-title">プロフィール</span>
+      </div>
+      <div class="profile-screen">
+        <div class="profile-card">
+          <div class="profile-avatar">K</div>
+          <div class="profile-name">Kanata</div>
+          <div class="profile-role">ゲストアカウント</div>
+        </div>
+
+        <div class="settings-section-title">設定</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <span class="settings-row-label">在庫アラート</span>
+            <span class="settings-row-value">50g以下 <span class="chevron">›</span></span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label">通知</span>
+            <span class="settings-row-value">ON <span class="chevron">›</span></span>
+          </div>
+        </div>
+
+        <div class="logout-link">ログアウト</div>
+      </div>
+
+      <!-- Tab Bar -->
+      <div class="tab-bar">
+        <div class="tab-item">
+          <span class="tab-icon">☕</span>
+          <span class="tab-label">コーヒー豆</span>
+        </div>
+        <div class="tab-item">
+          <div class="tab-indicator"></div>
+          <span class="tab-icon active">👤</span>
+          <span class="tab-label active">プロフィール</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

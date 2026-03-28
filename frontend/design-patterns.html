@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coffee Beans Stock — 3 Design Patterns</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Instrument+Serif:ital@0;1&family=Karla:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Manrope:wght@300;400;500;600;700;800&family=Outfit:wght@200;300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0a;
+    color: #e0e0e0;
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== PAGE LAYOUT ===== */
+  .page-header {
+    text-align: center;
+    padding: 64px 20px 24px;
+  }
+  .page-header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 42px;
+    font-weight: 300;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: #fff;
+    margin-bottom: 12px;
+  }
+  .page-header p {
+    font-size: 13px;
+    color: #666;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .pattern-section {
+    padding: 60px 20px 80px;
+    position: relative;
+  }
+  .pattern-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #333, transparent);
+  }
+
+  .pattern-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .pattern-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 12px;
+  }
+  .pattern-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 400;
+    color: #fff;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+  .pattern-desc {
+    font-size: 14px;
+    color: #777;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.8;
+  }
+
+  .palette-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 32px 0 48px;
+    flex-wrap: wrap;
+  }
+  .palette-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .palette-dot {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  .palette-hex {
+    font-size: 9px;
+    color: #555;
+    font-family: 'DM Sans', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  .screens-row {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .screen-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .screen-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 14px;
+    font-weight: 500;
+  }
+
+  .phone {
+    width: 360px;
+    height: 780px;
+    border-radius: 36px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+  }
+  .phone-inner {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .status-bar {
+    height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 24px 6px;
+    font-size: 13px;
+    font-weight: 600;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* ================================================================
+     PATTERN 1: NOIR ROASTERY
+     Dark, moody, luxury coffee bar. Amber accents on deep blacks.
+     ================================================================ */
+
+  .noir .phone {
+    background: #0D0D0D;
+    border: 1px solid #1a1a1a;
+  }
+
+  .noir .status-bar { color: #8a8a8a; }
+
+  /* Noir Login */
+  .noir .login {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 44px 60px;
+    background: #0D0D0D;
+    position: relative;
+  }
+  .noir .login::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 50% 30%, rgba(184,134,11,0.06) 0%, transparent 70%);
+  }
+  .noir .login-icon {
+    font-size: 48px;
+    margin-bottom: 40px;
+    opacity: 0.7;
+    filter: sepia(1) brightness(0.8);
+  }
+  .noir .login h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 30px;
+    font-weight: 300;
+    color: #E8DCC8;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .noir .login .tagline {
+    font-size: 12px;
+    color: #5a5550;
+    letter-spacing: 2px;
+    margin-bottom: 56px;
+    text-transform: uppercase;
+  }
+  .noir .login-btn {
+    width: 100%;
+    padding: 18px;
+    background: transparent;
+    border: 1px solid #B8860B;
+    color: #B8860B;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+  .noir .login-footer {
+    position: absolute;
+    bottom: 44px;
+    font-size: 9px;
+    color: #333;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  /* Noir Header */
+  .noir .header {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #1a1a1a;
+    position: relative;
+    background: #0D0D0D;
+  }
+  .noir .header-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    color: #8a8a8a;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+  .noir .header-back {
+    position: absolute;
+    left: 20px;
+    font-size: 13px;
+    color: #B8860B;
+    font-weight: 400;
+  }
+  .noir .header-action {
+    position: absolute;
+    right: 20px;
+    font-size: 12px;
+    color: #B8860B;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  /* Noir List */
+  .noir .beans-list {
+    padding: 20px 16px;
+    overflow-y: auto;
+    height: calc(100% - 50px - 44px - 65px);
+    background: #0D0D0D;
+  }
+  .noir .bean-card {
+    background: #141414;
+    border: 1px solid #1f1f1f;
+    border-radius: 2px;
+    padding: 20px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .noir .bean-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    right: 20px;
+    height: 1px;
+  }
+  .noir .accent-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+  }
+  .noir .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .noir .bean-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 19px;
+    font-weight: 400;
+    color: #E8DCC8;
+    letter-spacing: 0.5px;
+  }
+  .noir .bean-stock {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+  }
+  .noir .bean-meta {
+    font-size: 11px;
+    color: #4a4a4a;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .noir .bean-meta span { margin-right: 16px; }
+
+  .noir .fab {
+    position: absolute;
+    bottom: 82px;
+    right: 20px;
+    width: 52px;
+    height: 52px;
+    background: #B8860B;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0D0D0D;
+    font-size: 24px;
+    font-weight: 300;
+    box-shadow: 0 4px 24px rgba(184,134,11,0.25);
+    z-index: 5;
+  }
+
+  /* Noir Tab */
+  .noir .tab-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #0D0D0D;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0 24px;
+    border-top: 1px solid #1a1a1a;
+  }
+  .noir .tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .noir .tab-icon { font-size: 18px; opacity: 0.3; }
+  .noir .tab-icon.active { opacity: 1; }
+  .noir .tab-label {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #3a3a3a;
+  }
+  .noir .tab-label.active { color: #B8860B; }
+
+  /* Noir Detail */
+  .noir .detail {
+    padding: 32px 24px;
+    background: #0D0D0D;
+    height: calc(100% - 50px - 44px);
+    overflow-y: auto;
+  }
+  .noir .detail-hero {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .noir .detail-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 300;
+    color: #E8DCC8;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+  .noir .detail-stock-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 56px;
+    font-weight: 300;
+    color: #fff;
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+  .noir .detail-stock-unit {
+    font-size: 14px;
+    color: #4a4a4a;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-left: 4px;
+  }
+  .noir .stock-line {
+    width: 120px;
+    height: 1px;
+    background: #1a1a1a;
+    margin: 16px auto 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .noir .stock-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+  }
+  .noir .info-block {
+    margin-bottom: 24px;
+  }
+  .noir .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid #141414;
+  }
+  .noir .info-label {
+    font-size: 10px;
+    color: #4a4a4a;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .noir .info-value {
+    font-size: 14px;
+    color: #999;
+  }
+  .noir .delete-link {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 11px;
+    color: #5a3030;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Noir Profile */
+  .noir .profile {
+    padding: 32px 20px;
+    background: #0D0D0D;
+    height: calc(100% - 50px - 44px - 65px);
+  }
+  .noir .profile-top {
+    text-align: center;
+    padding: 40px 0;
+    margin-bottom: 32px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .noir .profile-avatar {
+    width: 80px;
+    height: 80px;
+    border: 1px solid #B8860B;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 300;
+    color: #B8860B;
+  }
+  .noir .profile-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    color: #E8DCC8;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  .noir .profile-sub {
+    font-size: 10px;
+    color: #3a3a3a;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .noir .settings-label {
+    font-size: 10px;
+    color: #3a3a3a;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .noir .settings-card {
+    border: 1px solid #1a1a1a;
+    border-radius: 0;
+  }
+  .noir .settings-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .noir .settings-row:last-child { border-bottom: none; }
+  .noir .settings-row-label { font-size: 13px; color: #777; }
+  .noir .settings-row-value { font-size: 13px; color: #4a4a4a; }
+  .noir .logout {
+    text-align: center;
+    margin-top: 48px;
+    font-size: 11px;
+    color: #5a3030;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Noir status colors */
+  .noir .stock-danger { color: #C53030; }
+  .noir .stock-warning { color: #B8860B; }
+  .noir .stock-success { color: #5a8a5a; }
+
+
+  /* ================================================================
+     PATTERN 2: NORDIC MINIMAL
+     Ultra-clean, airy, Scandinavian. Muted earth, generous whitespace.
+     ================================================================ */
+
+  .nordic .phone {
+    background: #FAFAF8;
+    border: 1px solid #e0e0dd;
+  }
+
+  .nordic .status-bar { color: #999; }
+
+  /* Nordic Login */
+  .nordic .login {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 48px 80px;
+    background: #FAFAF8;
+  }
+  .nordic .login-mark {
+    width: 48px;
+    height: 48px;
+    border: 1.5px solid #C4A882;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 40px;
+    font-size: 20px;
+    filter: grayscale(30%);
+  }
+  .nordic .login h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: #2a2a28;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .nordic .login .tagline {
+    font-family: 'Karla', sans-serif;
+    font-size: 13px;
+    color: #aaa8a3;
+    margin-bottom: 56px;
+    letter-spacing: 0.3px;
+  }
+  .nordic .login-btn {
+    width: 100%;
+    padding: 16px;
+    background: #2a2a28;
+    border: none;
+    border-radius: 999px;
+    color: #FAFAF8;
+    font-family: 'Karla', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+  .nordic .login-footer {
+    position: absolute;
+    bottom: 44px;
+    font-family: 'Karla', sans-serif;
+    font-size: 10px;
+    color: #ccc9c3;
+    letter-spacing: 1px;
+  }
+
+  /* Nordic Header */
+  .nordic .header {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #FAFAF8;
+    position: relative;
+  }
+  .nordic .header-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 17px;
+    color: #2a2a28;
+    font-weight: 400;
+  }
+  .nordic .header-back {
+    position: absolute;
+    left: 20px;
+    font-family: 'Karla', sans-serif;
+    font-size: 13px;
+    color: #999;
+  }
+  .nordic .header-action {
+    position: absolute;
+    right: 20px;
+    font-family: 'Karla', sans-serif;
+    font-size: 13px;
+    color: #C4A882;
+    font-weight: 500;
+  }
+
+  /* Nordic List */
+  .nordic .beans-list {
+    padding: 8px 20px 20px;
+    overflow-y: auto;
+    height: calc(100% - 50px - 42px - 65px);
+    background: #FAFAF8;
+  }
+  .nordic .bean-card {
+    padding: 20px 0;
+    border-bottom: 1px solid #EDECE8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .nordic .bean-card:last-child { border-bottom: none; }
+  .nordic .bean-info { flex: 1; }
+  .nordic .bean-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 18px;
+    color: #2a2a28;
+    margin-bottom: 4px;
+  }
+  .nordic .bean-meta {
+    font-family: 'Karla', sans-serif;
+    font-size: 12px;
+    color: #b0ada6;
+    letter-spacing: 0.3px;
+  }
+  .nordic .bean-meta span { margin-right: 10px; }
+  .nordic .bean-stock-pill {
+    font-family: 'Karla', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: #f3f2ef;
+  }
+
+  .nordic .fab {
+    position: absolute;
+    bottom: 82px;
+    right: 20px;
+    width: 52px;
+    height: 52px;
+    background: #2a2a28;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FAFAF8;
+    font-size: 24px;
+    font-weight: 300;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+    z-index: 5;
+  }
+
+  /* Nordic Tab */
+  .nordic .tab-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #FAFAF8;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0 24px;
+  }
+  .nordic .tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    position: relative;
+  }
+  .nordic .tab-icon { font-size: 18px; opacity: 0.3; }
+  .nordic .tab-icon.active { opacity: 0.8; }
+  .nordic .tab-label {
+    font-family: 'Karla', sans-serif;
+    font-size: 10px;
+    color: #ccc;
+    font-weight: 500;
+  }
+  .nordic .tab-label.active { color: #2a2a28; }
+  .nordic .tab-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #2a2a28;
+    position: absolute;
+    top: -6px;
+  }
+
+  /* Nordic Detail */
+  .nordic .detail {
+    padding: 40px 28px;
+    background: #FAFAF8;
+    height: calc(100% - 50px - 42px);
+    overflow-y: auto;
+  }
+  .nordic .detail-hero {
+    margin-bottom: 40px;
+  }
+  .nordic .detail-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px;
+    color: #2a2a28;
+    margin-bottom: 16px;
+    line-height: 1.2;
+  }
+  .nordic .detail-stock-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .nordic .detail-stock-num {
+    font-family: 'Karla', sans-serif;
+    font-size: 44px;
+    font-weight: 300;
+    color: #2a2a28;
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+  .nordic .detail-stock-unit {
+    font-family: 'Karla', sans-serif;
+    font-size: 14px;
+    color: #b0ada6;
+  }
+  .nordic .stock-bar {
+    width: 100%;
+    height: 2px;
+    background: #EDECE8;
+    margin-top: 16px;
+    border-radius: 1px;
+    overflow: hidden;
+  }
+  .nordic .stock-fill {
+    height: 100%;
+    border-radius: 1px;
+  }
+  .nordic .info-section {
+    margin-top: 32px;
+  }
+  .nordic .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 18px 0;
+    border-bottom: 1px solid #EDECE8;
+  }
+  .nordic .info-row:last-child { border-bottom: none; }
+  .nordic .info-label {
+    font-family: 'Karla', sans-serif;
+    font-size: 12px;
+    color: #b0ada6;
+    letter-spacing: 0.5px;
+  }
+  .nordic .info-value {
+    font-family: 'Karla', sans-serif;
+    font-size: 14px;
+    color: #2a2a28;
+  }
+  .nordic .delete-link {
+    text-align: center;
+    margin-top: 40px;
+    font-family: 'Karla', sans-serif;
+    font-size: 13px;
+    color: #c4a0a0;
+  }
+
+  /* Nordic Profile */
+  .nordic .profile {
+    padding: 40px 28px;
+    background: #FAFAF8;
+    height: calc(100% - 50px - 42px - 65px);
+  }
+  .nordic .profile-top {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .nordic .profile-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: #EDECE8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-family: 'Instrument Serif', serif;
+    font-size: 36px;
+    color: #2a2a28;
+    font-weight: 400;
+  }
+  .nordic .profile-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px;
+    color: #2a2a28;
+    margin-bottom: 4px;
+  }
+  .nordic .profile-sub {
+    font-family: 'Karla', sans-serif;
+    font-size: 12px;
+    color: #b0ada6;
+  }
+  .nordic .settings-label {
+    font-family: 'Karla', sans-serif;
+    font-size: 11px;
+    color: #b0ada6;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .nordic .settings-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .nordic .settings-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f4f3f0;
+  }
+  .nordic .settings-row:last-child { border-bottom: none; }
+  .nordic .settings-row-label {
+    font-family: 'Karla', sans-serif;
+    font-size: 14px;
+    color: #2a2a28;
+  }
+  .nordic .settings-row-value {
+    font-family: 'Karla', sans-serif;
+    font-size: 14px;
+    color: #b0ada6;
+  }
+  .nordic .logout {
+    text-align: center;
+    margin-top: 40px;
+    font-family: 'Karla', sans-serif;
+    font-size: 13px;
+    color: #c4a0a0;
+  }
+
+  .nordic .stock-danger { color: #bf6060; }
+  .nordic .stock-warning { color: #b89a5a; }
+  .nordic .stock-success { color: #6a9a6a; }
+  .nordic .pill-danger { background: #faf0f0; color: #bf6060; }
+  .nordic .pill-warning { background: #faf6ef; color: #b89a5a; }
+  .nordic .pill-success { background: #f0f5f0; color: #6a9a6a; }
+
+
+  /* ================================================================
+     PATTERN 3: WABI-SABI CRAFT
+     Japanese-inspired organic aesthetic. Earthy, asymmetric, handcraft.
+     ================================================================ */
+
+  .wabi .phone {
+    background: #F5F0E8;
+    border: 1px solid #d8d0c4;
+  }
+
+  .wabi .status-bar { color: #9a9080; }
+
+  /* Wabi Login */
+  .wabi .login {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 40px 60px;
+    background: #F5F0E8;
+    position: relative;
+  }
+  .wabi .login::before {
+    content: '';
+    position: absolute;
+    top: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(168,136,100,0.08) 0%, transparent 70%);
+  }
+  .wabi .login-circle {
+    width: 100px;
+    height: 100px;
+    border: 1.5px solid #C8B8A0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 36px;
+    font-size: 36px;
+    filter: grayscale(40%);
+  }
+  .wabi .login h1 {
+    font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: #4A3F35;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+  .wabi .login h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    font-weight: 300;
+    color: #4A3F35;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    font-style: italic;
+  }
+  .wabi .login .tagline {
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 12px;
+    color: #A89880;
+    margin-bottom: 48px;
+    letter-spacing: 1px;
+  }
+  .wabi .login-btn {
+    width: 80%;
+    padding: 16px;
+    background: #4A3F35;
+    border: none;
+    border-radius: 4px;
+    color: #F5F0E8;
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+  .wabi .login-footer {
+    position: absolute;
+    bottom: 40px;
+    font-family: 'Fraunces', serif;
+    font-size: 10px;
+    color: #C8B8A0;
+    letter-spacing: 2px;
+    font-style: italic;
+  }
+
+  /* Wabi Header */
+  .wabi .header {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F5F0E8;
+    position: relative;
+    border-bottom: 0.5px solid #D8D0C4;
+  }
+  .wabi .header-title {
+    font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    font-size: 15px;
+    color: #4A3F35;
+    font-weight: 400;
+    letter-spacing: 2px;
+  }
+  .wabi .header-back {
+    position: absolute;
+    left: 20px;
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 13px;
+    color: #A89880;
+  }
+  .wabi .header-action {
+    position: absolute;
+    right: 20px;
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 12px;
+    color: #8B7355;
+    letter-spacing: 1px;
+  }
+
+  /* Wabi List */
+  .wabi .beans-list {
+    padding: 12px 16px;
+    overflow-y: auto;
+    height: calc(100% - 50px - 44px - 65px);
+    background: #F5F0E8;
+  }
+  .wabi .bean-card {
+    background: #FAF6F0;
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 10px;
+    position: relative;
+    border: 0.5px solid #E8DFD2;
+    overflow: hidden;
+  }
+  .wabi .bean-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 8px 0 0 8px;
+  }
+  .wabi .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .wabi .bean-name {
+    font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: #3A3228;
+    letter-spacing: 0.5px;
+  }
+  .wabi .bean-stock-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid;
+    flex-shrink: 0;
+  }
+  .wabi .bean-stock-num {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1;
+  }
+  .wabi .bean-stock-g {
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    opacity: 0.7;
+  }
+  .wabi .bean-meta {
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 12px;
+    color: #A89880;
+    letter-spacing: 0.3px;
+  }
+  .wabi .bean-meta span { margin-right: 10px; }
+
+  .wabi .fab {
+    position: absolute;
+    bottom: 82px;
+    right: 20px;
+    width: 52px;
+    height: 52px;
+    background: #4A3F35;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #F5F0E8;
+    font-size: 24px;
+    font-weight: 300;
+    box-shadow: 0 4px 20px rgba(74,63,53,0.2);
+    z-index: 5;
+  }
+
+  /* Wabi Tab */
+  .wabi .tab-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #FAF6F0;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0 24px;
+    border-top: 0.5px solid #E8DFD2;
+  }
+  .wabi .tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    position: relative;
+  }
+  .wabi .tab-icon { font-size: 18px; opacity: 0.3; }
+  .wabi .tab-icon.active { opacity: 0.9; }
+  .wabi .tab-label {
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 10px;
+    color: #C8B8A0;
+    letter-spacing: 0.5px;
+  }
+  .wabi .tab-label.active { color: #4A3F35; }
+  .wabi .tab-line {
+    width: 16px;
+    height: 1.5px;
+    border-radius: 1px;
+    background: #4A3F35;
+    position: absolute;
+    top: -6px;
+  }
+
+  /* Wabi Detail */
+  .wabi .detail {
+    padding: 28px 24px;
+    background: #F5F0E8;
+    height: calc(100% - 50px - 44px);
+    overflow-y: auto;
+  }
+  .wabi .detail-hero {
+    text-align: center;
+    margin-bottom: 36px;
+    padding-bottom: 28px;
+    position: relative;
+  }
+  .wabi .detail-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 30%;
+    right: 30%;
+    height: 0.5px;
+    background: #D8D0C4;
+  }
+  .wabi .detail-name {
+    font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    font-size: 22px;
+    color: #3A3228;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+  .wabi .detail-stock-circle {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 1.5px solid #D8D0C4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+  }
+  .wabi .detail-stock-num {
+    font-family: 'Fraunces', serif;
+    font-size: 40px;
+    font-weight: 300;
+    color: #3A3228;
+    line-height: 1;
+  }
+  .wabi .detail-stock-unit {
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 11px;
+    color: #A89880;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .wabi .info-card {
+    background: #FAF6F0;
+    border-radius: 8px;
+    padding: 4px 20px;
+    border: 0.5px solid #E8DFD2;
+    margin-bottom: 20px;
+  }
+  .wabi .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 0.5px solid #EDE6DC;
+  }
+  .wabi .info-row:last-child { border-bottom: none; }
+  .wabi .info-label {
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 12px;
+    color: #A89880;
+    letter-spacing: 0.5px;
+  }
+  .wabi .info-value {
+    font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    font-size: 14px;
+    color: #4A3F35;
+    font-weight: 400;
+  }
+  .wabi .delete-link {
+    text-align: center;
+    margin-top: 24px;
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 12px;
+    color: #b08080;
+    letter-spacing: 1px;
+  }
+
+  /* Wabi Profile */
+  .wabi .profile {
+    padding: 28px 20px;
+    background: #F5F0E8;
+    height: calc(100% - 50px - 44px - 65px);
+  }
+  .wabi .profile-top {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .wabi .profile-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    border: 1.5px solid #D8D0C4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    font-size: 32px;
+    color: #4A3F35;
+  }
+  .wabi .profile-name {
+    font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    font-size: 20px;
+    color: #3A3228;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .wabi .profile-sub {
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 12px;
+    color: #A89880;
+    letter-spacing: 0.3px;
+  }
+  .wabi .settings-label {
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 12px;
+    color: #A89880;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    padding-left: 4px;
+  }
+  .wabi .settings-card {
+    background: #FAF6F0;
+    border-radius: 8px;
+    border: 0.5px solid #E8DFD2;
+    overflow: hidden;
+  }
+  .wabi .settings-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 20px;
+    border-bottom: 0.5px solid #EDE6DC;
+  }
+  .wabi .settings-row:last-child { border-bottom: none; }
+  .wabi .settings-row-label {
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 14px;
+    color: #4A3F35;
+  }
+  .wabi .settings-row-value {
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 14px;
+    color: #A89880;
+  }
+  .wabi .logout {
+    text-align: center;
+    margin-top: 36px;
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 13px;
+    color: #b08080;
+    letter-spacing: 0.5px;
+  }
+
+  .wabi .stock-danger { color: #b06050; }
+  .wabi .stock-warning { color: #a08540; }
+  .wabi .stock-success { color: #6a8a5a; }
+  .wabi .circle-danger { border-color: #b06050 !important; }
+  .wabi .circle-warning { border-color: #a08540 !important; }
+  .wabi .circle-success { border-color: #6a8a5a !important; }
+  .wabi .bar-danger { background: #b06050; }
+  .wabi .bar-warning { background: #a08540; }
+  .wabi .bar-success { background: #6a8a5a; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Coffee Beans Stock</h1>
+  <p>3 Design Patterns</p>
+</div>
+
+<!-- ============================
+     PATTERN 1: NOIR ROASTERY
+     ============================ -->
+<section class="pattern-section">
+  <div class="pattern-header">
+    <div class="pattern-number">Pattern 01</div>
+    <div class="pattern-name">Noir Roastery</div>
+    <div class="pattern-desc">
+      深い闇とアンバーの光。高級コーヒーバーのカウンター越しに見える、<br>
+      ムーディーで重厚感のあるダークテーマ。角張ったジオメトリ、セリフ体の繊細さ。
+    </div>
+  </div>
+
+  <div class="palette-row">
+    <div class="palette-chip"><div class="palette-dot" style="background:#0D0D0D; border: 1px solid #333;"></div><span class="palette-hex">#0D0D0D</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#141414; border: 1px solid #333;"></div><span class="palette-hex">#141414</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#B8860B;"></div><span class="palette-hex">#B8860B</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#E8DCC8;"></div><span class="palette-hex">#E8DCC8</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#4a4a4a;"></div><span class="palette-hex">#4A4A4A</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#C53030;"></div><span class="palette-hex">#C53030</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#5a8a5a;"></div><span class="palette-hex">#5A8A5A</span></div>
+  </div>
+
+  <div class="screens-row noir">
+    <!-- Login -->
+    <div class="screen-wrapper">
+      <span class="screen-label">Login</span>
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+          <div class="login">
+            <div class="login-icon">☕</div>
+            <h1>Coffee Beans<br>Stock</h1>
+            <div class="tagline">Specialty Coffee Management</div>
+            <div class="login-btn">はじめる</div>
+            <div class="login-footer">est. 2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div class="screen-wrapper">
+      <span class="screen-label">Beans List</span>
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+          <div class="header">
+            <span class="header-title">コーヒー豆</span>
+          </div>
+          <div class="beans-list">
+            <div class="bean-card">
+              <div class="accent-line" style="background:#5a8a5a;"></div>
+              <div class="card-top">
+                <span class="bean-name">エチオピア イルガチェフェ</span>
+                <span class="bean-stock stock-success">250g</span>
+              </div>
+              <div class="bean-meta"><span>エチオピア</span><span>浅煎り</span></div>
+            </div>
+            <div class="bean-card">
+              <div class="accent-line" style="background:#B8860B;"></div>
+              <div class="card-top">
+                <span class="bean-name">グアテマラ アンティグア</span>
+                <span class="bean-stock stock-warning">80g</span>
+              </div>
+              <div class="bean-meta"><span>グアテマラ</span><span>中煎り</span></div>
+            </div>
+            <div class="bean-card">
+              <div class="accent-line" style="background:#C53030;"></div>
+              <div class="card-top">
+                <span class="bean-name">ブラジル サントス</span>
+                <span class="bean-stock stock-danger">30g</span>
+              </div>
+              <div class="bean-meta"><span>ブラジル</span><span>深煎り</span></div>
+            </div>
+            <div class="bean-card">
+              <div class="accent-line" style="background:#5a8a5a;"></div>
+              <div class="card-top">
+                <span class="bean-name">コロンビア スプレモ</span>
+                <span class="bean-stock stock-success">180g</span>
+              </div>
+              <div class="bean-meta"><span>コロンビア</span><span>中煎り</span></div>
+            </div>
+            <div class="bean-card">
+              <div class="accent-line" style="background:#5a8a5a;"></div>
+              <div class="card-top">
+                <span class="bean-name">ケニア AA</span>
+                <span class="bean-stock stock-success">320g</span>
+              </div>
+              <div class="bean-meta"><span>ケニア</span><span>浅煎り</span></div>
+            </div>
+          </div>
+          <div class="fab">+</div>
+          <div class="tab-bar">
+            <div class="tab-item"><span class="tab-icon active">☕</span><span class="tab-label active">BEANS</span></div>
+            <div class="tab-item"><span class="tab-icon">👤</span><span class="tab-label">PROFILE</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail -->
+    <div class="screen-wrapper">
+      <span class="screen-label">Detail</span>
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+          <div class="header">
+            <span class="header-back">‹</span>
+            <span class="header-title">詳細</span>
+            <span class="header-action">EDIT</span>
+          </div>
+          <div class="detail">
+            <div class="detail-hero">
+              <div class="detail-name">エチオピア<br>イルガチェフェ</div>
+              <span class="detail-stock-num">250</span>
+              <span class="detail-stock-unit">gram</span>
+              <div class="stock-line"><div class="stock-fill" style="width:50%; background:#5a8a5a;"></div></div>
+            </div>
+            <div class="info-block">
+              <div class="info-row"><span class="info-label">ORIGIN</span><span class="info-value">エチオピア</span></div>
+              <div class="info-row"><span class="info-label">ROAST</span><span class="info-value">浅煎り</span></div>
+              <div class="info-row"><span class="info-label">NOTES</span><span class="info-value">フルーティーで華やかな香り</span></div>
+              <div class="info-row"><span class="info-label">ADDED</span><span class="info-value">2026.03.20</span></div>
+            </div>
+            <div class="delete-link">DELETE THIS BEAN</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile -->
+    <div class="screen-wrapper">
+      <span class="screen-label">Profile</span>
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+          <div class="header">
+            <span class="header-title">プロフィール</span>
+          </div>
+          <div class="profile">
+            <div class="profile-top">
+              <div class="profile-avatar">K</div>
+              <div class="profile-name">Kanata</div>
+              <div class="profile-sub">GUEST ACCOUNT</div>
+            </div>
+            <div class="settings-label">SETTINGS</div>
+            <div class="settings-card">
+              <div class="settings-row"><span class="settings-row-label">在庫アラート</span><span class="settings-row-value">50g以下</span></div>
+              <div class="settings-row"><span class="settings-row-label">通知</span><span class="settings-row-value">ON</span></div>
+            </div>
+            <div class="logout">SIGN OUT</div>
+          </div>
+          <div class="tab-bar">
+            <div class="tab-item"><span class="tab-icon">☕</span><span class="tab-label">BEANS</span></div>
+            <div class="tab-item"><span class="tab-icon active">👤</span><span class="tab-label active">PROFILE</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================
+     PATTERN 2: NORDIC MINIMAL
+     ============================ -->
+<section class="pattern-section">
+  <div class="pattern-header">
+    <div class="pattern-number">Pattern 02</div>
+    <div class="pattern-name">Nordic Minimal</div>
+    <div class="pattern-desc">
+      北欧の静寂と余白の美学。カードを排してフラットなリスト構成に。<br>
+      Instrument Serifの優雅さとKarlaの機能美が調和する、空気感のあるデザイン。
+    </div>
+  </div>
+
+  <div class="palette-row">
+    <div class="palette-chip"><div class="palette-dot" style="background:#FAFAF8; border: 1px solid #ccc;"></div><span class="palette-hex">#FAFAF8</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#2a2a28;"></div><span class="palette-hex">#2A2A28</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#C4A882;"></div><span class="palette-hex">#C4A882</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#EDECE8; border: 1px solid #ccc;"></div><span class="palette-hex">#EDECE8</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#b0ada6;"></div><span class="palette-hex">#B0ADA6</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#bf6060;"></div><span class="palette-hex">#BF6060</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#6a9a6a;"></div><span class="palette-hex">#6A9A6A</span></div>
+  </div>
+
+  <div class="screens-row nordic">
+    <!-- Login -->
+    <div class="screen-wrapper">
+      <span class="screen-label">Login</span>
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+          <div class="login">
+            <div class="login-mark">☕</div>
+            <h1>Coffee Beans Stock</h1>
+            <div class="tagline">コーヒー豆の在庫を簡単管理</div>
+            <div class="login-btn">はじめる</div>
+            <div class="login-footer">Specialty Coffee Management</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div class="screen-wrapper">
+      <span class="screen-label">Beans List</span>
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+          <div class="header">
+            <span class="header-title">コーヒー豆</span>
+          </div>
+          <div class="beans-list">
+            <div class="bean-card">
+              <div class="bean-info">
+                <div class="bean-name">エチオピア イルガチェフェ</div>
+                <div class="bean-meta"><span>エチオピア</span><span>浅煎り</span></div>
+              </div>
+              <div class="bean-stock-pill pill-success">250g</div>
+            </div>
+            <div class="bean-card">
+              <div class="bean-info">
+                <div class="bean-name">グアテマラ アンティグア</div>
+                <div class="bean-meta"><span>グアテマラ</span><span>中煎り</span></div>
+              </div>
+              <div class="bean-stock-pill pill-warning">80g</div>
+            </div>
+            <div class="bean-card">
+              <div class="bean-info">
+                <div class="bean-name">ブラジル サントス</div>
+                <div class="bean-meta"><span>ブラジル</span><span>深煎り</span></div>
+              </div>
+              <div class="bean-stock-pill pill-danger">30g</div>
+            </div>
+            <div class="bean-card">
+              <div class="bean-info">
+                <div class="bean-name">コロンビア スプレモ</div>
+                <div class="bean-meta"><span>コロンビア</span><span>中煎り</span></div>
+              </div>
+              <div class="bean-stock-pill pill-success">180g</div>
+            </div>
+            <div class="bean-card">
+              <div class="bean-info">
+                <div class="bean-name">ケニア AA</div>
+                <div class="bean-meta"><span>ケニア</span><span>浅煎り</span></div>
+              </div>
+              <div class="bean-stock-pill pill-success">320g</div>
+            </div>
+          </div>
+          <div class="fab">+</div>
+          <div class="tab-bar">
+            <div class="tab-item"><div class="tab-dot"></div><span class="tab-icon active">☕</span><span class="tab-label active">コーヒー豆</span></div>
+            <div class="tab-item"><span class="tab-icon">👤</span><span class="tab-label">プロフィール</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail -->
+    <div class="screen-wrapper">
+      <span class="screen-label">Detail</span>
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+          <div class="header">
+            <span class="header-back">‹ 戻る</span>
+            <span class="header-title">詳細</span>
+            <span class="header-action">編集</span>
+          </div>
+          <div class="detail">
+            <div class="detail-hero">
+              <div class="detail-name">エチオピア<br>イルガチェフェ</div>
+              <div class="detail-stock-row">
+                <span class="detail-stock-num">250</span>
+                <span class="detail-stock-unit">g</span>
+              </div>
+              <div class="stock-bar"><div class="stock-fill" style="width:50%; background:#6a9a6a;"></div></div>
+            </div>
+            <div class="info-section">
+              <div class="info-row"><span class="info-label">産地</span><span class="info-value">エチオピア</span></div>
+              <div class="info-row"><span class="info-label">焙煎度</span><span class="info-value">浅煎り</span></div>
+              <div class="info-row"><span class="info-label">メモ</span><span class="info-value">フルーティーで華やかな香り</span></div>
+              <div class="info-row"><span class="info-label">登録日</span><span class="info-value">2026-03-20</span></div>
+            </div>
+            <div class="delete-link">この豆を削除する</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile -->
+    <div class="screen-wrapper">
+      <span class="screen-label">Profile</span>
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+          <div class="header">
+            <span class="header-title">プロフィール</span>
+          </div>
+          <div class="profile">
+            <div class="profile-top">
+              <div class="profile-avatar">K</div>
+              <div class="profile-name">Kanata</div>
+              <div class="profile-sub">ゲストアカウント</div>
+            </div>
+            <div class="settings-label">SETTINGS</div>
+            <div class="settings-card">
+              <div class="settings-row"><span class="settings-row-label">在庫アラート</span><span class="settings-row-value">50g以下</span></div>
+              <div class="settings-row"><span class="settings-row-label">通知</span><span class="settings-row-value">ON</span></div>
+            </div>
+            <div class="logout">ログアウト</div>
+          </div>
+          <div class="tab-bar">
+            <div class="tab-item"><span class="tab-icon">☕</span><span class="tab-label">コーヒー豆</span></div>
+            <div class="tab-item"><div class="tab-dot"></div><span class="tab-icon active">👤</span><span class="tab-label active">プロフィール</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================
+     PATTERN 3: WABI-SABI CRAFT
+     ============================ -->
+<section class="pattern-section">
+  <div class="pattern-header">
+    <div class="pattern-number">Pattern 03</div>
+    <div class="pattern-name">Wabi-Sabi Craft</div>
+    <div class="pattern-desc">
+      日本の侘び寂びと手仕事の温もり。和の余白にフランス菓子のような丸み。<br>
+      ヒラギノ明朝の品格とFrauncesのオーガニックな曲線が織りなす、陶器のような柔らかさ。<br>
+      システムフォント活用で読込コストゼロ、シンプルな円形UIで実装負荷を軽減。
+    </div>
+  </div>
+
+  <div class="palette-row">
+    <div class="palette-chip"><div class="palette-dot" style="background:#F5F0E8; border: 1px solid #ccc;"></div><span class="palette-hex">#F5F0E8</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#4A3F35;"></div><span class="palette-hex">#4A3F35</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#C8B8A0;"></div><span class="palette-hex">#C8B8A0</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#FAF6F0; border: 1px solid #ccc;"></div><span class="palette-hex">#FAF6F0</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#A89880;"></div><span class="palette-hex">#A89880</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#b06050;"></div><span class="palette-hex">#B06050</span></div>
+    <div class="palette-chip"><div class="palette-dot" style="background:#6a8a5a;"></div><span class="palette-hex">#6A8A5A</span></div>
+  </div>
+
+  <div class="screens-row wabi">
+    <!-- Login -->
+    <div class="screen-wrapper">
+      <span class="screen-label">Login</span>
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+          <div class="login">
+            <div class="login-circle">☕</div>
+            <h2>Coffee Beans Stock</h2>
+            <h1>珈琲豆の記録</h1>
+            <div class="tagline">コーヒー豆の在庫を簡単管理</div>
+            <div class="login-btn">はじめる</div>
+            <div class="login-footer">— craft your cup —</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div class="screen-wrapper">
+      <span class="screen-label">Beans List</span>
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+          <div class="header">
+            <span class="header-title">珈琲豆</span>
+          </div>
+          <div class="beans-list">
+            <div class="bean-card">
+              <div style="position:absolute;top:0;left:0;bottom:0;width:4px;border-radius:8px 0 0 8px;background:#6a8a5a;"></div>
+              <div class="card-top">
+                <span class="bean-name">エチオピア イルガチェフェ</span>
+                <div class="bean-stock-circle circle-success">
+                  <span class="bean-stock-num stock-success">250</span>
+                  <span class="bean-stock-g stock-success">gram</span>
+                </div>
+              </div>
+              <div class="bean-meta"><span>エチオピア</span><span>浅煎り</span></div>
+            </div>
+            <div class="bean-card">
+              <div style="position:absolute;top:0;left:0;bottom:0;width:4px;border-radius:8px 0 0 8px;background:#a08540;"></div>
+              <div class="card-top">
+                <span class="bean-name">グアテマラ アンティグア</span>
+                <div class="bean-stock-circle circle-warning">
+                  <span class="bean-stock-num stock-warning">80</span>
+                  <span class="bean-stock-g stock-warning">gram</span>
+                </div>
+              </div>
+              <div class="bean-meta"><span>グアテマラ</span><span>中煎り</span></div>
+            </div>
+            <div class="bean-card">
+              <div style="position:absolute;top:0;left:0;bottom:0;width:4px;border-radius:8px 0 0 8px;background:#b06050;"></div>
+              <div class="card-top">
+                <span class="bean-name">ブラジル サントス</span>
+                <div class="bean-stock-circle circle-danger">
+                  <span class="bean-stock-num stock-danger">30</span>
+                  <span class="bean-stock-g stock-danger">gram</span>
+                </div>
+              </div>
+              <div class="bean-meta"><span>ブラジル</span><span>深煎り</span></div>
+            </div>
+            <div class="bean-card">
+              <div style="position:absolute;top:0;left:0;bottom:0;width:4px;border-radius:8px 0 0 8px;background:#6a8a5a;"></div>
+              <div class="card-top">
+                <span class="bean-name">コロンビア スプレモ</span>
+                <div class="bean-stock-circle circle-success">
+                  <span class="bean-stock-num stock-success">180</span>
+                  <span class="bean-stock-g stock-success">gram</span>
+                </div>
+              </div>
+              <div class="bean-meta"><span>コロンビア</span><span>中煎り</span></div>
+            </div>
+            <div class="bean-card">
+              <div style="position:absolute;top:0;left:0;bottom:0;width:4px;border-radius:8px 0 0 8px;background:#6a8a5a;"></div>
+              <div class="card-top">
+                <span class="bean-name">ケニア AA</span>
+                <div class="bean-stock-circle circle-success">
+                  <span class="bean-stock-num stock-success">320</span>
+                  <span class="bean-stock-g stock-success">gram</span>
+                </div>
+              </div>
+              <div class="bean-meta"><span>ケニア</span><span>浅煎り</span></div>
+            </div>
+          </div>
+          <div class="fab">+</div>
+          <div class="tab-bar">
+            <div class="tab-item"><div class="tab-line"></div><span class="tab-icon active">☕</span><span class="tab-label active">珈琲豆</span></div>
+            <div class="tab-item"><span class="tab-icon">👤</span><span class="tab-label">マイページ</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail -->
+    <div class="screen-wrapper">
+      <span class="screen-label">Detail</span>
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+          <div class="header">
+            <span class="header-back">‹ 戻る</span>
+            <span class="header-title">詳細</span>
+            <span class="header-action">編集</span>
+          </div>
+          <div class="detail">
+            <div class="detail-hero">
+              <div class="detail-name">エチオピア イルガチェフェ</div>
+              <div class="detail-stock-circle circle-success">
+                <span class="detail-stock-num stock-success">250</span>
+                <span class="detail-stock-unit">gram</span>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="info-row"><span class="info-label">産地</span><span class="info-value">エチオピア</span></div>
+              <div class="info-row"><span class="info-label">焙煎度</span><span class="info-value">浅煎り</span></div>
+              <div class="info-row"><span class="info-label">メモ</span><span class="info-value">フルーティーで華やかな香り</span></div>
+              <div class="info-row"><span class="info-label">登録日</span><span class="info-value">2026-03-20</span></div>
+            </div>
+            <div class="delete-link">この豆を削除する</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile -->
+    <div class="screen-wrapper">
+      <span class="screen-label">Profile</span>
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+          <div class="header">
+            <span class="header-title">マイページ</span>
+          </div>
+          <div class="profile">
+            <div class="profile-top">
+              <div class="profile-avatar">K</div>
+              <div class="profile-name">Kanata</div>
+              <div class="profile-sub">ゲストアカウント</div>
+            </div>
+            <div class="settings-label">設定</div>
+            <div class="settings-card">
+              <div class="settings-row"><span class="settings-row-label">在庫アラート</span><span class="settings-row-value">50g以下</span></div>
+              <div class="settings-row"><span class="settings-row-label">通知</span><span class="settings-row-value">ON</span></div>
+            </div>
+            <div class="logout">ログアウト</div>
+          </div>
+          <div class="tab-bar">
+            <div class="tab-item"><span class="tab-icon">☕</span><span class="tab-label">珈琲豆</span></div>
+            <div class="tab-item"><div class="tab-line"></div><span class="tab-icon active">👤</span><span class="tab-label active">マイページ</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
