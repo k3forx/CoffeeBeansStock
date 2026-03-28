@@ -48,7 +48,7 @@ func (h *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if errs := h.authService.ValidateSignupInput(input); len(errs) > 0 {
-		api.WriteValidationError(w, toAPIFieldErrors(errs))
+		api.WriteValidationError(w, errs)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if errs := h.authService.ValidateLoginInput(input); len(errs) > 0 {
-		api.WriteValidationError(w, toAPIFieldErrors(errs))
+		api.WriteValidationError(w, errs)
 		return
 	}
 
@@ -138,10 +138,3 @@ func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	api.WriteSuccess(w, http.StatusOK, user)
 }
 
-func toAPIFieldErrors(errs []services.FieldError) []api.FieldError {
-	result := make([]api.FieldError, len(errs))
-	for i, e := range errs {
-		result[i] = api.FieldError{Field: e.Field, Message: e.Message}
-	}
-	return result
-}

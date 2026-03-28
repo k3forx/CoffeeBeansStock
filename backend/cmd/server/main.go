@@ -10,14 +10,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/handlers"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/middleware"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/auth"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/config"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/repository"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/router"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/services"
 )
 
@@ -47,49 +46,29 @@ func main() {
 
 	queries := database.New(pool)
 	jwtManager := auth.NewJWTManager(cfg.JWTSecret)
-	authService := services.NewAuthService(queries, jwtManager)
+
+	userRepo := repository.NewUserRepository(queries)
+	coffeeBeanRepo := repository.NewCoffeeBeanRepository(queries)
+
+	authService := services.NewAuthService(userRepo, jwtManager)
 	authHandler := handlers.NewAuthHandler(authService)
-	coffeeBeansService := services.NewCoffeeBeansService(queries)
+	coffeeBeansService := services.NewCoffeeBeansService(coffeeBeanRepo)
 	coffeeBeansHandler := handlers.NewCoffeeBeansHandler(coffeeBeansService)
 
-	r := chi.NewRouter()
-	r.Use(chimiddleware.RequestID)
-	r.Use(chimiddleware.RealIP)
-	r.Use(chimiddleware.Recoverer)
-
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		if err := pool.Ping(r.Context()); err != nil {
-			w.WriteHeader(http.StatusServiceUnavailable)
-			fmt.Fprintf(w, `{"status":"error","database":"disconnected"}`)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{"status":"ok","database":"connected"}`)
-	})
-
-	r.Route("/api/v1", func(r chi.Router) {
-		r.Route("/auth", func(r chi.Router) {
-			r.Post("/signup", authHandler.Signup)
-			r.Post("/login", authHandler.Login)
-			r.Post("/refresh", authHandler.Refresh)
-
-			r.Group(func(r chi.Router) {
-				r.Use(middleware.Auth(jwtManager))
-				r.Get("/me", authHandler.GetMe)
-			})
-		})
-
-		r.Group(func(r chi.Router) {
-			r.Use(middleware.Auth(jwtManager))
-			r.Route("/coffee-beans", func(r chi.Router) {
-				r.Get("/", coffeeBeansHandler.List)
-				r.Post("/", coffeeBeansHandler.Create)
-				r.Get("/{id}", coffeeBeansHandler.Get)
-				r.Put("/{id}", coffeeBeansHandler.Update)
-				r.Delete("/{id}", coffeeBeansHandler.Delete)
-			})
-		})
+	r := router.New(router.Deps{
+		AuthHandler:        authHandler,
+		CoffeeBeansHandler: coffeeBeansHandler,
+		JWTManager:         jwtManager,
+		HealthCheck: func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			if err := pool.Ping(r.Context()); err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				fmt.Fprintf(w, `{"status":"error","database":"disconnected"}`)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintf(w, `{"status":"ok","database":"connected"}`)
+		},
 	})
 
 	srv := &http.Server{

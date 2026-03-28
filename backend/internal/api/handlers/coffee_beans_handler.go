@@ -78,7 +78,7 @@ func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if errs := h.service.ValidateCreateInput(input); len(errs) > 0 {
-		api.WriteValidationError(w, toAPIFieldErrors(errs))
+		api.WriteValidationError(w, errs)
 		return
 	}
 
