@@ -3,8 +3,8 @@
 -- ============================================================================
 
 -- name: CreateAnonymousUser :one
-INSERT INTO users (low_stock_threshold, notification_enabled)
-VALUES ($1, $2)
+INSERT INTO users (id, low_stock_threshold, notification_enabled)
+VALUES ($1, $2, $3)
 RETURNING *;
 
 -- name: GetUserByID :one
@@ -32,8 +32,8 @@ WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: CreateCoffeeBean :one
 INSERT INTO coffee_beans (
-    user_id, name, origin, roast_level, current_stock, notes
-) VALUES ($1, $2, $3, $4, $5, $6)
+    id, user_id, name, origin, roast_level, current_stock, notes
+) VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 
 -- name: GetCoffeeBeanByID :one

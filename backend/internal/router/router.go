@@ -5,16 +5,17 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/handlers"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/middleware"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/auth"
+	domainauth "github.com/k3forx/CoffeeBeansStock/backend/internal/domain/auth"
 )
 
 // Deps holds the dependencies required to set up routes.
 type Deps struct {
 	AuthHandler        *handlers.AuthHandler
 	CoffeeBeansHandler *handlers.CoffeeBeansHandler
-	JWTManager         *auth.JWTManager
+	TokenManager       domainauth.TokenManager
 	HealthCheck        http.HandlerFunc
 }
 
@@ -33,13 +34,13 @@ func New(deps Deps) chi.Router {
 			r.Post("/refresh", deps.AuthHandler.Refresh)
 
 			r.Group(func(r chi.Router) {
-				r.Use(middleware.Auth(deps.JWTManager))
+				r.Use(middleware.Auth(deps.TokenManager))
 				r.Get("/me", deps.AuthHandler.GetMe)
 			})
 		})
 
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.Auth(deps.JWTManager))
+			r.Use(middleware.Auth(deps.TokenManager))
 			r.Route("/coffee-beans", func(r chi.Router) {
 				r.Get("/", deps.CoffeeBeansHandler.List)
 				r.Post("/", deps.CoffeeBeansHandler.Create)

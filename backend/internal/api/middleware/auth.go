@@ -6,8 +6,9 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/auth"
+	domainauth "github.com/k3forx/CoffeeBeansStock/backend/internal/domain/auth"
 )
 
 type contextKey string
@@ -15,7 +16,7 @@ type contextKey string
 const userIDKey contextKey = "userID"
 
 // Auth returns middleware that validates JWT tokens from the Authorization header.
-func Auth(jwtManager *auth.JWTManager) func(http.Handler) http.Handler {
+func Auth(tokens domainauth.TokenManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			header := r.Header.Get("Authorization")
@@ -30,7 +31,7 @@ func Auth(jwtManager *auth.JWTManager) func(http.Handler) http.Handler {
 				return
 			}
 
-			claims, err := jwtManager.ValidateToken(parts[1])
+			claims, err := tokens.ValidateToken(parts[1])
 			if err != nil {
 				api.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "認証トークンが無効です")
 				return

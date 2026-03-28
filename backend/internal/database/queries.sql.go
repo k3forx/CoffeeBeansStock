@@ -61,21 +61,22 @@ func (q *Queries) CountUsageHistoriesByUserID(ctx context.Context, userID pgtype
 
 const createAnonymousUser = `-- name: CreateAnonymousUser :one
 
-INSERT INTO users (low_stock_threshold, notification_enabled)
-VALUES ($1, $2)
+INSERT INTO users (id, low_stock_threshold, notification_enabled)
+VALUES ($1, $2, $3)
 RETURNING id, email, password_hash, name, low_stock_threshold, notification_enabled, created_at, updated_at, deleted_at
 `
 
 type CreateAnonymousUserParams struct {
-	LowStockThreshold   int32 `json:"low_stock_threshold"`
-	NotificationEnabled bool  `json:"notification_enabled"`
+	ID                  pgtype.UUID `json:"id"`
+	LowStockThreshold   int32       `json:"low_stock_threshold"`
+	NotificationEnabled bool        `json:"notification_enabled"`
 }
 
 // ============================================================================
 // Users Queries
 // ============================================================================
 func (q *Queries) CreateAnonymousUser(ctx context.Context, arg CreateAnonymousUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, createAnonymousUser, arg.LowStockThreshold, arg.NotificationEnabled)
+	row := q.db.QueryRow(ctx, createAnonymousUser, arg.ID, arg.LowStockThreshold, arg.NotificationEnabled)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -94,16 +95,17 @@ func (q *Queries) CreateAnonymousUser(ctx context.Context, arg CreateAnonymousUs
 const createCoffeeBean = `-- name: CreateCoffeeBean :one
 
 INSERT INTO coffee_beans (
-    user_id, name, origin, roast_level, current_stock, notes
-) VALUES ($1, $2, $3, $4, $5, $6)
+    id, user_id, name, origin, roast_level, current_stock, notes
+) VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id, user_id, name, origin, roast_level, current_stock, notes, created_at, updated_at, deleted_at
 `
 
 type CreateCoffeeBeanParams struct {
+	ID           pgtype.UUID `json:"id"`
 	UserID       pgtype.UUID `json:"user_id"`
 	Name         string      `json:"name"`
 	Origin       pgtype.Text `json:"origin"`
-	RoastLevel   pgtype.Text `json:"roast_level"`
+	RoastLevel   string      `json:"roast_level"`
 	CurrentStock int32       `json:"current_stock"`
 	Notes        pgtype.Text `json:"notes"`
 }
@@ -113,6 +115,7 @@ type CreateCoffeeBeanParams struct {
 // ============================================================================
 func (q *Queries) CreateCoffeeBean(ctx context.Context, arg CreateCoffeeBeanParams) (CoffeeBean, error) {
 	row := q.db.QueryRow(ctx, createCoffeeBean,
+		arg.ID,
 		arg.UserID,
 		arg.Name,
 		arg.Origin,
@@ -531,7 +534,7 @@ type ListCoffeeBeansWithLatestPurchaseRow struct {
 	UserID              pgtype.UUID        `json:"user_id"`
 	Name                string             `json:"name"`
 	Origin              pgtype.Text        `json:"origin"`
-	RoastLevel          pgtype.Text        `json:"roast_level"`
+	RoastLevel          string             `json:"roast_level"`
 	CurrentStock        int32              `json:"current_stock"`
 	Notes               pgtype.Text        `json:"notes"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`

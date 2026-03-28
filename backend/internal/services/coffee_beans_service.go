@@ -2,47 +2,29 @@ package services
 
 import (
 	"context"
-	"errors"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/api"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/repository"
+
+	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/coffeebean"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/unitofwork"
 )
-
-// ErrBeanNotFound is returned when a coffee bean is not found.
-var ErrBeanNotFound = errors.New("coffee bean not found")
-
-// ErrForbidden is returned when a user lacks permission to access a resource.
-var ErrForbidden = errors.New("forbidden")
 
 // CoffeeBeansService handles coffee bean business logic.
 type CoffeeBeansService struct {
-	beanRepo repository.CoffeeBeanRepository
+	beanRepo coffeebean.Repository
+	uow      unitofwork.UnitOfWork
 }
 
 // NewCoffeeBeansService creates a new CoffeeBeansService.
-func NewCoffeeBeansService(beanRepo repository.CoffeeBeanRepository) *CoffeeBeansService {
-	return &CoffeeBeansService{beanRepo: beanRepo}
-}
-
-// CoffeeBeanResponse is the API representation of a coffee bean.
-type CoffeeBeanResponse struct {
-	Origin       *string   `json:"origin,omitempty"`
-	RoastLevel   *string   `json:"roast_level,omitempty"`
-	Notes        *string   `json:"notes,omitempty"`
-	Name         string    `json:"name"`
-	CreatedAt    string    `json:"created_at"`
-	UpdatedAt    string    `json:"updated_at"`
-	ID           uuid.UUID `json:"id"`
-	CurrentStock int32     `json:"current_stock"`
+func NewCoffeeBeansService(beanRepo coffeebean.Repository, uow unitofwork.UnitOfWork) *CoffeeBeansService {
+	return &CoffeeBeansService{beanRepo: beanRepo, uow: uow}
 }
 
 // ListBeansResult holds a paginated list of coffee beans.
 type ListBeansResult struct {
-	Beans      []CoffeeBeanResponse `json:"beans"`
-	Pagination PaginationResponse   `json:"pagination"`
+	Beans      []*coffeebean.CoffeeBean
+	Pagination PaginationResponse
 }
 
 // PaginationResponse holds pagination metadata.
@@ -53,41 +35,22 @@ type PaginationResponse struct {
 	HasMore bool  `json:"has_more"`
 }
 
-// CreateBeanInput holds validated input for creating a coffee bean.
+// CreateBeanInput holds input for creating a coffee bean.
 type CreateBeanInput struct {
-	Origin       *string
-	RoastLevel   *string
-	Notes        *string
 	Name         string
+	Origin       *string
+	RoastLevel   string
+	Notes        *string
 	CurrentStock int32
 }
 
-// UpdateBeanInput holds validated input for updating a coffee bean.
+// UpdateBeanInput holds input for updating a coffee bean.
 type UpdateBeanInput struct {
 	Name         *string
 	Origin       *string
 	RoastLevel   *string
-	CurrentStock *int32
 	Notes        *string
-}
-
-// ValidateCreateInput validates the input for creating a coffee bean.
-func (s *CoffeeBeansService) ValidateCreateInput(input *CreateBeanInput) []api.FieldError {
-	var errs []api.FieldError
-
-	if input.Name == "" {
-		errs = append(errs, api.FieldError{Field: "name", Message: "名前は必須です"})
-	} else if len(input.Name) > 200 {
-		errs = append(errs, api.FieldError{Field: "name", Message: "名前は200文字以内で入力してください"})
-	}
-
-	if input.CurrentStock < 0 {
-		errs = append(errs, api.FieldError{Field: "current_stock", Message: "在庫数は0以上で入力してください"})
-	} else if input.CurrentStock > 50000 {
-		errs = append(errs, api.FieldError{Field: "current_stock", Message: "在庫数は50000以下で入力してください"})
-	}
-
-	return errs
+	CurrentStock *int32
 }
 
 // List returns a paginated list of coffee beans for the given user.
@@ -109,13 +72,8 @@ func (s *CoffeeBeansService) List(ctx context.Context, userID uuid.UUID, limit, 
 		return nil, err
 	}
 
-	result := make([]CoffeeBeanResponse, len(beans))
-	for i, b := range beans {
-		result[i] = toCoffeeBeanResponse(b)
-	}
-
 	return &ListBeansResult{
-		Beans: result,
+		Beans: beans,
 		Pagination: PaginationResponse{
 			Total:   total,
 			Limit:   limit,
@@ -126,100 +84,83 @@ func (s *CoffeeBeansService) List(ctx context.Context, userID uuid.UUID, limit, 
 }
 
 // Create creates a new coffee bean for the given user.
-func (s *CoffeeBeansService) Create(ctx context.Context, userID uuid.UUID, input *CreateBeanInput) (*CoffeeBeanResponse, error) {
-	bean, err := s.beanRepo.Create(ctx, repository.CreateCoffeeBeanParams{
-		UserID:       userID,
-		Name:         input.Name,
-		Origin:       input.Origin,
-		RoastLevel:   input.RoastLevel,
-		CurrentStock: input.CurrentStock,
-		Notes:        input.Notes,
-	})
+func (s *CoffeeBeansService) Create(ctx context.Context, userID uuid.UUID, input *CreateBeanInput) (*coffeebean.CoffeeBean, error) {
+	roastLevel, err := coffeebean.NewRoastLevel(input.RoastLevel)
+	if err != nil {
+		return nil, err
+	}
+	stock, err := coffeebean.NewStock(input.CurrentStock)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := toCoffeeBeanResponse(bean)
-	return &resp, nil
+	bean, err := coffeebean.New(userID, input.Name, roastLevel, input.Origin, input.Notes, stock)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.beanRepo.Save(ctx, bean); err != nil {
+		return nil, err
+	}
+	return bean, nil
 }
 
 // GetByID returns a coffee bean by ID, verifying ownership.
-func (s *CoffeeBeansService) GetByID(ctx context.Context, userID, beanID uuid.UUID) (*CoffeeBeanResponse, error) {
+func (s *CoffeeBeansService) GetByID(ctx context.Context, userID, beanID uuid.UUID) (*coffeebean.CoffeeBean, error) {
 	bean, err := s.beanRepo.GetByID(ctx, beanID)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrBeanNotFound
-		}
 		return nil, err
 	}
-
-	if bean.UserID.Valid && uuid.UUID(bean.UserID.Bytes) != userID {
-		return nil, ErrForbidden
+	if !bean.IsOwnedBy(userID) {
+		return nil, domain.ErrForbidden
 	}
-
-	resp := toCoffeeBeanResponse(bean)
-	return &resp, nil
+	return bean, nil
 }
 
 // Update updates a coffee bean, verifying ownership.
-func (s *CoffeeBeansService) Update(ctx context.Context, userID, beanID uuid.UUID, input *UpdateBeanInput) (*CoffeeBeanResponse, error) {
-	_, err := s.GetByID(ctx, userID, beanID)
+func (s *CoffeeBeansService) Update(ctx context.Context, userID, beanID uuid.UUID, input *UpdateBeanInput) (*coffeebean.CoffeeBean, error) {
+	bean, err := s.beanRepo.GetByID(ctx, beanID)
 	if err != nil {
 		return nil, err
 	}
+	if !bean.IsOwnedBy(userID) {
+		return nil, domain.ErrForbidden
+	}
 
-	bean, err := s.beanRepo.Update(ctx, repository.UpdateCoffeeBeanParams{
-		ID:           beanID,
-		UserID:       userID,
-		Name:         input.Name,
-		Origin:       input.Origin,
-		RoastLevel:   input.RoastLevel,
-		CurrentStock: input.CurrentStock,
-		Notes:        input.Notes,
-	})
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrBeanNotFound
+	var rl *coffeebean.RoastLevel
+	if input.RoastLevel != nil {
+		r, err := coffeebean.NewRoastLevel(*input.RoastLevel)
+		if err != nil {
+			return nil, err
 		}
-		return nil, err
+		rl = &r
+	}
+	var st *coffeebean.Stock
+	if input.CurrentStock != nil {
+		stk, err := coffeebean.NewStock(*input.CurrentStock)
+		if err != nil {
+			return nil, err
+		}
+		st = &stk
 	}
 
-	resp := toCoffeeBeanResponse(bean)
-	return &resp, nil
+	if err := bean.Update(input.Name, input.Origin, rl, input.Notes, st); err != nil {
+		return nil, err
+	}
+	if err := s.beanRepo.Update(ctx, bean); err != nil {
+		return nil, err
+	}
+	return bean, nil
 }
 
 // Delete soft-deletes a coffee bean, verifying ownership.
 func (s *CoffeeBeansService) Delete(ctx context.Context, userID, beanID uuid.UUID) error {
-	_, err := s.GetByID(ctx, userID, beanID)
+	bean, err := s.beanRepo.GetByID(ctx, beanID)
 	if err != nil {
 		return err
 	}
-
+	if !bean.IsOwnedBy(userID) {
+		return domain.ErrForbidden
+	}
 	return s.beanRepo.SoftDelete(ctx, beanID, userID)
-}
-
-func toCoffeeBeanResponse(b database.CoffeeBean) CoffeeBeanResponse {
-	resp := CoffeeBeanResponse{
-		Name:         b.Name,
-		CurrentStock: b.CurrentStock,
-	}
-	if b.ID.Valid {
-		resp.ID = uuid.UUID(b.ID.Bytes)
-	}
-	if b.Origin.Valid {
-		resp.Origin = &b.Origin.String
-	}
-	if b.RoastLevel.Valid {
-		resp.RoastLevel = &b.RoastLevel.String
-	}
-	if b.Notes.Valid {
-		resp.Notes = &b.Notes.String
-	}
-	if b.CreatedAt.Valid {
-		resp.CreatedAt = b.CreatedAt.Time.Format("2006-01-02T15:04:05Z")
-	}
-	if b.UpdatedAt.Valid {
-		resp.UpdatedAt = b.UpdatedAt.Time.Format("2006-01-02T15:04:05Z")
-	}
-	return resp
 }

@@ -3,23 +3,22 @@ package repository
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
+
+	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/user"
 )
 
-func TestUserRepository_CreateAnonymous(t *testing.T) {
+func TestUserRepository_Save(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		want database.User
+		wantLowStockThreshold   int32
+		wantNotificationEnabled bool
 	}{
 		"creates anonymous user with default values": {
-			want: database.User{
-				LowStockThreshold:   100,
-				NotificationEnabled: true,
-			},
+			wantLowStockThreshold:   100,
+			wantNotificationEnabled: true,
 		},
 	}
 
@@ -27,27 +26,22 @@ func TestUserRepository_CreateAnonymous(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			repo := NewUserRepository(newTestQueries(t))
+			repo := NewUserRepository(newTestTx(t))
 
-			got, err := repo.CreateAnonymous(t.Context())
+			u := user.NewAnonymousUser()
+			err := repo.Save(t.Context(), u)
 			if err != nil {
-				t.Fatalf("CreateAnonymous() error: %v", err)
+				t.Fatalf("Save() error: %v", err)
 			}
 
-			if !got.ID.Valid {
-				t.Fatal("expected valid UUID, got invalid")
+			if u.ID() == uuid.Nil {
+				t.Fatal("expected valid UUID, got nil")
 			}
-			if got.LowStockThreshold != tt.want.LowStockThreshold {
-				t.Errorf("LowStockThreshold = %d, want %d", got.LowStockThreshold, tt.want.LowStockThreshold)
+			if u.LowStockThreshold() != tt.wantLowStockThreshold {
+				t.Errorf("LowStockThreshold = %d, want %d", u.LowStockThreshold(), tt.wantLowStockThreshold)
 			}
-			if got.NotificationEnabled != tt.want.NotificationEnabled {
-				t.Errorf("NotificationEnabled = %v, want %v", got.NotificationEnabled, tt.want.NotificationEnabled)
-			}
-			if got.Email.Valid {
-				t.Errorf("Email should be null for anonymous user, got %q", got.Email.String)
-			}
-			if got.Name.Valid {
-				t.Errorf("Name should be null for anonymous user, got %q", got.Name.String)
+			if u.NotificationEnabled() != tt.wantNotificationEnabled {
+				t.Errorf("NotificationEnabled = %v, want %v", u.NotificationEnabled(), tt.wantNotificationEnabled)
 			}
 		})
 	}
@@ -57,30 +51,26 @@ func TestUserRepository_GetByID(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		setup   func(t *testing.T, repo UserRepository) uuid.UUID
-		wantErr bool
+		setup   func(t *testing.T, repo user.Repository) uuid.UUID
+		wantErr error
 	}{
 		"returns user by ID": {
-			setup: func(t *testing.T, repo UserRepository) uuid.UUID {
+			setup: func(t *testing.T, repo user.Repository) uuid.UUID {
 				t.Helper()
-				user, err := repo.CreateAnonymous(t.Context())
-				if err != nil {
-					t.Fatalf("setup CreateAnonymous: %v", err)
+				u := user.NewAnonymousUser()
+				if err := repo.Save(t.Context(), u); err != nil {
+					t.Fatalf("setup Save: %v", err)
 				}
-				id, err := uuid.FromBytes(user.ID.Bytes[:])
-				if err != nil {
-					t.Fatalf("setup parse UUID: %v", err)
-				}
-				return id
+				return u.ID()
 			},
-			wantErr: false,
+			wantErr: nil,
 		},
-		"returns error for non-existent ID": {
-			setup: func(t *testing.T, _ UserRepository) uuid.UUID {
+		"returns ErrNotFound for non-existent ID": {
+			setup: func(t *testing.T, _ user.Repository) uuid.UUID {
 				t.Helper()
 				return uuid.New()
 			},
-			wantErr: true,
+			wantErr: domain.ErrNotFound,
 		},
 	}
 
@@ -88,12 +78,12 @@ func TestUserRepository_GetByID(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			repo := NewUserRepository(newTestQueries(t))
+			repo := NewUserRepository(newTestTx(t))
 			targetID := tt.setup(t, repo)
 
 			got, err := repo.GetByID(t.Context(), targetID)
 
-			if tt.wantErr {
+			if tt.wantErr != nil {
 				if err == nil {
 					t.Fatal("GetByID() expected error, got nil")
 				}
@@ -103,27 +93,15 @@ func TestUserRepository_GetByID(t *testing.T) {
 				t.Fatalf("GetByID() unexpected error: %v", err)
 			}
 
-			want := database.User{
-				ID:                  pgtype.UUID{Bytes: targetID, Valid: true},
-				LowStockThreshold:   100,
-				NotificationEnabled: true,
+			if got.ID() != targetID {
+				t.Errorf("ID = %v, want %v", got.ID(), targetID)
 			}
-
-			if diff := cmp.Diff(want, got, userCmpOpts()...); diff != "" {
-				t.Errorf("GetByID() mismatch (-want +got):\n%s", diff)
+			if got.LowStockThreshold() != 100 {
+				t.Errorf("LowStockThreshold = %d, want 100", got.LowStockThreshold())
+			}
+			if !got.NotificationEnabled() {
+				t.Error("NotificationEnabled = false, want true")
 			}
 		})
 	}
-}
-
-func userCmpOpts() cmp.Options {
-	ignoreTimestamps := cmp.FilterPath(func(p cmp.Path) bool {
-		switch p.String() {
-		case "CreatedAt", "UpdatedAt":
-			return true
-		}
-		return false
-	}, cmp.Ignore())
-
-	return cmp.Options{ignoreTimestamps}
 }

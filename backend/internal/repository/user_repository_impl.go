@@ -2,27 +2,64 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
+	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/user"
 )
 
 type userRepository struct {
 	queries *database.Queries
 }
 
-// NewUserRepository creates a new UserRepository backed by sqlc queries.
-func NewUserRepository(queries *database.Queries) UserRepository {
-	return &userRepository{queries: queries}
+func NewUserRepository(db database.DBTX) user.Repository {
+	return &userRepository{queries: database.New(db)}
 }
 
-func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (database.User, error) {
-	return r.queries.GetUserByID(ctx, toUUID(id))
+func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*user.User, error) {
+	u, err := r.queries.GetUserByID(ctx, toUUID(id))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
+	}
+	return toDomainUser(u), nil
 }
 
-func (r *userRepository) CreateAnonymous(ctx context.Context) (database.User, error) {
-	return r.queries.CreateAnonymousUser(ctx, database.CreateAnonymousUserParams{
-		LowStockThreshold:   100,
-		NotificationEnabled: true,
+func (r *userRepository) Save(ctx context.Context, u *user.User) error {
+	_, err := r.queries.CreateAnonymousUser(ctx, database.CreateAnonymousUserParams{
+		ID:                  toUUID(u.ID()),
+		LowStockThreshold:   u.LowStockThreshold(),
+		NotificationEnabled: u.NotificationEnabled(),
 	})
+	return err
+}
+
+func toDomainUser(u database.User) *user.User {
+	var id uuid.UUID
+	if u.ID.Valid {
+		id = uuid.UUID(u.ID.Bytes)
+	}
+
+	var email, passwordHash, name string
+	if u.Email.Valid {
+		email = u.Email.String
+	}
+	if u.PasswordHash.Valid {
+		passwordHash = u.PasswordHash.String
+	}
+	if u.Name.Valid {
+		name = u.Name.String
+	}
+
+	return user.Reconstruct(
+		id, email, passwordHash, name,
+		u.LowStockThreshold, u.NotificationEnabled,
+		u.CreatedAt.Time, u.UpdatedAt.Time,
+	)
 }

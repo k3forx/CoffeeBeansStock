@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/handlers"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/auth"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/config"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/repository"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/router"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/services"
@@ -44,21 +44,21 @@ func main() {
 	}
 	slog.Info("database connection established")
 
-	queries := database.New(pool)
 	jwtManager := auth.NewJWTManager(cfg.JWTSecret)
 
-	userRepo := repository.NewUserRepository(queries)
-	coffeeBeanRepo := repository.NewCoffeeBeanRepository(queries)
+	userRepo := repository.NewUserRepository(pool)
+	coffeeBeanRepo := repository.NewCoffeeBeanRepository(pool)
+	uow := repository.NewUnitOfWork(pool)
 
 	authService := services.NewAuthService(userRepo, jwtManager)
 	authHandler := handlers.NewAuthHandler(authService)
-	coffeeBeansService := services.NewCoffeeBeansService(coffeeBeanRepo)
+	coffeeBeansService := services.NewCoffeeBeansService(coffeeBeanRepo, uow)
 	coffeeBeansHandler := handlers.NewCoffeeBeansHandler(coffeeBeansService)
 
 	r := router.New(router.Deps{
 		AuthHandler:        authHandler,
 		CoffeeBeansHandler: coffeeBeansHandler,
-		JWTManager:         jwtManager,
+		TokenManager:       jwtManager,
 		HealthCheck: func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			if err := pool.Ping(r.Context()); err != nil {

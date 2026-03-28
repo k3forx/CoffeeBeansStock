@@ -2,57 +2,82 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
+	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/coffeebean"
 )
 
 type coffeeBeanRepository struct {
 	queries *database.Queries
 }
 
-// NewCoffeeBeanRepository creates a new CoffeeBeanRepository backed by sqlc queries.
-func NewCoffeeBeanRepository(queries *database.Queries) CoffeeBeanRepository {
-	return &coffeeBeanRepository{queries: queries}
+func NewCoffeeBeanRepository(db database.DBTX) coffeebean.Repository {
+	return &coffeeBeanRepository{queries: database.New(db)}
 }
 
-func (r *coffeeBeanRepository) GetByID(ctx context.Context, id uuid.UUID) (database.CoffeeBean, error) {
-	return r.queries.GetCoffeeBeanByID(ctx, toUUID(id))
+func (r *coffeeBeanRepository) GetByID(ctx context.Context, id uuid.UUID) (*coffeebean.CoffeeBean, error) {
+	b, err := r.queries.GetCoffeeBeanByID(ctx, toUUID(id))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
+	}
+	return toDomainCoffeeBean(b), nil
 }
 
-func (r *coffeeBeanRepository) ListByUserID(ctx context.Context, userID uuid.UUID, limit, offset int32) ([]database.CoffeeBean, error) {
-	return r.queries.ListCoffeeBeansByUserID(ctx, database.ListCoffeeBeansByUserIDParams{
+func (r *coffeeBeanRepository) ListByUserID(ctx context.Context, userID uuid.UUID, limit, offset int32) ([]*coffeebean.CoffeeBean, error) {
+	rows, err := r.queries.ListCoffeeBeansByUserID(ctx, database.ListCoffeeBeansByUserIDParams{
 		UserID: toUUID(userID),
 		Limit:  limit,
 		Offset: offset,
 	})
+	if err != nil {
+		return nil, err
+	}
+	beans := make([]*coffeebean.CoffeeBean, len(rows))
+	for i, row := range rows {
+		beans[i] = toDomainCoffeeBean(row)
+	}
+	return beans, nil
 }
 
 func (r *coffeeBeanRepository) CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error) {
 	return r.queries.CountCoffeeBeansByUserID(ctx, toUUID(userID))
 }
 
-func (r *coffeeBeanRepository) Create(ctx context.Context, params CreateCoffeeBeanParams) (database.CoffeeBean, error) {
-	return r.queries.CreateCoffeeBean(ctx, database.CreateCoffeeBeanParams{
-		UserID:       toUUID(params.UserID),
-		Name:         params.Name,
-		Origin:       toPgText(params.Origin),
-		RoastLevel:   toPgText(params.RoastLevel),
-		CurrentStock: params.CurrentStock,
-		Notes:        toPgText(params.Notes),
+func (r *coffeeBeanRepository) Save(ctx context.Context, bean *coffeebean.CoffeeBean) error {
+	_, err := r.queries.CreateCoffeeBean(ctx, database.CreateCoffeeBeanParams{
+		ID:           toUUID(bean.ID()),
+		UserID:       toUUID(bean.UserID()),
+		Name:         bean.Name(),
+		Origin:       toPgText(bean.Origin()),
+		RoastLevel:   bean.RoastLevel().String(),
+		CurrentStock: bean.CurrentStock().Value(),
+		Notes:        toPgText(bean.Notes()),
 	})
+	return err
 }
 
-func (r *coffeeBeanRepository) Update(ctx context.Context, params UpdateCoffeeBeanParams) (database.CoffeeBean, error) {
-	return r.queries.UpdateCoffeeBean(ctx, database.UpdateCoffeeBeanParams{
-		ID:           toUUID(params.ID),
-		UserID:       toUUID(params.UserID),
-		Name:         toPgText(params.Name),
-		Origin:       toPgText(params.Origin),
-		RoastLevel:   toPgText(params.RoastLevel),
-		CurrentStock: toPgInt4(params.CurrentStock),
-		Notes:        toPgText(params.Notes),
+func (r *coffeeBeanRepository) Update(ctx context.Context, bean *coffeebean.CoffeeBean) error {
+	name := bean.Name()
+	roastLevel := bean.RoastLevel().String()
+	stock := bean.CurrentStock().Value()
+	_, err := r.queries.UpdateCoffeeBean(ctx, database.UpdateCoffeeBeanParams{
+		ID:           toUUID(bean.ID()),
+		UserID:       toUUID(bean.UserID()),
+		Name:         toPgText(&name),
+		Origin:       toPgText(bean.Origin()),
+		RoastLevel:   toPgText(&roastLevel),
+		CurrentStock: toPgInt4(&stock),
+		Notes:        toPgText(bean.Notes()),
 	})
+	return err
 }
 
 func (r *coffeeBeanRepository) SoftDelete(ctx context.Context, id, userID uuid.UUID) error {
@@ -60,4 +85,30 @@ func (r *coffeeBeanRepository) SoftDelete(ctx context.Context, id, userID uuid.U
 		ID:     toUUID(id),
 		UserID: toUUID(userID),
 	})
+}
+
+func toDomainCoffeeBean(b database.CoffeeBean) *coffeebean.CoffeeBean {
+	var id, userID uuid.UUID
+	if b.ID.Valid {
+		id = uuid.UUID(b.ID.Bytes)
+	}
+	if b.UserID.Valid {
+		userID = uuid.UUID(b.UserID.Bytes)
+	}
+
+	var origin *string
+	if b.Origin.Valid {
+		origin = &b.Origin.String
+	}
+	var notes *string
+	if b.Notes.Valid {
+		notes = &b.Notes.String
+	}
+
+	return coffeebean.Reconstruct(
+		id, userID, b.Name, origin,
+		coffeebean.ReconstructRoastLevel(b.RoastLevel),
+		coffeebean.ReconstructStock(b.CurrentStock),
+		notes, b.CreatedAt.Time, b.UpdatedAt.Time,
+	)
 }

@@ -13,7 +13,7 @@ type CoffeeBean struct {
 	UserID       pgtype.UUID        `json:"user_id"`
 	Name         string             `json:"name"`
 	Origin       pgtype.Text        `json:"origin"`
-	RoastLevel   pgtype.Text        `json:"roast_level"`
+	RoastLevel   string             `json:"roast_level"`
 	CurrentStock int32              `json:"current_stock"`
 	Notes        pgtype.Text        `json:"notes"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`

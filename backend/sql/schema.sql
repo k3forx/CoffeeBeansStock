@@ -21,7 +21,7 @@ CREATE TABLE coffee_beans (
     user_id UUID NOT NULL,
     name VARCHAR(200) NOT NULL,
     origin VARCHAR(100),
-    roast_level VARCHAR(50),
+    roast_level VARCHAR(50) NOT NULL,
     current_stock INTEGER NOT NULL CHECK (current_stock >= 0),
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -31,7 +31,10 @@ CREATE TABLE coffee_beans (
     CONSTRAINT fk_coffee_beans_user
         FOREIGN KEY (user_id)
         REFERENCES users(id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT check_roast_level
+        CHECK (roast_level IN ('light', 'cinnamon', 'medium', 'high', 'city', 'full_city', 'french', 'italian'))
 );
 
 -- Purchase history table (separated from coffee_beans)

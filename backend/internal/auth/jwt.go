@@ -6,44 +6,33 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+
+	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
+	domainauth "github.com/k3forx/CoffeeBeansStock/backend/internal/domain/auth"
 )
 
-// ErrInvalidToken is returned when a token is malformed or has an invalid signature.
-var ErrInvalidToken = errors.New("invalid token")
+const (
+	AccessTokenDuration  = 1 * time.Hour
+	RefreshTokenDuration = 7 * 24 * time.Hour
+)
 
-// ErrExpiredToken is returned when a token has expired.
-var ErrExpiredToken = errors.New("expired token")
-
-// AccessTokenDuration is the lifetime of an access token.
-const AccessTokenDuration = 1 * time.Hour
-
-// RefreshTokenDuration is the lifetime of a refresh token.
-const RefreshTokenDuration = 7 * 24 * time.Hour
-
-// TokenClaims represents the JWT claims including the user ID.
-type TokenClaims struct {
+// jwtClaims is the internal JWT claims structure.
+type jwtClaims struct {
 	UserID string `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
-// TokenPair holds an access token and a refresh token.
-type TokenPair struct {
-	AccessToken  string `json:"access_token"`  //nolint:gosec // JWT response field, not a hardcoded secret
-	RefreshToken string `json:"refresh_token"` //nolint:gosec // JWT response field, not a hardcoded secret
-}
-
 // JWTManager handles JWT token generation and validation.
+// It implements domainauth.TokenManager.
 type JWTManager struct {
 	secret []byte
 }
 
-// NewJWTManager creates a new JWTManager with the given secret.
 func NewJWTManager(secret string) *JWTManager {
 	return &JWTManager{secret: []byte(secret)}
 }
 
-// GenerateTokenPair creates a new access/refresh token pair for the given user.
-func (m *JWTManager) GenerateTokenPair(userID uuid.UUID) (*TokenPair, error) {
+func (m *JWTManager) GenerateTokenPair(userID uuid.UUID) (*domainauth.TokenPair, error) {
 	accessToken, err := m.generateToken(userID.String(), AccessTokenDuration)
 	if err != nil {
 		return nil, err
@@ -54,38 +43,39 @@ func (m *JWTManager) GenerateTokenPair(userID uuid.UUID) (*TokenPair, error) {
 		return nil, err
 	}
 
-	return &TokenPair{
+	return &domainauth.TokenPair{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
 }
 
-// ValidateToken parses and validates a JWT token string.
-func (m *JWTManager) ValidateToken(tokenStr string) (*TokenClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &TokenClaims{}, func(t *jwt.Token) (interface{}, error) {
+func (m *JWTManager) ValidateToken(tokenStr string) (*domainauth.TokenClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &jwtClaims{}, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, ErrInvalidToken
+			return nil, domain.ErrInvalidToken
 		}
 		return m.secret, nil
 	})
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			return nil, ErrExpiredToken
+			return nil, domain.ErrExpiredToken
 		}
-		return nil, ErrInvalidToken
+		return nil, domain.ErrInvalidToken
 	}
 
-	claims, ok := token.Claims.(*TokenClaims)
+	claims, ok := token.Claims.(*jwtClaims)
 	if !ok || !token.Valid {
-		return nil, ErrInvalidToken
+		return nil, domain.ErrInvalidToken
 	}
 
-	return claims, nil
+	return &domainauth.TokenClaims{
+		UserID: claims.UserID,
+	}, nil
 }
 
 func (m *JWTManager) generateToken(userID string, duration time.Duration) (string, error) {
 	now := time.Now()
-	claims := &TokenClaims{
+	claims := &jwtClaims{
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(duration)),

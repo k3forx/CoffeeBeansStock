@@ -5,60 +5,44 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/auth"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/repository"
+
+	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
+	domainauth "github.com/k3forx/CoffeeBeansStock/backend/internal/domain/auth"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/user"
 )
 
 // AuthService handles authentication business logic.
 type AuthService struct {
-	userRepo   repository.UserRepository
-	jwtManager *auth.JWTManager
+	userRepo user.Repository
+	tokens   domainauth.TokenManager
 }
 
 // NewAuthService creates a new AuthService.
-func NewAuthService(userRepo repository.UserRepository, jwtManager *auth.JWTManager) *AuthService {
-	return &AuthService{userRepo: userRepo, jwtManager: jwtManager}
+func NewAuthService(userRepo user.Repository, tokens domainauth.TokenManager) *AuthService {
+	return &AuthService{userRepo: userRepo, tokens: tokens}
 }
 
 // AuthResult holds the result of an authentication operation.
 type AuthResult struct {
-	User         *UserResponse `json:"user"`
-	AccessToken  string        `json:"access_token"`  //nolint:gosec // JWT response field, not a hardcoded secret
-	RefreshToken string        `json:"refresh_token"` //nolint:gosec // JWT response field, not a hardcoded secret
-}
-
-// UserResponse is the API representation of a user.
-type UserResponse struct {
-	Name                string    `json:"name,omitempty"`
-	CreatedAt           string    `json:"created_at"`
-	UpdatedAt           string    `json:"updated_at,omitempty"`
-	ID                  uuid.UUID `json:"id"`
-	LowStockThreshold   int32     `json:"low_stock_threshold,omitempty"`
-	NotificationEnabled bool      `json:"notification_enabled,omitempty"`
+	User         *user.User
+	AccessToken  string
+	RefreshToken string
 }
 
 // RegisterAnonymous creates a new anonymous user and returns tokens.
 func (s *AuthService) RegisterAnonymous(ctx context.Context) (*AuthResult, error) {
-	user, err := s.userRepo.CreateAnonymous(ctx)
-	if err != nil {
+	u := user.NewAnonymousUser()
+	if err := s.userRepo.Save(ctx, u); err != nil {
 		return nil, err
 	}
 
-	userID, err := uuidFromPgtype(user.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	tokens, err := s.jwtManager.GenerateTokenPair(userID)
+	tokens, err := s.tokens.GenerateTokenPair(u.ID())
 	if err != nil {
 		return nil, err
 	}
 
 	return &AuthResult{
-		User:         toUserResponse(user),
+		User:         u,
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
 	}, nil
@@ -66,33 +50,31 @@ func (s *AuthService) RegisterAnonymous(ctx context.Context) (*AuthResult, error
 
 // RefreshResult holds new tokens after a refresh operation.
 type RefreshResult struct {
-	AccessToken  string `json:"access_token"`  //nolint:gosec // JWT response field, not a hardcoded secret
-	RefreshToken string `json:"refresh_token"` //nolint:gosec // JWT response field, not a hardcoded secret
+	AccessToken  string
+	RefreshToken string
 }
 
 // Refresh validates a refresh token and issues a new token pair.
 func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*RefreshResult, error) {
-	claims, err := s.jwtManager.ValidateToken(refreshToken)
-	if err != nil {
-		return nil, auth.ErrInvalidToken
-	}
-
-	userID, err := uuid.Parse(claims.UserID)
-	if err != nil {
-		return nil, auth.ErrInvalidToken
-	}
-
-	user, err := s.userRepo.GetByID(ctx, userID)
-	if err != nil {
-		return nil, auth.ErrInvalidToken
-	}
-
-	uid, err := uuidFromPgtype(user.ID)
+	claims, err := s.tokens.ValidateToken(refreshToken)
 	if err != nil {
 		return nil, err
 	}
 
-	tokens, err := s.jwtManager.GenerateTokenPair(uid)
+	userID, err := uuid.Parse(claims.UserID)
+	if err != nil {
+		return nil, domain.ErrInvalidToken
+	}
+
+	u, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			return nil, domain.ErrInvalidToken
+		}
+		return nil, err
+	}
+
+	tokens, err := s.tokens.GenerateTokenPair(u.ID())
 	if err != nil {
 		return nil, err
 	}
@@ -103,41 +85,7 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*Refres
 	}, nil
 }
 
-// GetMe returns the user profile for the given user ID.
-func (s *AuthService) GetMe(ctx context.Context, userID uuid.UUID) (*UserResponse, error) {
-	user, err := s.userRepo.GetByID(ctx, userID)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, errors.New("user not found")
-		}
-		return nil, err
-	}
-	return toUserResponse(user), nil
-}
-
-func toUserResponse(user database.User) *UserResponse {
-	resp := &UserResponse{
-		LowStockThreshold:   user.LowStockThreshold,
-		NotificationEnabled: user.NotificationEnabled,
-	}
-	if user.ID.Valid {
-		resp.ID = uuid.UUID(user.ID.Bytes)
-	}
-	if user.Name.Valid {
-		resp.Name = user.Name.String
-	}
-	if user.CreatedAt.Valid {
-		resp.CreatedAt = user.CreatedAt.Time.Format("2006-01-02T15:04:05Z")
-	}
-	if user.UpdatedAt.Valid {
-		resp.UpdatedAt = user.UpdatedAt.Time.Format("2006-01-02T15:04:05Z")
-	}
-	return resp
-}
-
-func uuidFromPgtype(id pgtype.UUID) (uuid.UUID, error) {
-	if !id.Valid {
-		return uuid.Nil, errors.New("invalid UUID")
-	}
-	return uuid.UUID(id.Bytes), nil
+// GetMe returns the user for the given user ID.
+func (s *AuthService) GetMe(ctx context.Context, userID uuid.UUID) (*user.User, error) {
+	return s.userRepo.GetByID(ctx, userID)
 }

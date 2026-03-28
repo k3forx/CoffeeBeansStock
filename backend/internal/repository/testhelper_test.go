@@ -70,6 +70,16 @@ func newTestQueries(t *testing.T) *database.Queries {
 	return database.New(tx)
 }
 
+func newTestTx(t *testing.T) database.DBTX {
+	t.Helper()
+	tx, err := testPool.Begin(t.Context())
+	if err != nil {
+		t.Fatalf("begin tx: %v", err)
+	}
+	t.Cleanup(func() { _ = tx.Rollback(t.Context()) })
+	return tx
+}
+
 func runMigrations(ctx context.Context, pool *pgxpool.Pool) error {
 	_, thisFile, _, _ := runtime.Caller(0)
 	migrationsDir := filepath.Join(filepath.Dir(thisFile), "..", "..", "migrations")
