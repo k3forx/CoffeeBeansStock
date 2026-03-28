@@ -22,6 +22,7 @@ CREATE TABLE coffee_beans (
     name VARCHAR(200) NOT NULL,
     origin VARCHAR(100),
     roast_level VARCHAR(50) NOT NULL,
+    roast_detail VARCHAR(50),
     current_stock INTEGER NOT NULL CHECK (current_stock >= 0),
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -34,7 +35,20 @@ CREATE TABLE coffee_beans (
         ON DELETE CASCADE,
 
     CONSTRAINT check_roast_level
-        CHECK (roast_level IN ('light', 'cinnamon', 'medium', 'high', 'city', 'full_city', 'french', 'italian'))
+        CHECK (roast_level IN ('shallow', 'medium', 'medium_deep', 'deep')),
+
+    CONSTRAINT check_roast_detail
+        CHECK (roast_detail IS NULL OR roast_detail IN (
+            'light', 'cinnamon', 'medium', 'high', 'city', 'full_city', 'french', 'italian')),
+
+    CONSTRAINT check_roast_level_detail_consistency
+        CHECK (
+            roast_detail IS NULL
+            OR (roast_level = 'shallow' AND roast_detail IN ('light', 'cinnamon'))
+            OR (roast_level = 'medium' AND roast_detail IN ('medium', 'high'))
+            OR (roast_level = 'medium_deep' AND roast_detail IN ('city', 'full_city'))
+            OR (roast_level = 'deep' AND roast_detail IN ('french', 'italian'))
+        )
 );
 
 -- Purchase history table (separated from coffee_beans)

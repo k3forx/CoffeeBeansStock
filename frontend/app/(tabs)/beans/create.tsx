@@ -8,25 +8,62 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  View,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
 import { ApiError } from "../../../src/api/client";
-import type { RoastLevel } from "../../../src/types/api";
+import type { RoastLevel, RoastDetail } from "../../../src/types/api";
 import { colors, typography, spacing, radius, shadows } from "@/theme";
+
+const ROAST_LEVELS: { value: RoastLevel; label: string }[] = [
+  { value: "shallow", label: "浅煎り" },
+  { value: "medium", label: "中煎り" },
+  { value: "medium_deep", label: "中深煎り" },
+  { value: "deep", label: "深煎り" },
+];
+
+const ROAST_DETAILS: Record<RoastLevel, { value: RoastDetail; label: string }[]> = {
+  shallow: [
+    { value: "light", label: "ライトロースト" },
+    { value: "cinnamon", label: "シナモンロースト" },
+  ],
+  medium: [
+    { value: "medium", label: "ミディアムロースト" },
+    { value: "high", label: "ハイロースト" },
+  ],
+  medium_deep: [
+    { value: "city", label: "シティロースト" },
+    { value: "full_city", label: "フルシティロースト" },
+  ],
+  deep: [
+    { value: "french", label: "フレンチロースト" },
+    { value: "italian", label: "イタリアンロースト" },
+  ],
+};
 
 export default function CreateBeanScreen() {
   const [name, setName] = useState("");
   const [origin, setOrigin] = useState("");
-  const [roastLevel, setRoastLevel] = useState("");
+  const [roastLevel, setRoastLevel] = useState<RoastLevel | "">("");
+  const [roastDetail, setRoastDetail] = useState<RoastDetail | "">("");
   const [currentStock, setCurrentStock] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const handleRoastLevelSelect = (level: RoastLevel) => {
+    setRoastLevel(level);
+    setRoastDetail("");
+  };
+
   const handleCreate = async () => {
     if (!name) {
       Alert.alert("エラー", "名前は必須です");
+      return;
+    }
+    if (!roastLevel) {
+      Alert.alert("エラー", "焙煎度を選択してください");
       return;
     }
     const stock = parseInt(currentStock, 10);
@@ -40,7 +77,8 @@ export default function CreateBeanScreen() {
       await beansApi.create({
         name,
         origin: origin || undefined,
-        roast_level: roastLevel as RoastLevel,
+        roast_level: roastLevel,
+        roast_detail: roastDetail || undefined,
         current_stock: stock,
         notes: notes || undefined,
       });
@@ -79,15 +117,48 @@ export default function CreateBeanScreen() {
           underlineColorAndroid="transparent"
         />
 
-        <Text style={styles.label}>焙煎度</Text>
-        <TextInput
-          style={styles.input}
-          value={roastLevel}
-          onChangeText={setRoastLevel}
-          placeholder="例: 中煎り"
-          placeholderTextColor={colors.textTertiary}
-          underlineColorAndroid="transparent"
-        />
+        <Text style={styles.label}>焙煎度 *</Text>
+        <View style={styles.chipContainer}>
+          {ROAST_LEVELS.map((level) => (
+            <TouchableOpacity
+              key={level.value}
+              style={[styles.chip, roastLevel === level.value && styles.chipSelected]}
+              onPress={() => handleRoastLevelSelect(level.value)}
+            >
+              <Text
+                style={[styles.chipText, roastLevel === level.value && styles.chipTextSelected]}
+              >
+                {level.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {roastLevel !== "" && (
+          <>
+            <Text style={styles.label}>焙煎度（詳細）</Text>
+            <View style={styles.chipContainer}>
+              {ROAST_DETAILS[roastLevel].map((detail) => (
+                <TouchableOpacity
+                  key={detail.value}
+                  style={[styles.chip, roastDetail === detail.value && styles.chipSelected]}
+                  onPress={() =>
+                    setRoastDetail(roastDetail === detail.value ? "" : detail.value)
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      roastDetail === detail.value && styles.chipTextSelected,
+                    ]}
+                  >
+                    {detail.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
 
         <Text style={styles.label}>在庫数 (g) *</Text>
         <TextInput
@@ -147,6 +218,30 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   textArea: { height: 100, textAlignVertical: "top" },
+  chipContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  chip: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  chipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  chipText: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+  },
+  chipTextSelected: {
+    color: colors.textInverse,
+  },
   button: {
     backgroundColor: colors.primary,
     borderRadius: radius.sm,

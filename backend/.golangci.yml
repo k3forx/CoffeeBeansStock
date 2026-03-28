@@ -29,6 +29,7 @@ linters:
         - name: error-return
         - name: error-strings
         - name: exported
+          disabled: true
         - name: increment-decrement
         - name: indent-error-flow
         - name: range

@@ -38,6 +38,10 @@ func toCoffeeBeanResponse(b *coffeebean.CoffeeBean) gen.CoffeeBeanResponse {
 		CreatedAt:    b.CreatedAt(),
 		UpdatedAt:    b.UpdatedAt(),
 	}
+	if b.RoastDetail() != nil {
+		rd := gen.RoastDetail(b.RoastDetail().String())
+		resp.RoastDetail = &rd
+	}
 	return resp
 }
 
@@ -88,10 +92,17 @@ func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var roastDetail *string
+	if req.RoastDetail != nil {
+		s := string(*req.RoastDetail)
+		roastDetail = &s
+	}
+
 	bean, err := h.service.Create(r.Context(), userID, &services.CreateBeanInput{
 		Name:         req.Name,
 		Origin:       req.Origin,
 		RoastLevel:   string(req.RoastLevel),
+		RoastDetail:  roastDetail,
 		Notes:        req.Notes,
 		CurrentStock: req.CurrentStock,
 	})
@@ -151,11 +162,17 @@ func (h *CoffeeBeansHandler) Update(w http.ResponseWriter, r *http.Request) {
 		s := string(*req.RoastLevel)
 		roastLevel = &s
 	}
+	var roastDetail *string
+	if req.RoastDetail != nil {
+		s := string(*req.RoastDetail)
+		roastDetail = &s
+	}
 
 	bean, err := h.service.Update(r.Context(), userID, beanID, &services.UpdateBeanInput{
 		Name:         req.Name,
 		Origin:       req.Origin,
 		RoastLevel:   roastLevel,
+		RoastDetail:  roastDetail,
 		CurrentStock: req.CurrentStock,
 		Notes:        req.Notes,
 	})

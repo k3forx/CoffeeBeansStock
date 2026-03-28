@@ -95,9 +95,9 @@ func (q *Queries) CreateAnonymousUser(ctx context.Context, arg CreateAnonymousUs
 const createCoffeeBean = `-- name: CreateCoffeeBean :one
 
 INSERT INTO coffee_beans (
-    id, user_id, name, origin, roast_level, current_stock, notes
-) VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, user_id, name, origin, roast_level, current_stock, notes, created_at, updated_at, deleted_at
+    id, user_id, name, origin, roast_level, roast_detail, current_stock, notes
+) VALUES ($1, $2, $3, $4, $5, $8, $6, $7)
+RETURNING id, user_id, name, origin, roast_level, roast_detail, current_stock, notes, created_at, updated_at, deleted_at
 `
 
 type CreateCoffeeBeanParams struct {
@@ -108,6 +108,7 @@ type CreateCoffeeBeanParams struct {
 	RoastLevel   string      `json:"roast_level"`
 	CurrentStock int32       `json:"current_stock"`
 	Notes        pgtype.Text `json:"notes"`
+	RoastDetail  pgtype.Text `json:"roast_detail"`
 }
 
 // ============================================================================
@@ -122,6 +123,7 @@ func (q *Queries) CreateCoffeeBean(ctx context.Context, arg CreateCoffeeBeanPara
 		arg.RoastLevel,
 		arg.CurrentStock,
 		arg.Notes,
+		arg.RoastDetail,
 	)
 	var i CoffeeBean
 	err := row.Scan(
@@ -130,6 +132,7 @@ func (q *Queries) CreateCoffeeBean(ctx context.Context, arg CreateCoffeeBeanPara
 		&i.Name,
 		&i.Origin,
 		&i.RoastLevel,
+		&i.RoastDetail,
 		&i.CurrentStock,
 		&i.Notes,
 		&i.CreatedAt,
@@ -260,7 +263,7 @@ func (q *Queries) DeleteUsageHistory(ctx context.Context, arg DeleteUsageHistory
 }
 
 const getCoffeeBeanByID = `-- name: GetCoffeeBeanByID :one
-SELECT id, user_id, name, origin, roast_level, current_stock, notes, created_at, updated_at, deleted_at FROM coffee_beans
+SELECT id, user_id, name, origin, roast_level, roast_detail, current_stock, notes, created_at, updated_at, deleted_at FROM coffee_beans
 WHERE id = $1 AND deleted_at IS NULL
 `
 
@@ -273,6 +276,7 @@ func (q *Queries) GetCoffeeBeanByID(ctx context.Context, id pgtype.UUID) (Coffee
 		&i.Name,
 		&i.Origin,
 		&i.RoastLevel,
+		&i.RoastDetail,
 		&i.CurrentStock,
 		&i.Notes,
 		&i.CreatedAt,
@@ -452,7 +456,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 }
 
 const listCoffeeBeansByUserID = `-- name: ListCoffeeBeansByUserID :many
-SELECT id, user_id, name, origin, roast_level, current_stock, notes, created_at, updated_at, deleted_at FROM coffee_beans
+SELECT id, user_id, name, origin, roast_level, roast_detail, current_stock, notes, created_at, updated_at, deleted_at FROM coffee_beans
 WHERE user_id = $1 AND deleted_at IS NULL
 ORDER BY updated_at DESC
 LIMIT $2 OFFSET $3
@@ -479,6 +483,7 @@ func (q *Queries) ListCoffeeBeansByUserID(ctx context.Context, arg ListCoffeeBea
 			&i.Name,
 			&i.Origin,
 			&i.RoastLevel,
+			&i.RoastDetail,
 			&i.CurrentStock,
 			&i.Notes,
 			&i.CreatedAt,
@@ -502,6 +507,7 @@ SELECT
     cb.name,
     cb.origin,
     cb.roast_level,
+    cb.roast_detail,
     cb.current_stock,
     cb.notes,
     cb.created_at,
@@ -535,6 +541,7 @@ type ListCoffeeBeansWithLatestPurchaseRow struct {
 	Name                string             `json:"name"`
 	Origin              pgtype.Text        `json:"origin"`
 	RoastLevel          string             `json:"roast_level"`
+	RoastDetail         pgtype.Text        `json:"roast_detail"`
 	CurrentStock        int32              `json:"current_stock"`
 	Notes               pgtype.Text        `json:"notes"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
@@ -560,6 +567,7 @@ func (q *Queries) ListCoffeeBeansWithLatestPurchase(ctx context.Context, arg Lis
 			&i.Name,
 			&i.Origin,
 			&i.RoastLevel,
+			&i.RoastDetail,
 			&i.CurrentStock,
 			&i.Notes,
 			&i.CreatedAt,
@@ -770,11 +778,12 @@ SET
     name = COALESCE($3, name),
     origin = COALESCE($4, origin),
     roast_level = COALESCE($5, roast_level),
-    current_stock = COALESCE($6, current_stock),
-    notes = COALESCE($7, notes),
+    roast_detail = COALESCE($6, roast_detail),
+    current_stock = COALESCE($7, current_stock),
+    notes = COALESCE($8, notes),
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
-RETURNING id, user_id, name, origin, roast_level, current_stock, notes, created_at, updated_at, deleted_at
+RETURNING id, user_id, name, origin, roast_level, roast_detail, current_stock, notes, created_at, updated_at, deleted_at
 `
 
 type UpdateCoffeeBeanParams struct {
@@ -783,6 +792,7 @@ type UpdateCoffeeBeanParams struct {
 	Name         pgtype.Text `json:"name"`
 	Origin       pgtype.Text `json:"origin"`
 	RoastLevel   pgtype.Text `json:"roast_level"`
+	RoastDetail  pgtype.Text `json:"roast_detail"`
 	CurrentStock pgtype.Int4 `json:"current_stock"`
 	Notes        pgtype.Text `json:"notes"`
 }
@@ -794,6 +804,7 @@ func (q *Queries) UpdateCoffeeBean(ctx context.Context, arg UpdateCoffeeBeanPara
 		arg.Name,
 		arg.Origin,
 		arg.RoastLevel,
+		arg.RoastDetail,
 		arg.CurrentStock,
 		arg.Notes,
 	)
@@ -804,6 +815,7 @@ func (q *Queries) UpdateCoffeeBean(ctx context.Context, arg UpdateCoffeeBeanPara
 		&i.Name,
 		&i.Origin,
 		&i.RoastLevel,
+		&i.RoastDetail,
 		&i.CurrentStock,
 		&i.Notes,
 		&i.CreatedAt,
@@ -819,7 +831,7 @@ SET
     current_stock = $2,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, user_id, name, origin, roast_level, current_stock, notes, created_at, updated_at, deleted_at
+RETURNING id, user_id, name, origin, roast_level, roast_detail, current_stock, notes, created_at, updated_at, deleted_at
 `
 
 type UpdateCoffeeBeanStockParams struct {
@@ -836,6 +848,7 @@ func (q *Queries) UpdateCoffeeBeanStock(ctx context.Context, arg UpdateCoffeeBea
 		&i.Name,
 		&i.Origin,
 		&i.RoastLevel,
+		&i.RoastDetail,
 		&i.CurrentStock,
 		&i.Notes,
 		&i.CreatedAt,

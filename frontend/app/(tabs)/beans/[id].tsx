@@ -14,8 +14,52 @@ import {
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
 import { ApiError } from "../../../src/api/client";
-import type { CoffeeBean, RoastLevel } from "../../../src/types/api";
+import type { CoffeeBean, RoastLevel, RoastDetail } from "../../../src/types/api";
 import { colors, typography, spacing, radius, shadows, getStockColor } from "@/theme";
+
+const ROAST_LEVELS: { value: RoastLevel; label: string }[] = [
+  { value: "shallow", label: "浅煎り" },
+  { value: "medium", label: "中煎り" },
+  { value: "medium_deep", label: "中深煎り" },
+  { value: "deep", label: "深煎り" },
+];
+
+const ROAST_DETAILS: Record<RoastLevel, { value: RoastDetail; label: string }[]> = {
+  shallow: [
+    { value: "light", label: "ライトロースト" },
+    { value: "cinnamon", label: "シナモンロースト" },
+  ],
+  medium: [
+    { value: "medium", label: "ミディアムロースト" },
+    { value: "high", label: "ハイロースト" },
+  ],
+  medium_deep: [
+    { value: "city", label: "シティロースト" },
+    { value: "full_city", label: "フルシティロースト" },
+  ],
+  deep: [
+    { value: "french", label: "フレンチロースト" },
+    { value: "italian", label: "イタリアンロースト" },
+  ],
+};
+
+const ROAST_LEVEL_LABELS: Record<RoastLevel, string> = {
+  shallow: "浅煎り",
+  medium: "中煎り",
+  medium_deep: "中深煎り",
+  deep: "深煎り",
+};
+
+const ROAST_DETAIL_LABELS: Record<RoastDetail, string> = {
+  light: "ライトロースト",
+  cinnamon: "シナモンロースト",
+  medium: "ミディアムロースト",
+  high: "ハイロースト",
+  city: "シティロースト",
+  full_city: "フルシティロースト",
+  french: "フレンチロースト",
+  italian: "イタリアンロースト",
+};
 
 export default function BeanDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -27,17 +71,19 @@ export default function BeanDetailScreen() {
 
   const [name, setName] = useState("");
   const [origin, setOrigin] = useState("");
-  const [roastLevel, setRoastLevel] = useState("");
+  const [roastLevel, setRoastLevel] = useState<RoastLevel | "">("");
+  const [roastDetail, setRoastDetail] = useState<RoastDetail | "">("");
   const [currentStock, setCurrentStock] = useState("");
   const [notes, setNotes] = useState("");
 
-  const loadBean = async () => {
+  const loadBean = useCallback(async () => {
     try {
       const data = await beansApi.get(id);
       setBean(data);
       setName(data.name);
       setOrigin(data.origin ?? "");
-      setRoastLevel(data.roast_level ?? "");
+      setRoastLevel(data.roast_level);
+      setRoastDetail(data.roast_detail ?? "");
       setCurrentStock(String(data.current_stock));
       setNotes(data.notes ?? "");
     } catch {
@@ -45,17 +91,26 @@ export default function BeanDetailScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, router]);
 
   useFocusEffect(
     useCallback(() => {
       loadBean();
-    }, [id])
+    }, [loadBean])
   );
+
+  const handleRoastLevelSelect = (level: RoastLevel) => {
+    setRoastLevel(level);
+    setRoastDetail("");
+  };
 
   const handleSave = async () => {
     if (!name) {
       Alert.alert("エラー", "名前は必須です");
+      return;
+    }
+    if (!roastLevel) {
+      Alert.alert("エラー", "焙煎度を選択してください");
       return;
     }
     const stock = parseInt(currentStock, 10);
@@ -69,7 +124,8 @@ export default function BeanDetailScreen() {
       const updated = await beansApi.update(id, {
         name,
         origin: origin || undefined,
-        roast_level: (roastLevel || undefined) as RoastLevel | undefined,
+        roast_level: roastLevel,
+        roast_detail: roastDetail || undefined,
         current_stock: stock,
         notes: notes || undefined,
       });
@@ -113,6 +169,14 @@ export default function BeanDetailScreen() {
 
   const stockColor = getStockColor(bean.current_stock);
 
+  const roastDisplayText = (() => {
+    const levelLabel = ROAST_LEVEL_LABELS[bean.roast_level];
+    if (bean.roast_detail) {
+      return `${levelLabel}（${ROAST_DETAIL_LABELS[bean.roast_detail]}）`;
+    }
+    return levelLabel;
+  })();
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -146,14 +210,48 @@ export default function BeanDetailScreen() {
               underlineColorAndroid="transparent"
             />
 
-            <Text style={styles.label}>焙煎度</Text>
-            <TextInput
-              style={styles.input}
-              value={roastLevel}
-              onChangeText={setRoastLevel}
-              placeholderTextColor={colors.textTertiary}
-              underlineColorAndroid="transparent"
-            />
+            <Text style={styles.label}>焙煎度 *</Text>
+            <View style={styles.chipContainer}>
+              {ROAST_LEVELS.map((level) => (
+                <TouchableOpacity
+                  key={level.value}
+                  style={[styles.chip, roastLevel === level.value && styles.chipSelected]}
+                  onPress={() => handleRoastLevelSelect(level.value)}
+                >
+                  <Text
+                    style={[styles.chipText, roastLevel === level.value && styles.chipTextSelected]}
+                  >
+                    {level.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {roastLevel !== "" && (
+              <>
+                <Text style={styles.label}>焙煎度（詳細）</Text>
+                <View style={styles.chipContainer}>
+                  {ROAST_DETAILS[roastLevel].map((detail) => (
+                    <TouchableOpacity
+                      key={detail.value}
+                      style={[styles.chip, roastDetail === detail.value && styles.chipSelected]}
+                      onPress={() =>
+                        setRoastDetail(roastDetail === detail.value ? "" : detail.value)
+                      }
+                    >
+                      <Text
+                        style={[
+                          styles.chipText,
+                          roastDetail === detail.value && styles.chipTextSelected,
+                        ]}
+                      >
+                        {detail.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
 
             <Text style={styles.label}>在庫数 (g) *</Text>
             <TextInput
@@ -183,7 +281,8 @@ export default function BeanDetailScreen() {
                   setEditing(false);
                   setName(bean.name);
                   setOrigin(bean.origin ?? "");
-                  setRoastLevel(bean.roast_level ?? "");
+                  setRoastLevel(bean.roast_level);
+                  setRoastDetail(bean.roast_detail ?? "");
                   setCurrentStock(String(bean.current_stock));
                   setNotes(bean.notes ?? "");
                 }}
@@ -218,19 +317,17 @@ export default function BeanDetailScreen() {
                   <Text style={styles.infoValue}>{bean.origin}</Text>
                 </View>
               )}
-              {bean.roast_level && (
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>焙煎度</Text>
-                  <Text style={styles.infoValue}>{bean.roast_level}</Text>
-                </View>
-              )}
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>焙煎度</Text>
+                <Text style={styles.infoValue}>{roastDisplayText}</Text>
+              </View>
               {bean.notes && (
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>メモ</Text>
                   <Text style={styles.infoValue}>{bean.notes}</Text>
                 </View>
               )}
-              <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
+              <View style={[styles.infoRow, styles.infoRowLast]}>
                 <Text style={styles.infoLabel}>登録日</Text>
                 <Text style={styles.infoValue}>
                   {new Date(bean.created_at).toLocaleDateString("ja-JP")}
@@ -315,6 +412,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.borderLight,
   },
+  infoRowLast: {
+    borderBottomWidth: 0,
+  },
   infoLabel: {
     ...typography.bodySmall,
     color: colors.textSecondary,
@@ -345,6 +445,30 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   textArea: { height: 100, textAlignVertical: "top" },
+  chipContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  chip: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  chipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  chipText: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+  },
+  chipTextSelected: {
+    color: colors.textInverse,
+  },
   editActions: { flexDirection: "row", gap: spacing.md, marginTop: spacing["3xl"] },
   button: { flex: 1, borderRadius: radius.sm, padding: spacing.lg, alignItems: "center" },
   cancelButton: {

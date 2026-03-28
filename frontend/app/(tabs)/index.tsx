@@ -11,8 +11,15 @@ import {
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { beansApi } from "../../src/api/beans";
-import type { CoffeeBean } from "../../src/types/api";
+import type { CoffeeBean, RoastLevel } from "../../src/types/api";
 import { colors, typography, spacing, radius, shadows, getStockColor } from "@/theme";
+
+const ROAST_LEVEL_LABELS: Record<RoastLevel, string> = {
+  shallow: "浅煎り",
+  medium: "中煎り",
+  medium_deep: "中深煎り",
+  deep: "深煎り",
+};
 
 export default function BeansListScreen() {
   const [beans, setBeans] = useState<CoffeeBean[]>([]);
@@ -57,7 +64,7 @@ export default function BeansListScreen() {
             <Text style={styles.beanName}>{item.name}</Text>
             <View style={styles.metaRow}>
               {item.origin && <Text style={styles.beanMeta}>{item.origin}</Text>}
-              {item.roast_level && <Text style={styles.beanMeta}>{item.roast_level}</Text>}
+              {item.roast_level && <Text style={styles.beanMeta}>{ROAST_LEVEL_LABELS[item.roast_level]}</Text>}
             </View>
           </View>
           <View style={[styles.stockCircle, { borderColor: stockColor }]}>

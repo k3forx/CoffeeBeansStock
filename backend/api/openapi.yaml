@@ -270,6 +270,14 @@ components:
     RoastLevel:
       type: string
       enum:
+        - shallow
+        - medium
+        - medium_deep
+        - deep
+
+    RoastDetail:
+      type: string
+      enum:
         - light
         - cinnamon
         - medium
@@ -298,6 +306,8 @@ components:
           type: string
         roast_level:
           $ref: "#/components/schemas/RoastLevel"
+        roast_detail:
+          $ref: "#/components/schemas/RoastDetail"
         current_stock:
           type: integer
           format: int32
@@ -323,6 +333,8 @@ components:
           type: string
         roast_level:
           $ref: "#/components/schemas/RoastLevel"
+        roast_detail:
+          $ref: "#/components/schemas/RoastDetail"
         current_stock:
           type: integer
           format: int32
@@ -338,6 +350,8 @@ components:
           type: string
         roast_level:
           $ref: "#/components/schemas/RoastLevel"
+        roast_detail:
+          $ref: "#/components/schemas/RoastDetail"
         current_stock:
           type: integer
           format: int32

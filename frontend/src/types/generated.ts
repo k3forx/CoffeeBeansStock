@@ -140,13 +140,16 @@ export interface components {
             refresh_token: string;
         };
         /** @enum {string} */
-        RoastLevel: "light" | "cinnamon" | "medium" | "high" | "city" | "full_city" | "french" | "italian";
+        RoastLevel: "shallow" | "medium" | "medium_deep" | "deep";
+        /** @enum {string} */
+        RoastDetail: "light" | "cinnamon" | "medium" | "high" | "city" | "full_city" | "french" | "italian";
         CoffeeBeanResponse: {
             /** Format: uuid */
             id: string;
             name: string;
             origin?: string;
             roast_level: components["schemas"]["RoastLevel"];
+            roast_detail?: components["schemas"]["RoastDetail"];
             /** Format: int32 */
             current_stock: number;
             notes?: string;
@@ -159,6 +162,7 @@ export interface components {
             name: string;
             origin?: string;
             roast_level: components["schemas"]["RoastLevel"];
+            roast_detail?: components["schemas"]["RoastDetail"];
             /** Format: int32 */
             current_stock: number;
             notes?: string;
@@ -167,6 +171,7 @@ export interface components {
             name?: string;
             origin?: string;
             roast_level?: components["schemas"]["RoastLevel"];
+            roast_detail?: components["schemas"]["RoastDetail"];
             /** Format: int32 */
             current_stock?: number;
             notes?: string;

@@ -13,36 +13,60 @@ const (
 	BearerAuthScopes = "bearerAuth.Scopes"
 )
 
+// Defines values for RoastDetail.
+const (
+	RoastDetailCinnamon RoastDetail = "cinnamon"
+	RoastDetailCity     RoastDetail = "city"
+	RoastDetailFrench   RoastDetail = "french"
+	RoastDetailFullCity RoastDetail = "full_city"
+	RoastDetailHigh     RoastDetail = "high"
+	RoastDetailItalian  RoastDetail = "italian"
+	RoastDetailLight    RoastDetail = "light"
+	RoastDetailMedium   RoastDetail = "medium"
+)
+
+// Valid indicates whether the value is a known member of the RoastDetail enum.
+func (e RoastDetail) Valid() bool {
+	switch e {
+	case RoastDetailCinnamon:
+		return true
+	case RoastDetailCity:
+		return true
+	case RoastDetailFrench:
+		return true
+	case RoastDetailFullCity:
+		return true
+	case RoastDetailHigh:
+		return true
+	case RoastDetailItalian:
+		return true
+	case RoastDetailLight:
+		return true
+	case RoastDetailMedium:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RoastLevel.
 const (
-	Cinnamon RoastLevel = "cinnamon"
-	City     RoastLevel = "city"
-	French   RoastLevel = "french"
-	FullCity RoastLevel = "full_city"
-	High     RoastLevel = "high"
-	Italian  RoastLevel = "italian"
-	Light    RoastLevel = "light"
-	Medium   RoastLevel = "medium"
+	RoastLevelDeep       RoastLevel = "deep"
+	RoastLevelMedium     RoastLevel = "medium"
+	RoastLevelMediumDeep RoastLevel = "medium_deep"
+	RoastLevelShallow    RoastLevel = "shallow"
 )
 
 // Valid indicates whether the value is a known member of the RoastLevel enum.
 func (e RoastLevel) Valid() bool {
 	switch e {
-	case Cinnamon:
+	case RoastLevelDeep:
 		return true
-	case City:
+	case RoastLevelMedium:
 		return true
-	case French:
+	case RoastLevelMediumDeep:
 		return true
-	case FullCity:
-		return true
-	case High:
-		return true
-	case Italian:
-		return true
-	case Light:
-		return true
-	case Medium:
+	case RoastLevelShallow:
 		return true
 	default:
 		return false
@@ -64,17 +88,19 @@ type CoffeeBeanResponse struct {
 	Name         string             `json:"name"`
 	Notes        *string            `json:"notes,omitempty"`
 	Origin       *string            `json:"origin,omitempty"`
+	RoastDetail  *RoastDetail       `json:"roast_detail,omitempty"`
 	RoastLevel   RoastLevel         `json:"roast_level"`
 	UpdatedAt    time.Time          `json:"updated_at"`
 }
 
 // CreateBeanRequest defines model for CreateBeanRequest.
 type CreateBeanRequest struct {
-	CurrentStock int32      `json:"current_stock"`
-	Name         string     `json:"name"`
-	Notes        *string    `json:"notes,omitempty"`
-	Origin       *string    `json:"origin,omitempty"`
-	RoastLevel   RoastLevel `json:"roast_level"`
+	CurrentStock int32        `json:"current_stock"`
+	Name         string       `json:"name"`
+	Notes        *string      `json:"notes,omitempty"`
+	Origin       *string      `json:"origin,omitempty"`
+	RoastDetail  *RoastDetail `json:"roast_detail,omitempty"`
+	RoastLevel   RoastLevel   `json:"roast_level"`
 }
 
 // DeleteResponse defines model for DeleteResponse.
@@ -120,16 +146,20 @@ type RefreshResult struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+// RoastDetail defines model for RoastDetail.
+type RoastDetail string
+
 // RoastLevel defines model for RoastLevel.
 type RoastLevel string
 
 // UpdateBeanRequest defines model for UpdateBeanRequest.
 type UpdateBeanRequest struct {
-	CurrentStock *int32      `json:"current_stock,omitempty"`
-	Name         *string     `json:"name,omitempty"`
-	Notes        *string     `json:"notes,omitempty"`
-	Origin       *string     `json:"origin,omitempty"`
-	RoastLevel   *RoastLevel `json:"roast_level,omitempty"`
+	CurrentStock *int32       `json:"current_stock,omitempty"`
+	Name         *string      `json:"name,omitempty"`
+	Notes        *string      `json:"notes,omitempty"`
+	Origin       *string      `json:"origin,omitempty"`
+	RoastDetail  *RoastDetail `json:"roast_detail,omitempty"`
+	RoastLevel   *RoastLevel  `json:"roast_level,omitempty"`
 }
 
 // UserResponse defines model for UserResponse.

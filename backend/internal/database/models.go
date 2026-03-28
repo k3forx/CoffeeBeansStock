@@ -14,6 +14,7 @@ type CoffeeBean struct {
 	Name         string             `json:"name"`
 	Origin       pgtype.Text        `json:"origin"`
 	RoastLevel   string             `json:"roast_level"`
+	RoastDetail  pgtype.Text        `json:"roast_detail"`
 	CurrentStock int32              `json:"current_stock"`
 	Notes        pgtype.Text        `json:"notes"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`

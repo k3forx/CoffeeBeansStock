@@ -10,6 +10,7 @@ export type CreateBeanInput = components["schemas"]["CreateBeanRequest"];
 export type UpdateBeanInput = components["schemas"]["UpdateBeanRequest"];
 export type ListBeansResult = components["schemas"]["ListBeansResponse"];
 export type RoastLevel = components["schemas"]["RoastLevel"];
+export type RoastDetail = components["schemas"]["RoastDetail"];
 
 // Envelope type used internally by client.ts
 export type ApiResponse<T> = {

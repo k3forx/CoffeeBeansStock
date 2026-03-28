@@ -32,8 +32,8 @@ WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: CreateCoffeeBean :one
 INSERT INTO coffee_beans (
-    id, user_id, name, origin, roast_level, current_stock, notes
-) VALUES ($1, $2, $3, $4, $5, $6, $7)
+    id, user_id, name, origin, roast_level, roast_detail, current_stock, notes
+) VALUES ($1, $2, $3, $4, $5, sqlc.narg('roast_detail'), $6, $7)
 RETURNING *;
 
 -- name: GetCoffeeBeanByID :one
@@ -53,6 +53,7 @@ SELECT
     cb.name,
     cb.origin,
     cb.roast_level,
+    cb.roast_detail,
     cb.current_stock,
     cb.notes,
     cb.created_at,
@@ -79,6 +80,7 @@ SET
     name = COALESCE(sqlc.narg('name'), name),
     origin = COALESCE(sqlc.narg('origin'), origin),
     roast_level = COALESCE(sqlc.narg('roast_level'), roast_level),
+    roast_detail = COALESCE(sqlc.narg('roast_detail'), roast_detail),
     current_stock = COALESCE(sqlc.narg('current_stock'), current_stock),
     notes = COALESCE(sqlc.narg('notes'), notes),
     updated_at = CURRENT_TIMESTAMP

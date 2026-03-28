@@ -38,8 +38,9 @@ type PaginationResponse struct {
 // CreateBeanInput holds input for creating a coffee bean.
 type CreateBeanInput struct {
 	Name         string
-	Origin       *string
 	RoastLevel   string
+	Origin       *string
+	RoastDetail  *string
 	Notes        *string
 	CurrentStock int32
 }
@@ -49,6 +50,7 @@ type UpdateBeanInput struct {
 	Name         *string
 	Origin       *string
 	RoastLevel   *string
+	RoastDetail  *string
 	Notes        *string
 	CurrentStock *int32
 }
@@ -89,12 +91,20 @@ func (s *CoffeeBeansService) Create(ctx context.Context, userID uuid.UUID, input
 	if err != nil {
 		return nil, err
 	}
+	var roastDetail *coffeebean.RoastDetail
+	if input.RoastDetail != nil {
+		rd, rdErr := coffeebean.NewRoastDetail(*input.RoastDetail)
+		if rdErr != nil {
+			return nil, rdErr
+		}
+		roastDetail = &rd
+	}
 	stock, err := coffeebean.NewStock(input.CurrentStock)
 	if err != nil {
 		return nil, err
 	}
 
-	bean, err := coffeebean.New(userID, input.Name, roastLevel, input.Origin, input.Notes, stock)
+	bean, err := coffeebean.New(userID, input.Name, roastLevel, roastDetail, input.Origin, input.Notes, stock)
 	if err != nil {
 		return nil, err
 	}
@@ -135,6 +145,14 @@ func (s *CoffeeBeansService) Update(ctx context.Context, userID, beanID uuid.UUI
 		}
 		rl = &r
 	}
+	var rd *coffeebean.RoastDetail
+	if input.RoastDetail != nil {
+		d, err := coffeebean.NewRoastDetail(*input.RoastDetail)
+		if err != nil {
+			return nil, err
+		}
+		rd = &d
+	}
 	var st *coffeebean.Stock
 	if input.CurrentStock != nil {
 		stk, err := coffeebean.NewStock(*input.CurrentStock)
@@ -144,7 +162,7 @@ func (s *CoffeeBeansService) Update(ctx context.Context, userID, beanID uuid.UUI
 		st = &stk
 	}
 
-	if err := bean.Update(input.Name, input.Origin, rl, input.Notes, st); err != nil {
+	if err := bean.Update(input.Name, input.Origin, rl, rd, input.Notes, st); err != nil {
 		return nil, err
 	}
 	if err := s.beanRepo.Update(ctx, bean); err != nil {

@@ -52,7 +52,7 @@ func (r *coffeeBeanRepository) CountByUserID(ctx context.Context, userID uuid.UU
 }
 
 func (r *coffeeBeanRepository) Save(ctx context.Context, bean *coffeebean.CoffeeBean) error {
-	_, err := r.queries.CreateCoffeeBean(ctx, database.CreateCoffeeBeanParams{
+	params := database.CreateCoffeeBeanParams{
 		ID:           toUUID(bean.ID()),
 		UserID:       toUUID(bean.UserID()),
 		Name:         bean.Name(),
@@ -60,7 +60,12 @@ func (r *coffeeBeanRepository) Save(ctx context.Context, bean *coffeebean.Coffee
 		RoastLevel:   bean.RoastLevel().String(),
 		CurrentStock: bean.CurrentStock().Value(),
 		Notes:        toPgText(bean.Notes()),
-	})
+	}
+	if bean.RoastDetail() != nil {
+		s := bean.RoastDetail().String()
+		params.RoastDetail = toPgText(&s)
+	}
+	_, err := r.queries.CreateCoffeeBean(ctx, params)
 	return err
 }
 
@@ -68,7 +73,7 @@ func (r *coffeeBeanRepository) Update(ctx context.Context, bean *coffeebean.Coff
 	name := bean.Name()
 	roastLevel := bean.RoastLevel().String()
 	stock := bean.CurrentStock().Value()
-	_, err := r.queries.UpdateCoffeeBean(ctx, database.UpdateCoffeeBeanParams{
+	params := database.UpdateCoffeeBeanParams{
 		ID:           toUUID(bean.ID()),
 		UserID:       toUUID(bean.UserID()),
 		Name:         toPgText(&name),
@@ -76,7 +81,12 @@ func (r *coffeeBeanRepository) Update(ctx context.Context, bean *coffeebean.Coff
 		RoastLevel:   toPgText(&roastLevel),
 		CurrentStock: toPgInt4(&stock),
 		Notes:        toPgText(bean.Notes()),
-	})
+	}
+	if bean.RoastDetail() != nil {
+		s := bean.RoastDetail().String()
+		params.RoastDetail = toPgText(&s)
+	}
+	_, err := r.queries.UpdateCoffeeBean(ctx, params)
 	return err
 }
 
@@ -105,9 +115,16 @@ func toDomainCoffeeBean(b database.CoffeeBean) *coffeebean.CoffeeBean {
 		notes = &b.Notes.String
 	}
 
+	var roastDetail *coffeebean.RoastDetail
+	if b.RoastDetail.Valid {
+		rd := coffeebean.ReconstructRoastDetail(b.RoastDetail.String)
+		roastDetail = &rd
+	}
+
 	return coffeebean.Reconstruct(
 		id, userID, b.Name, origin,
 		coffeebean.ReconstructRoastLevel(b.RoastLevel),
+		roastDetail,
 		coffeebean.ReconstructStock(b.CurrentStock),
 		notes, b.CreatedAt.Time, b.UpdatedAt.Time,
 	)
