@@ -1,4 +1,18 @@
 {
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'if [[ \"$CLAUDE_FILE_PATH\" == */plans/* ]]; then mkdir -p .claude/plans && cp \"$CLAUDE_FILE_PATH\" .claude/plans/ 2>/dev/null || true; fi'",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "feature-dev@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true
