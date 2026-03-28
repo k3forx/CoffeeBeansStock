@@ -15,6 +15,7 @@ type Config struct {
 	DBPass    string
 	DBName    string
 	DBSSLMode string
+	JWTSecret string
 }
 
 func Load() (*Config, error) {
@@ -28,6 +29,7 @@ func Load() (*Config, error) {
 		DBPass:    getEnv("DB_PASSWORD", "coffee_pass"),
 		DBName:    getEnv("DB_NAME", "coffee_stock"),
 		DBSSLMode: getEnv("DB_SSLMODE", "disable"),
+		JWTSecret: getEnv("JWT_SECRET", "dev-secret-change-in-production"),
 	}
 
 	return cfg, nil

@@ -11,9 +11,14 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/handlers"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/middleware"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/auth"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/config"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/services"
 )
 
 func main() {
@@ -40,10 +45,15 @@ func main() {
 	}
 	slog.Info("database connection established")
 
+	queries := database.New(pool)
+	jwtManager := auth.NewJWTManager(cfg.JWTSecret)
+	authService := services.NewAuthService(queries, jwtManager)
+	authHandler := handlers.NewAuthHandler(authService)
+
 	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Recoverer)
+	r.Use(chimiddleware.RequestID)
+	r.Use(chimiddleware.RealIP)
+	r.Use(chimiddleware.Recoverer)
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -54,6 +64,19 @@ func main() {
 		}
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `{"status":"ok","database":"connected"}`)
+	})
+
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Route("/auth", func(r chi.Router) {
+			r.Post("/signup", authHandler.Signup)
+			r.Post("/login", authHandler.Login)
+			r.Post("/refresh", authHandler.Refresh)
+
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.Auth(jwtManager))
+				r.Get("/me", authHandler.GetMe)
+			})
+		})
 	})
 
 	srv := &http.Server{
