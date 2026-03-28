@@ -11,7 +11,7 @@ run: ## Run the server
 	go run cmd/server/main.go
 
 sqlc-generate: ## Generate sqlc code
-	sqlc generate
+	$(GOBIN)/sqlc generate
 
 migrate-up: ## Run migrations up
 	$(GOBIN)/migrate -path $(MIGRATIONS_DIR) -database "$(DB_URL)" up
