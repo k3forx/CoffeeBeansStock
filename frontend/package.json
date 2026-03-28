@@ -10,7 +10,16 @@
     "generate:types": "openapi-typescript ../backend/api/openapi.yaml -o src/types/generated.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "setupFiles": ["<rootDir>/jest.setup.ts"],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    }
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -28,12 +37,14 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
     "eslint": "^9.39.4",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-native": "^5.0.0",
     "globals": "^17.4.0",
+    "jest-expo": "~54.0.17",
     "openapi-typescript": "^7.13.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.57.2"
