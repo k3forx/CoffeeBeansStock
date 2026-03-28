@@ -1,3 +1,6 @@
+DB_URL ?= postgres://coffee_user:coffee_pass@localhost:5432/coffee_stock?sslmode=disable
+MIGRATIONS_DIR = migrations
+
 .PHONY: help run sqlc-generate migrate-up migrate-down test build clean
 
 help: ## Show this help message
@@ -11,10 +14,10 @@ sqlc-generate: ## Generate sqlc code
 	sqlc generate
 
 migrate-up: ## Run migrations up
-	# TODO: マイグレーションツール導入後に実装
+	$(GOBIN)/migrate -path $(MIGRATIONS_DIR) -database "$(DB_URL)" up
 
-migrate-down: ## Run migrations down
-	# TODO: マイグレーションツール導入後に実装
+migrate-down: ## Run migrations down (1 step)
+	$(GOBIN)/migrate -path $(MIGRATIONS_DIR) -database "$(DB_URL)" down 1
 
 test: ## Run tests
 	go test -v ./...

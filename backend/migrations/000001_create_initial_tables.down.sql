@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS usage_history;
+DROP TABLE IF EXISTS purchase_history;
+DROP TABLE IF EXISTS coffee_beans;
+DROP TABLE IF EXISTS users;
+
+DROP EXTENSION IF EXISTS "pgcrypto";
+DROP EXTENSION IF EXISTS "uuid-ossp";
