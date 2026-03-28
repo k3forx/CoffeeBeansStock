@@ -11,6 +11,7 @@ type coffeeBeanRepository struct {
 	queries *database.Queries
 }
 
+// NewCoffeeBeanRepository creates a new CoffeeBeanRepository backed by sqlc queries.
 func NewCoffeeBeanRepository(queries *database.Queries) CoffeeBeanRepository {
 	return &coffeeBeanRepository{queries: queries}
 }

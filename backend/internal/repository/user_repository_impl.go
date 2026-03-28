@@ -11,6 +11,7 @@ type userRepository struct {
 	queries *database.Queries
 }
 
+// NewUserRepository creates a new UserRepository backed by sqlc queries.
 func NewUserRepository(queries *database.Queries) UserRepository {
 	return &userRepository{queries: queries}
 }

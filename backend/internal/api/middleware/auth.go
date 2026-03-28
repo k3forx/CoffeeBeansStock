@@ -14,6 +14,7 @@ type contextKey string
 
 const userIDKey contextKey = "userID"
 
+// Auth returns middleware that validates JWT tokens from the Authorization header.
 func Auth(jwtManager *auth.JWTManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +48,7 @@ func Auth(jwtManager *auth.JWTManager) func(http.Handler) http.Handler {
 	}
 }
 
+// GetUserID extracts the authenticated user ID from the context.
 func GetUserID(ctx context.Context) (uuid.UUID, bool) {
 	id, ok := ctx.Value(userIDKey).(uuid.UUID)
 	return id, ok

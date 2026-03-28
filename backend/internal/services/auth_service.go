@@ -12,30 +12,35 @@ import (
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/repository"
 )
 
+// AuthService handles authentication business logic.
 type AuthService struct {
 	userRepo   repository.UserRepository
 	jwtManager *auth.JWTManager
 }
 
+// NewAuthService creates a new AuthService.
 func NewAuthService(userRepo repository.UserRepository, jwtManager *auth.JWTManager) *AuthService {
 	return &AuthService{userRepo: userRepo, jwtManager: jwtManager}
 }
 
+// AuthResult holds the result of an authentication operation.
 type AuthResult struct {
 	User         *UserResponse `json:"user"`
-	AccessToken  string        `json:"access_token"`
-	RefreshToken string        `json:"refresh_token"`
+	AccessToken  string        `json:"access_token"`  //nolint:gosec // JWT response field, not a hardcoded secret
+	RefreshToken string        `json:"refresh_token"` //nolint:gosec // JWT response field, not a hardcoded secret
 }
 
+// UserResponse is the API representation of a user.
 type UserResponse struct {
-	ID                  uuid.UUID `json:"id"`
 	Name                string    `json:"name,omitempty"`
-	LowStockThreshold   int32    `json:"low_stock_threshold,omitempty"`
-	NotificationEnabled bool      `json:"notification_enabled,omitempty"`
 	CreatedAt           string    `json:"created_at"`
 	UpdatedAt           string    `json:"updated_at,omitempty"`
+	ID                  uuid.UUID `json:"id"`
+	LowStockThreshold   int32     `json:"low_stock_threshold,omitempty"`
+	NotificationEnabled bool      `json:"notification_enabled,omitempty"`
 }
 
+// RegisterAnonymous creates a new anonymous user and returns tokens.
 func (s *AuthService) RegisterAnonymous(ctx context.Context) (*AuthResult, error) {
 	user, err := s.userRepo.CreateAnonymous(ctx)
 	if err != nil {
@@ -59,11 +64,13 @@ func (s *AuthService) RegisterAnonymous(ctx context.Context) (*AuthResult, error
 	}, nil
 }
 
+// RefreshResult holds new tokens after a refresh operation.
 type RefreshResult struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	AccessToken  string `json:"access_token"`  //nolint:gosec // JWT response field, not a hardcoded secret
+	RefreshToken string `json:"refresh_token"` //nolint:gosec // JWT response field, not a hardcoded secret
 }
 
+// Refresh validates a refresh token and issues a new token pair.
 func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*RefreshResult, error) {
 	claims, err := s.jwtManager.ValidateToken(refreshToken)
 	if err != nil {
@@ -96,6 +103,7 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*Refres
 	}, nil
 }
 
+// GetMe returns the user profile for the given user ID.
 func (s *AuthService) GetMe(ctx context.Context, userID uuid.UUID) (*UserResponse, error) {
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {

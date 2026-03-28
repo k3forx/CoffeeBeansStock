@@ -11,35 +11,41 @@ import (
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/repository"
 )
 
-var (
-	ErrBeanNotFound = errors.New("coffee bean not found")
-	ErrForbidden    = errors.New("forbidden")
-)
+// ErrBeanNotFound is returned when a coffee bean is not found.
+var ErrBeanNotFound = errors.New("coffee bean not found")
 
+// ErrForbidden is returned when a user lacks permission to access a resource.
+var ErrForbidden = errors.New("forbidden")
+
+// CoffeeBeansService handles coffee bean business logic.
 type CoffeeBeansService struct {
 	beanRepo repository.CoffeeBeanRepository
 }
 
+// NewCoffeeBeansService creates a new CoffeeBeansService.
 func NewCoffeeBeansService(beanRepo repository.CoffeeBeanRepository) *CoffeeBeansService {
 	return &CoffeeBeansService{beanRepo: beanRepo}
 }
 
+// CoffeeBeanResponse is the API representation of a coffee bean.
 type CoffeeBeanResponse struct {
-	ID           uuid.UUID `json:"id"`
-	Name         string    `json:"name"`
 	Origin       *string   `json:"origin,omitempty"`
 	RoastLevel   *string   `json:"roast_level,omitempty"`
-	CurrentStock int32     `json:"current_stock"`
 	Notes        *string   `json:"notes,omitempty"`
+	Name         string    `json:"name"`
 	CreatedAt    string    `json:"created_at"`
 	UpdatedAt    string    `json:"updated_at"`
+	ID           uuid.UUID `json:"id"`
+	CurrentStock int32     `json:"current_stock"`
 }
 
+// ListBeansResult holds a paginated list of coffee beans.
 type ListBeansResult struct {
 	Beans      []CoffeeBeanResponse `json:"beans"`
 	Pagination PaginationResponse   `json:"pagination"`
 }
 
+// PaginationResponse holds pagination metadata.
 type PaginationResponse struct {
 	Total   int64 `json:"total"`
 	Limit   int32 `json:"limit"`
@@ -47,14 +53,16 @@ type PaginationResponse struct {
 	HasMore bool  `json:"has_more"`
 }
 
+// CreateBeanInput holds validated input for creating a coffee bean.
 type CreateBeanInput struct {
-	Name         string
 	Origin       *string
 	RoastLevel   *string
-	CurrentStock int32
 	Notes        *string
+	Name         string
+	CurrentStock int32
 }
 
+// UpdateBeanInput holds validated input for updating a coffee bean.
 type UpdateBeanInput struct {
 	Name         *string
 	Origin       *string
@@ -63,6 +71,7 @@ type UpdateBeanInput struct {
 	Notes        *string
 }
 
+// ValidateCreateInput validates the input for creating a coffee bean.
 func (s *CoffeeBeansService) ValidateCreateInput(input *CreateBeanInput) []api.FieldError {
 	var errs []api.FieldError
 
@@ -81,6 +90,7 @@ func (s *CoffeeBeansService) ValidateCreateInput(input *CreateBeanInput) []api.F
 	return errs
 }
 
+// List returns a paginated list of coffee beans for the given user.
 func (s *CoffeeBeansService) List(ctx context.Context, userID uuid.UUID, limit, offset int32) (*ListBeansResult, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 20
@@ -115,6 +125,7 @@ func (s *CoffeeBeansService) List(ctx context.Context, userID uuid.UUID, limit, 
 	}, nil
 }
 
+// Create creates a new coffee bean for the given user.
 func (s *CoffeeBeansService) Create(ctx context.Context, userID uuid.UUID, input *CreateBeanInput) (*CoffeeBeanResponse, error) {
 	bean, err := s.beanRepo.Create(ctx, repository.CreateCoffeeBeanParams{
 		UserID:       userID,
@@ -132,7 +143,8 @@ func (s *CoffeeBeansService) Create(ctx context.Context, userID uuid.UUID, input
 	return &resp, nil
 }
 
-func (s *CoffeeBeansService) GetByID(ctx context.Context, userID uuid.UUID, beanID uuid.UUID) (*CoffeeBeanResponse, error) {
+// GetByID returns a coffee bean by ID, verifying ownership.
+func (s *CoffeeBeansService) GetByID(ctx context.Context, userID, beanID uuid.UUID) (*CoffeeBeanResponse, error) {
 	bean, err := s.beanRepo.GetByID(ctx, beanID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -149,7 +161,8 @@ func (s *CoffeeBeansService) GetByID(ctx context.Context, userID uuid.UUID, bean
 	return &resp, nil
 }
 
-func (s *CoffeeBeansService) Update(ctx context.Context, userID uuid.UUID, beanID uuid.UUID, input *UpdateBeanInput) (*CoffeeBeanResponse, error) {
+// Update updates a coffee bean, verifying ownership.
+func (s *CoffeeBeansService) Update(ctx context.Context, userID, beanID uuid.UUID, input *UpdateBeanInput) (*CoffeeBeanResponse, error) {
 	_, err := s.GetByID(ctx, userID, beanID)
 	if err != nil {
 		return nil, err
@@ -175,7 +188,8 @@ func (s *CoffeeBeansService) Update(ctx context.Context, userID uuid.UUID, beanI
 	return &resp, nil
 }
 
-func (s *CoffeeBeansService) Delete(ctx context.Context, userID uuid.UUID, beanID uuid.UUID) error {
+// Delete soft-deletes a coffee bean, verifying ownership.
+func (s *CoffeeBeansService) Delete(ctx context.Context, userID, beanID uuid.UUID) error {
 	_, err := s.GetByID(ctx, userID, beanID)
 	if err != nil {
 		return err

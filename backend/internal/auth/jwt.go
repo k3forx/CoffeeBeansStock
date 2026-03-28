@@ -8,34 +8,41 @@ import (
 	"github.com/google/uuid"
 )
 
-var (
-	ErrInvalidToken = errors.New("invalid token")
-	ErrExpiredToken = errors.New("expired token")
-)
+// ErrInvalidToken is returned when a token is malformed or has an invalid signature.
+var ErrInvalidToken = errors.New("invalid token")
 
-const (
-	AccessTokenDuration  = 1 * time.Hour
-	RefreshTokenDuration = 7 * 24 * time.Hour
-)
+// ErrExpiredToken is returned when a token has expired.
+var ErrExpiredToken = errors.New("expired token")
 
+// AccessTokenDuration is the lifetime of an access token.
+const AccessTokenDuration = 1 * time.Hour
+
+// RefreshTokenDuration is the lifetime of a refresh token.
+const RefreshTokenDuration = 7 * 24 * time.Hour
+
+// TokenClaims represents the JWT claims including the user ID.
 type TokenClaims struct {
 	UserID string `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
+// TokenPair holds an access token and a refresh token.
 type TokenPair struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	AccessToken  string `json:"access_token"`  //nolint:gosec // JWT response field, not a hardcoded secret
+	RefreshToken string `json:"refresh_token"` //nolint:gosec // JWT response field, not a hardcoded secret
 }
 
+// JWTManager handles JWT token generation and validation.
 type JWTManager struct {
 	secret []byte
 }
 
+// NewJWTManager creates a new JWTManager with the given secret.
 func NewJWTManager(secret string) *JWTManager {
 	return &JWTManager{secret: []byte(secret)}
 }
 
+// GenerateTokenPair creates a new access/refresh token pair for the given user.
 func (m *JWTManager) GenerateTokenPair(userID uuid.UUID) (*TokenPair, error) {
 	accessToken, err := m.generateToken(userID.String(), AccessTokenDuration)
 	if err != nil {
@@ -53,6 +60,7 @@ func (m *JWTManager) GenerateTokenPair(userID uuid.UUID) (*TokenPair, error) {
 	}, nil
 }
 
+// ValidateToken parses and validates a JWT token string.
 func (m *JWTManager) ValidateToken(tokenStr string) (*TokenClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &TokenClaims{}, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {

@@ -7,6 +7,7 @@ import (
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
 )
 
+// CoffeeBeanRepository defines the interface for coffee bean data access.
 type CoffeeBeanRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (database.CoffeeBean, error)
 	ListByUserID(ctx context.Context, userID uuid.UUID, limit, offset int32) ([]database.CoffeeBean, error)
@@ -16,21 +17,23 @@ type CoffeeBeanRepository interface {
 	SoftDelete(ctx context.Context, id, userID uuid.UUID) error
 }
 
+// CreateCoffeeBeanParams holds parameters for creating a coffee bean.
 type CreateCoffeeBeanParams struct {
-	UserID       uuid.UUID
-	Name         string
 	Origin       *string
 	RoastLevel   *string
-	CurrentStock int32
 	Notes        *string
+	Name         string
+	UserID       uuid.UUID
+	CurrentStock int32
 }
 
+// UpdateCoffeeBeanParams holds parameters for updating a coffee bean.
 type UpdateCoffeeBeanParams struct {
-	ID           uuid.UUID
-	UserID       uuid.UUID
 	Name         *string
 	Origin       *string
 	RoastLevel   *string
 	CurrentStock *int32
 	Notes        *string
+	ID           uuid.UUID
+	UserID       uuid.UUID
 }

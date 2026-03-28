@@ -63,17 +63,18 @@ func main() {
 			w.Header().Set("Content-Type", "application/json")
 			if err := pool.Ping(r.Context()); err != nil {
 				w.WriteHeader(http.StatusServiceUnavailable)
-				fmt.Fprintf(w, `{"status":"error","database":"disconnected"}`)
+				_, _ = fmt.Fprintf(w, `{"status":"error","database":"disconnected"}`)
 				return
 			}
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, `{"status":"ok","database":"connected"}`)
+			_, _ = fmt.Fprintf(w, `{"status":"ok","database":"connected"}`)
 		},
 	})
 
 	srv := &http.Server{
-		Addr:    ":" + cfg.Port,
-		Handler: r,
+		Addr:              ":" + cfg.Port,
+		Handler:           r,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	go func() {

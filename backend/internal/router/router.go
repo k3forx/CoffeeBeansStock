@@ -10,6 +10,7 @@ import (
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/auth"
 )
 
+// Deps holds the dependencies required to set up routes.
 type Deps struct {
 	AuthHandler        *handlers.AuthHandler
 	CoffeeBeansHandler *handlers.CoffeeBeansHandler
@@ -17,6 +18,7 @@ type Deps struct {
 	HealthCheck        http.HandlerFunc
 }
 
+// New creates and configures the application router.
 func New(deps Deps) chi.Router {
 	r := chi.NewRouter()
 	r.Use(chimiddleware.RequestID)

@@ -1,7 +1,7 @@
 DB_URL ?= postgres://coffee_user:coffee_pass@localhost:5432/coffee_stock?sslmode=disable
 MIGRATIONS_DIR = migrations
 
-.PHONY: help run sqlc-generate migrate-up migrate-down test build clean
+.PHONY: help run sqlc-generate migrate-up migrate-down test build clean lint
 
 help: ## Show this help message
 	@echo "Available targets:"
@@ -27,3 +27,13 @@ build: ## Build the binary
 
 clean: ## Clean build artifacts
 	rm -rf bin/
+
+GOLANGCI_LINT_VERSION ?= v2.1.6
+TARGETS ?= ./...
+
+lint: ## Run golangci-lint (use TARGETS="./path/..." to specify targets)
+	@if ! command -v golangci-lint >/dev/null 2>&1; then \
+		echo "Installing golangci-lint $(GOLANGCI_LINT_VERSION)..."; \
+		go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
+	fi
+	golangci-lint run $(TARGETS)

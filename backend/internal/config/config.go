@@ -7,6 +7,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// Config holds the application configuration loaded from environment variables.
 type Config struct {
 	Port      string
 	DBHost    string
@@ -15,9 +16,10 @@ type Config struct {
 	DBPass    string
 	DBName    string
 	DBSSLMode string
-	JWTSecret string
+	JWTSecret string //nolint:gosec // config field loaded from env, not a hardcoded secret
 }
 
+// Load reads configuration from environment variables with sensible defaults.
 func Load() (*Config, error) {
 	_ = godotenv.Load()
 
@@ -35,6 +37,7 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
+// DatabaseURL returns the PostgreSQL connection string.
 func (c *Config) DatabaseURL() string {
 	return fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",

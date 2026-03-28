@@ -11,18 +11,21 @@ import (
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/services"
 )
 
+// AuthHandler handles authentication-related HTTP requests.
 type AuthHandler struct {
 	authService *services.AuthService
 }
 
+// NewAuthHandler creates a new AuthHandler.
 func NewAuthHandler(authService *services.AuthService) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
 type refreshRequest struct {
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"refresh_token"` //nolint:gosec // request field, not a hardcoded secret
 }
 
+// RegisterAnonymous handles anonymous user registration.
 func (h *AuthHandler) RegisterAnonymous(w http.ResponseWriter, r *http.Request) {
 	result, err := h.authService.RegisterAnonymous(r.Context())
 	if err != nil {
@@ -33,6 +36,7 @@ func (h *AuthHandler) RegisterAnonymous(w http.ResponseWriter, r *http.Request) 
 	api.WriteSuccess(w, http.StatusCreated, result)
 }
 
+// Refresh handles token refresh requests.
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	var req refreshRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -60,6 +64,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	api.WriteSuccess(w, http.StatusOK, result)
 }
 
+// GetMe returns the authenticated user's profile.
 func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {

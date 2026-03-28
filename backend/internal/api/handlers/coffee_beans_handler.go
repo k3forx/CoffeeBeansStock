@@ -13,20 +13,22 @@ import (
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/services"
 )
 
+// CoffeeBeansHandler handles coffee beans CRUD HTTP requests.
 type CoffeeBeansHandler struct {
 	service *services.CoffeeBeansService
 }
 
+// NewCoffeeBeansHandler creates a new CoffeeBeansHandler.
 func NewCoffeeBeansHandler(service *services.CoffeeBeansService) *CoffeeBeansHandler {
 	return &CoffeeBeansHandler{service: service}
 }
 
 type createBeanRequest struct {
-	Name         string  `json:"name"`
 	Origin       *string `json:"origin"`
 	RoastLevel   *string `json:"roast_level"`
-	CurrentStock int32   `json:"current_stock"`
 	Notes        *string `json:"notes"`
+	Name         string  `json:"name"`
+	CurrentStock int32   `json:"current_stock"`
 }
 
 type updateBeanRequest struct {
@@ -37,6 +39,7 @@ type updateBeanRequest struct {
 	Notes        *string `json:"notes"`
 }
 
+// List returns a paginated list of coffee beans.
 func (h *CoffeeBeansHandler) List(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -56,6 +59,7 @@ func (h *CoffeeBeansHandler) List(w http.ResponseWriter, r *http.Request) {
 	api.WriteSuccess(w, http.StatusOK, result)
 }
 
+// Create handles coffee bean creation.
 func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -91,6 +95,7 @@ func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
 	api.WriteSuccess(w, http.StatusCreated, bean)
 }
 
+// Get returns a single coffee bean by ID.
 func (h *CoffeeBeansHandler) Get(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -113,6 +118,7 @@ func (h *CoffeeBeansHandler) Get(w http.ResponseWriter, r *http.Request) {
 	api.WriteSuccess(w, http.StatusOK, bean)
 }
 
+// Update handles coffee bean updates.
 func (h *CoffeeBeansHandler) Update(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
@@ -127,7 +133,7 @@ func (h *CoffeeBeansHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req updateBeanRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
 		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "リクエストの形式が不正です")
 		return
 	}
@@ -149,6 +155,7 @@ func (h *CoffeeBeansHandler) Update(w http.ResponseWriter, r *http.Request) {
 	api.WriteSuccess(w, http.StatusOK, bean)
 }
 
+// Delete handles coffee bean deletion.
 func (h *CoffeeBeansHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
