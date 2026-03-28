@@ -1,0 +1,8 @@
+package: gen
+output: ../internal/api/gen/types.gen.go
+generate:
+  models: true
+  chi-server: false
+  embedded-spec: false
+output-options:
+  skip-prune: true

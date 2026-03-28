@@ -1,69 +1,19 @@
-// API response envelope
-export interface ApiResponse<T> {
+import type { components } from "./generated";
+
+// Re-export generated types with existing names to maintain backward compatibility.
+// All types originate from the OpenAPI spec (backend/api/openapi.yaml).
+export type UserResponse = components["schemas"]["UserResponse"];
+export type AuthResult = components["schemas"]["AuthResponse"];
+export type RefreshResult = components["schemas"]["RefreshResult"];
+export type CoffeeBean = components["schemas"]["CoffeeBeanResponse"];
+export type CreateBeanInput = components["schemas"]["CreateBeanRequest"];
+export type UpdateBeanInput = components["schemas"]["UpdateBeanRequest"];
+export type ListBeansResult = components["schemas"]["ListBeansResponse"];
+export type RoastLevel = components["schemas"]["RoastLevel"];
+
+// Envelope type used internally by client.ts
+export type ApiResponse<T> = {
   success: boolean;
   data?: T;
-  error?: {
-    code: string;
-    message: string;
-    details?: { field: string; message: string }[];
-  };
-}
-
-// Auth
-export interface UserResponse {
-  id: string;
-  name?: string;
-  low_stock_threshold?: number;
-  notification_enabled?: boolean;
-  created_at: string;
-  updated_at?: string;
-}
-
-export interface AuthResult {
-  user: UserResponse;
-  access_token: string;
-  refresh_token: string;
-}
-
-export interface RefreshResult {
-  access_token: string;
-  refresh_token: string;
-}
-
-// Coffee Beans
-export interface CoffeeBean {
-  id: string;
-  name: string;
-  origin?: string;
-  roast_level?: string;
-  current_stock: number;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ListBeansResult {
-  beans: CoffeeBean[];
-  pagination: {
-    total: number;
-    limit: number;
-    offset: number;
-    has_more: boolean;
-  };
-}
-
-export interface CreateBeanInput {
-  name: string;
-  origin?: string;
-  roast_level?: string;
-  current_stock: number;
-  notes?: string;
-}
-
-export interface UpdateBeanInput {
-  name?: string;
-  origin?: string;
-  roast_level?: string;
-  current_stock?: number;
-  notes?: string;
-}
+  error?: components["schemas"]["ErrorBody"];
+};

@@ -1,0 +1,413 @@
+openapi: "3.0.3"
+info:
+  title: CoffeeBeansStock API
+  description: コーヒー豆在庫管理アプリケーション API
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      summary: ヘルスチェック
+      tags: [system]
+      responses:
+        "200":
+          description: OK
+
+  /api/v1/auth/register:
+    post:
+      operationId: registerAnonymous
+      summary: 匿名ユーザー登録
+      tags: [auth]
+      responses:
+        "201":
+          description: 登録成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /api/v1/auth/refresh:
+    post:
+      operationId: refreshToken
+      summary: トークンリフレッシュ
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: リフレッシュ成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefreshResult"
+        "401":
+          description: トークン無効
+
+  /api/v1/auth/me:
+    get:
+      operationId: getMe
+      summary: 認証ユーザー情報取得
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          description: 認証エラー
+
+  /api/v1/coffee-beans:
+    get:
+      operationId: listBeans
+      summary: コーヒー豆一覧取得
+      tags: [coffee-beans]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListBeansResponse"
+        "401":
+          description: 認証エラー
+
+    post:
+      operationId: createBean
+      summary: コーヒー豆登録
+      tags: [coffee-beans]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBeanRequest"
+      responses:
+        "201":
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoffeeBeanResponse"
+        "400":
+          description: バリデーションエラー
+        "401":
+          description: 認証エラー
+
+  /api/v1/coffee-beans/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      operationId: getBean
+      summary: コーヒー豆詳細取得
+      tags: [coffee-beans]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoffeeBeanResponse"
+        "401":
+          description: 認証エラー
+        "403":
+          description: アクセス権限なし
+        "404":
+          description: 見つかりません
+
+    put:
+      operationId: updateBean
+      summary: コーヒー豆更新
+      tags: [coffee-beans]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBeanRequest"
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoffeeBeanResponse"
+        "400":
+          description: バリデーションエラー
+        "401":
+          description: 認証エラー
+        "403":
+          description: アクセス権限なし
+        "404":
+          description: 見つかりません
+
+    delete:
+      operationId: deleteBean
+      summary: コーヒー豆削除
+      tags: [coffee-beans]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: 削除成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+        "401":
+          description: 認証エラー
+        "403":
+          description: アクセス権限なし
+        "404":
+          description: 見つかりません
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ── Auth ──────────────────────────────────────────────
+    UserResponse:
+      type: object
+      required:
+        - id
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        low_stock_threshold:
+          type: integer
+          format: int32
+        notification_enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AuthResponse:
+      type: object
+      required:
+        - user
+        - access_token
+        - refresh_token
+      properties:
+        user:
+          $ref: "#/components/schemas/UserResponse"
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+
+    RefreshRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+
+    RefreshResult:
+      type: object
+      required:
+        - access_token
+        - refresh_token
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+
+    # ── Coffee Beans ─────────────────────────────────────
+    RoastLevel:
+      type: string
+      enum:
+        - light
+        - cinnamon
+        - medium
+        - high
+        - city
+        - full_city
+        - french
+        - italian
+
+    CoffeeBeanResponse:
+      type: object
+      required:
+        - id
+        - name
+        - roast_level
+        - current_stock
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        origin:
+          type: string
+        roast_level:
+          $ref: "#/components/schemas/RoastLevel"
+        current_stock:
+          type: integer
+          format: int32
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateBeanRequest:
+      type: object
+      required:
+        - name
+        - roast_level
+        - current_stock
+      properties:
+        name:
+          type: string
+        origin:
+          type: string
+        roast_level:
+          $ref: "#/components/schemas/RoastLevel"
+        current_stock:
+          type: integer
+          format: int32
+        notes:
+          type: string
+
+    UpdateBeanRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        origin:
+          type: string
+        roast_level:
+          $ref: "#/components/schemas/RoastLevel"
+        current_stock:
+          type: integer
+          format: int32
+        notes:
+          type: string
+
+    ListBeansResponse:
+      type: object
+      required:
+        - beans
+        - pagination
+      properties:
+        beans:
+          type: array
+          items:
+            $ref: "#/components/schemas/CoffeeBeanResponse"
+        pagination:
+          $ref: "#/components/schemas/PaginationResponse"
+
+    PaginationResponse:
+      type: object
+      required:
+        - total
+        - limit
+        - offset
+        - has_more
+      properties:
+        total:
+          type: integer
+          format: int64
+        limit:
+          type: integer
+          format: int32
+        offset:
+          type: integer
+          format: int32
+        has_more:
+          type: boolean
+
+    DeleteResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+
+    # ── Envelope (TS 生成用) ─────────────────────────────
+    ErrorBody:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldError"
+
+    FieldError:
+      type: object
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+        message:
+          type: string

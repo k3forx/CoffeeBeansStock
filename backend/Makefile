@@ -1,7 +1,7 @@
 DB_URL ?= postgres://coffee_user:coffee_pass@localhost:5432/coffee_stock?sslmode=disable
 MIGRATIONS_DIR = migrations
 
-.PHONY: help run sqlc-generate migrate-up migrate-down test build clean lint
+.PHONY: help run sqlc-generate migrate-up migrate-down test build clean lint generate-api
 
 help: ## Show this help message
 	@echo "Available targets:"
@@ -30,6 +30,9 @@ clean: ## Clean build artifacts
 
 GOLANGCI_LINT_VERSION ?= v2.1.6
 TARGETS ?= ./...
+
+generate-api: ## Generate Go types from OpenAPI spec
+	$(GOBIN)/oapi-codegen -config api/oapi-codegen.yaml api/openapi.yaml
 
 lint: ## Run golangci-lint (use TARGETS="./path/..." to specify targets)
 	@if ! command -v golangci-lint >/dev/null 2>&1; then \

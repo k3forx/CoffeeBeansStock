@@ -12,6 +12,7 @@ import {
 import { useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
 import { ApiError } from "../../../src/api/client";
+import type { RoastLevel } from "../../../src/types/api";
 import { colors, typography, spacing, radius, shadows } from "@/theme";
 
 export default function CreateBeanScreen() {
@@ -39,7 +40,7 @@ export default function CreateBeanScreen() {
       await beansApi.create({
         name,
         origin: origin || undefined,
-        roast_level: roastLevel || undefined,
+        roast_level: roastLevel as RoastLevel,
         current_stock: stock,
         notes: notes || undefined,
       });

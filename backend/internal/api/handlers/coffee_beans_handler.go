@@ -5,12 +5,12 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/gen"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/middleware"
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/coffeebean"
@@ -27,54 +27,18 @@ func NewCoffeeBeansHandler(service *services.CoffeeBeansService) *CoffeeBeansHan
 	return &CoffeeBeansHandler{service: service}
 }
 
-type createBeanRequest struct {
-	Origin       *string `json:"origin"`
-	RoastLevel   string  `json:"roast_level"`
-	Notes        *string `json:"notes"`
-	Name         string  `json:"name"`
-	CurrentStock int32   `json:"current_stock"`
-}
-
-type updateBeanRequest struct {
-	Name         *string `json:"name"`
-	Origin       *string `json:"origin"`
-	RoastLevel   *string `json:"roast_level"`
-	CurrentStock *int32  `json:"current_stock"`
-	Notes        *string `json:"notes"`
-}
-
-type coffeeBeanResponse struct {
-	ID           uuid.UUID `json:"id"`
-	Name         string    `json:"name"`
-	Origin       *string   `json:"origin,omitempty"`
-	RoastLevel   string    `json:"roast_level"`
-	CurrentStock int32     `json:"current_stock"`
-	Notes        *string   `json:"notes,omitempty"`
-	CreatedAt    string    `json:"created_at"`
-	UpdatedAt    string    `json:"updated_at"`
-}
-
-func toCoffeeBeanResponse(b *coffeebean.CoffeeBean) coffeeBeanResponse {
-	resp := coffeeBeanResponse{
-		ID:           b.ID(),
+func toCoffeeBeanResponse(b *coffeebean.CoffeeBean) gen.CoffeeBeanResponse {
+	resp := gen.CoffeeBeanResponse{
+		Id:           b.ID(),
 		Name:         b.Name(),
 		Origin:       b.Origin(),
-		RoastLevel:   b.RoastLevel().String(),
+		RoastLevel:   gen.RoastLevel(b.RoastLevel().String()),
 		CurrentStock: b.CurrentStock().Value(),
 		Notes:        b.Notes(),
-	}
-	if !b.CreatedAt().IsZero() {
-		resp.CreatedAt = b.CreatedAt().Format(time.RFC3339)
-	}
-	if !b.UpdatedAt().IsZero() {
-		resp.UpdatedAt = b.UpdatedAt().Format(time.RFC3339)
+		CreatedAt:    b.CreatedAt(),
+		UpdatedAt:    b.UpdatedAt(),
 	}
 	return resp
-}
-
-type listBeansResponse struct {
-	Beans      []coffeeBeanResponse       `json:"beans"`
-	Pagination services.PaginationResponse `json:"pagination"`
 }
 
 // List returns a paginated list of coffee beans.
@@ -94,14 +58,19 @@ func (h *CoffeeBeansHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	beans := make([]coffeeBeanResponse, len(result.Beans))
+	beans := make([]gen.CoffeeBeanResponse, len(result.Beans))
 	for i, b := range result.Beans {
 		beans[i] = toCoffeeBeanResponse(b)
 	}
 
-	api.WriteSuccess(w, http.StatusOK, listBeansResponse{
-		Beans:      beans,
-		Pagination: result.Pagination,
+	api.WriteSuccess(w, http.StatusOK, gen.ListBeansResponse{
+		Beans: beans,
+		Pagination: gen.PaginationResponse{
+			Total:   result.Pagination.Total,
+			Limit:   result.Pagination.Limit,
+			Offset:  result.Pagination.Offset,
+			HasMore: result.Pagination.HasMore,
+		},
 	})
 }
 
@@ -113,7 +82,7 @@ func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req createBeanRequest
+	var req gen.CreateBeanRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "リクエストの形式が不正です")
 		return
@@ -122,7 +91,7 @@ func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
 	bean, err := h.service.Create(r.Context(), userID, &services.CreateBeanInput{
 		Name:         req.Name,
 		Origin:       req.Origin,
-		RoastLevel:   req.RoastLevel,
+		RoastLevel:   string(req.RoastLevel),
 		Notes:        req.Notes,
 		CurrentStock: req.CurrentStock,
 	})
@@ -171,16 +140,22 @@ func (h *CoffeeBeansHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req updateBeanRequest
+	var req gen.UpdateBeanRequest
 	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
 		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "リクエストの形式が不正です")
 		return
 	}
 
+	var roastLevel *string
+	if req.RoastLevel != nil {
+		s := string(*req.RoastLevel)
+		roastLevel = &s
+	}
+
 	bean, err := h.service.Update(r.Context(), userID, beanID, &services.UpdateBeanInput{
 		Name:         req.Name,
 		Origin:       req.Origin,
-		RoastLevel:   req.RoastLevel,
+		RoastLevel:   roastLevel,
 		CurrentStock: req.CurrentStock,
 		Notes:        req.Notes,
 	})
@@ -211,7 +186,7 @@ func (h *CoffeeBeansHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteSuccess(w, http.StatusOK, map[string]string{"message": "コーヒー豆を削除しました"})
+	api.WriteSuccess(w, http.StatusOK, gen.DeleteResponse{Message: "コーヒー豆を削除しました"})
 }
 
 func handleBeanError(w http.ResponseWriter, err error) {

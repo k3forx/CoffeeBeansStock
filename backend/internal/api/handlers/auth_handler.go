@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"time"
-
-	"github.com/google/uuid"
 
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/gen"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/middleware"
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/user"
@@ -25,39 +23,25 @@ func NewAuthHandler(authService *services.AuthService) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
-type refreshRequest struct {
-	RefreshToken string `json:"refresh_token"` //nolint:gosec // request field, not a hardcoded secret
-}
-
-type userResponse struct {
-	ID                  uuid.UUID `json:"id"`
-	Name                string    `json:"name,omitempty"`
-	LowStockThreshold   int32     `json:"low_stock_threshold,omitempty"`
-	NotificationEnabled bool      `json:"notification_enabled,omitempty"`
-	CreatedAt           string    `json:"created_at"`
-	UpdatedAt           string    `json:"updated_at,omitempty"`
-}
-
-func toUserResponse(u *user.User) userResponse {
-	resp := userResponse{
-		ID:                  u.ID(),
-		Name:                u.Name(),
-		LowStockThreshold:   u.LowStockThreshold(),
-		NotificationEnabled: u.NotificationEnabled(),
+func toUserResponse(u *user.User) gen.UserResponse {
+	resp := gen.UserResponse{
+		Id:        u.ID(),
+		CreatedAt: u.CreatedAt(),
 	}
-	if !u.CreatedAt().IsZero() {
-		resp.CreatedAt = u.CreatedAt().Format(time.RFC3339)
+	if name := u.Name(); name != "" {
+		resp.Name = &name
+	}
+	if threshold := u.LowStockThreshold(); threshold != 0 {
+		resp.LowStockThreshold = &threshold
+	}
+	if enabled := u.NotificationEnabled(); enabled {
+		resp.NotificationEnabled = &enabled
 	}
 	if !u.UpdatedAt().IsZero() {
-		resp.UpdatedAt = u.UpdatedAt().Format(time.RFC3339)
+		updatedAt := u.UpdatedAt()
+		resp.UpdatedAt = &updatedAt
 	}
 	return resp
-}
-
-type authResponse struct {
-	User         userResponse `json:"user"`
-	AccessToken  string       `json:"access_token"`  //nolint:gosec
-	RefreshToken string       `json:"refresh_token"` //nolint:gosec
 }
 
 // RegisterAnonymous handles anonymous user registration.
@@ -68,7 +52,7 @@ func (h *AuthHandler) RegisterAnonymous(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	api.WriteSuccess(w, http.StatusCreated, authResponse{
+	api.WriteSuccess(w, http.StatusCreated, gen.AuthResponse{
 		User:         toUserResponse(result.User),
 		AccessToken:  result.AccessToken,
 		RefreshToken: result.RefreshToken,
@@ -77,7 +61,7 @@ func (h *AuthHandler) RegisterAnonymous(w http.ResponseWriter, r *http.Request) 
 
 // Refresh handles token refresh requests.
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
-	var req refreshRequest
+	var req gen.RefreshRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "リクエストの形式が不正です")
 		return
@@ -100,7 +84,10 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteSuccess(w, http.StatusOK, result)
+	api.WriteSuccess(w, http.StatusOK, gen.RefreshResult{
+		AccessToken:  result.AccessToken,
+		RefreshToken: result.RefreshToken,
+	})
 }
 
 // GetMe returns the authenticated user's profile.

@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "generate:types": "openapi-typescript ../backend/api/openapi.yaml -o src/types/generated.ts"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -19,10 +20,12 @@
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "openapi-typescript": "^7.13.0",
     "typescript": "~5.9.2"
   },
   "private": true

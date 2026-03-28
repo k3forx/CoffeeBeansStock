@@ -14,7 +14,7 @@ import {
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
 import { ApiError } from "../../../src/api/client";
-import type { CoffeeBean } from "../../../src/types/api";
+import type { CoffeeBean, RoastLevel } from "../../../src/types/api";
 import { colors, typography, spacing, radius, shadows, getStockColor } from "@/theme";
 
 export default function BeanDetailScreen() {
@@ -69,7 +69,7 @@ export default function BeanDetailScreen() {
       const updated = await beansApi.update(id, {
         name,
         origin: origin || undefined,
-        roast_level: roastLevel || undefined,
+        roast_level: (roastLevel || undefined) as RoastLevel | undefined,
         current_stock: stock,
         notes: notes || undefined,
       });
