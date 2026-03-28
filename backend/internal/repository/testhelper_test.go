@@ -17,10 +17,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-var (
-	testPool    *pgxpool.Pool
-	testQueries *database.Queries
-)
+var testPool *pgxpool.Pool
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
@@ -60,9 +57,17 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	testQueries = database.New(testPool)
-
 	os.Exit(m.Run())
+}
+
+func newTestQueries(t *testing.T) *database.Queries {
+	t.Helper()
+	tx, err := testPool.Begin(t.Context())
+	if err != nil {
+		t.Fatalf("begin tx: %v", err)
+	}
+	t.Cleanup(func() { _ = tx.Rollback(t.Context()) })
+	return database.New(tx)
 }
 
 func runMigrations(ctx context.Context, pool *pgxpool.Pool) error {

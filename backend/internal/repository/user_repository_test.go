@@ -27,16 +27,9 @@ func TestUserRepository_CreateAnonymous(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := t.Context()
-			tx, err := testPool.Begin(ctx)
-			if err != nil {
-				t.Fatalf("begin tx: %v", err)
-			}
-			defer func() { _ = tx.Rollback(ctx) }()
+			repo := NewUserRepository(newTestQueries(t))
 
-			repo := NewUserRepository(testQueries.WithTx(tx))
-
-			got, err := repo.CreateAnonymous(ctx)
+			got, err := repo.CreateAnonymous(t.Context())
 			if err != nil {
 				t.Fatalf("CreateAnonymous() error: %v", err)
 			}
@@ -95,17 +88,10 @@ func TestUserRepository_GetByID(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := t.Context()
-			tx, err := testPool.Begin(ctx)
-			if err != nil {
-				t.Fatalf("begin tx: %v", err)
-			}
-			defer func() { _ = tx.Rollback(ctx) }()
-
-			repo := NewUserRepository(testQueries.WithTx(tx))
+			repo := NewUserRepository(newTestQueries(t))
 			targetID := tt.setup(t, repo)
 
-			got, err := repo.GetByID(ctx, targetID)
+			got, err := repo.GetByID(t.Context(), targetID)
 
 			if tt.wantErr {
 				if err == nil {
