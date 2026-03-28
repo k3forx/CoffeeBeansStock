@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     ...typography.titleMedium,
     color: colors.textPrimary,
     textAlign: "center",
-    letterSpacing: 2,
+    letterSpacing: 0.5,
   },
   headerRight: { width: 70 },
   content: { flex: 1 },
