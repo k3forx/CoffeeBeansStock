@@ -16,6 +16,10 @@ type Querier interface {
 	CountUsageHistoriesByCoffeeBeanID(ctx context.Context, coffeeBeanID pgtype.UUID) (int64, error)
 	CountUsageHistoriesByUserID(ctx context.Context, userID pgtype.UUID) (int64, error)
 	// ============================================================================
+	// Users Queries
+	// ============================================================================
+	CreateAnonymousUser(ctx context.Context, arg CreateAnonymousUserParams) (User, error)
+	// ============================================================================
 	// Coffee Beans Queries (without purchase fields)
 	// ============================================================================
 	CreateCoffeeBean(ctx context.Context, arg CreateCoffeeBeanParams) (CoffeeBean, error)
@@ -27,10 +31,6 @@ type Querier interface {
 	// Usage History Queries
 	// ============================================================================
 	CreateUsageHistory(ctx context.Context, arg CreateUsageHistoryParams) (UsageHistory, error)
-	// ============================================================================
-	// Users Queries
-	// ============================================================================
-	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeletePurchaseHistory(ctx context.Context, arg DeletePurchaseHistoryParams) error
 	DeleteUsageHistory(ctx context.Context, arg DeleteUsageHistoryParams) error
 	GetCoffeeBeanByID(ctx context.Context, id pgtype.UUID) (CoffeeBean, error)
@@ -39,7 +39,6 @@ type Querier interface {
 	GetPurchaseHistoryByID(ctx context.Context, id pgtype.UUID) (PurchaseHistory, error)
 	GetRecentUsageHistoryForConsumptionRate(ctx context.Context, arg GetRecentUsageHistoryForConsumptionRateParams) ([]GetRecentUsageHistoryForConsumptionRateRow, error)
 	GetUsageHistoryByID(ctx context.Context, id pgtype.UUID) (UsageHistory, error)
-	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	ListCoffeeBeansByUserID(ctx context.Context, arg ListCoffeeBeansByUserIDParams) ([]CoffeeBean, error)
 	ListCoffeeBeansWithLatestPurchase(ctx context.Context, arg ListCoffeeBeansWithLatestPurchaseParams) ([]ListCoffeeBeansWithLatestPurchaseRow, error)

@@ -59,6 +59,38 @@ func (q *Queries) CountUsageHistoriesByUserID(ctx context.Context, userID pgtype
 	return count, err
 }
 
+const createAnonymousUser = `-- name: CreateAnonymousUser :one
+
+INSERT INTO users (low_stock_threshold, notification_enabled)
+VALUES ($1, $2)
+RETURNING id, email, password_hash, name, low_stock_threshold, notification_enabled, created_at, updated_at, deleted_at
+`
+
+type CreateAnonymousUserParams struct {
+	LowStockThreshold   int32 `json:"low_stock_threshold"`
+	NotificationEnabled bool  `json:"notification_enabled"`
+}
+
+// ============================================================================
+// Users Queries
+// ============================================================================
+func (q *Queries) CreateAnonymousUser(ctx context.Context, arg CreateAnonymousUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, createAnonymousUser, arg.LowStockThreshold, arg.NotificationEnabled)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.PasswordHash,
+		&i.Name,
+		&i.LowStockThreshold,
+		&i.NotificationEnabled,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const createCoffeeBean = `-- name: CreateCoffeeBean :one
 
 INSERT INTO coffee_beans (
@@ -190,48 +222,6 @@ func (q *Queries) CreateUsageHistory(ctx context.Context, arg CreateUsageHistory
 		&i.UsageType,
 		&i.Notes,
 		&i.CreatedAt,
-	)
-	return i, err
-}
-
-const createUser = `-- name: CreateUser :one
-
-INSERT INTO users (
-    email, password_hash, name, low_stock_threshold, notification_enabled
-) VALUES ($1, $2, $3, $4, $5)
-RETURNING id, email, password_hash, name, low_stock_threshold, notification_enabled, created_at, updated_at, deleted_at
-`
-
-type CreateUserParams struct {
-	Email               string `json:"email"`
-	PasswordHash        string `json:"password_hash"`
-	Name                string `json:"name"`
-	LowStockThreshold   int32  `json:"low_stock_threshold"`
-	NotificationEnabled bool   `json:"notification_enabled"`
-}
-
-// ============================================================================
-// Users Queries
-// ============================================================================
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, createUser,
-		arg.Email,
-		arg.PasswordHash,
-		arg.Name,
-		arg.LowStockThreshold,
-		arg.NotificationEnabled,
-	)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Email,
-		&i.PasswordHash,
-		&i.Name,
-		&i.LowStockThreshold,
-		&i.NotificationEnabled,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -432,28 +422,6 @@ func (q *Queries) GetUsageHistoryByID(ctx context.Context, id pgtype.UUID) (Usag
 		&i.UsageType,
 		&i.Notes,
 		&i.CreatedAt,
-	)
-	return i, err
-}
-
-const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, password_hash, name, low_stock_threshold, notification_enabled, created_at, updated_at, deleted_at FROM users
-WHERE email = $1 AND deleted_at IS NULL
-`
-
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
-	row := q.db.QueryRow(ctx, getUserByEmail, email)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Email,
-		&i.PasswordHash,
-		&i.Name,
-		&i.LowStockThreshold,
-		&i.NotificationEnabled,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
 	)
 	return i, err
 }

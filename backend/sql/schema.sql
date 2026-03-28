@@ -5,9 +5,9 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Users table
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255),
+    password_hash VARCHAR(255),
+    name VARCHAR(100),
     low_stock_threshold INTEGER NOT NULL DEFAULT 100,
     notification_enabled BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -82,8 +82,7 @@ CREATE TABLE usage_history (
         CHECK (usage_type IN ('manual', 'quick_button'))
 );
 
--- Indexes for users
-CREATE INDEX idx_users_email ON users(email) WHERE deleted_at IS NULL;
+-- Indexes for users (email index removed for anonymous auth)
 
 -- Indexes for coffee_beans
 CREATE INDEX idx_coffee_beans_user_id ON coffee_beans(user_id) WHERE deleted_at IS NULL;

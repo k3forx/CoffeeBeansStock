@@ -27,8 +27,7 @@ func New(deps Deps) chi.Router {
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Route("/auth", func(r chi.Router) {
-			r.Post("/signup", deps.AuthHandler.Signup)
-			r.Post("/login", deps.AuthHandler.Login)
+			r.Post("/register", deps.AuthHandler.RegisterAnonymous)
 			r.Post("/refresh", deps.AuthHandler.Refresh)
 
 			r.Group(func(r chi.Router) {

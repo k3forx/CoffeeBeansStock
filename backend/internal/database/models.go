@@ -46,9 +46,9 @@ type UsageHistory struct {
 
 type User struct {
 	ID                  pgtype.UUID        `json:"id"`
-	Email               string             `json:"email"`
-	PasswordHash        string             `json:"password_hash"`
-	Name                string             `json:"name"`
+	Email               pgtype.Text        `json:"email"`
+	PasswordHash        pgtype.Text        `json:"password_hash"`
+	Name                pgtype.Text        `json:"name"`
 	LowStockThreshold   int32              `json:"low_stock_threshold"`
 	NotificationEnabled bool               `json:"notification_enabled"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`

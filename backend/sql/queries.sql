@@ -2,19 +2,14 @@
 -- Users Queries
 -- ============================================================================
 
--- name: CreateUser :one
-INSERT INTO users (
-    email, password_hash, name, low_stock_threshold, notification_enabled
-) VALUES ($1, $2, $3, $4, $5)
+-- name: CreateAnonymousUser :one
+INSERT INTO users (low_stock_threshold, notification_enabled)
+VALUES ($1, $2)
 RETURNING *;
 
 -- name: GetUserByID :one
 SELECT * FROM users
 WHERE id = $1 AND deleted_at IS NULL;
-
--- name: GetUserByEmail :one
-SELECT * FROM users
-WHERE email = $1 AND deleted_at IS NULL;
 
 -- name: UpdateUser :one
 UPDATE users

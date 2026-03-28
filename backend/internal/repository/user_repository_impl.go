@@ -19,16 +19,9 @@ func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (database.Us
 	return r.queries.GetUserByID(ctx, toUUID(id))
 }
 
-func (r *userRepository) GetByEmail(ctx context.Context, email string) (database.User, error) {
-	return r.queries.GetUserByEmail(ctx, email)
-}
-
-func (r *userRepository) Create(ctx context.Context, params CreateUserParams) (database.User, error) {
-	return r.queries.CreateUser(ctx, database.CreateUserParams{
-		Email:               params.Email,
-		PasswordHash:        params.PasswordHash,
-		Name:                params.Name,
-		LowStockThreshold:   params.LowStockThreshold,
-		NotificationEnabled: params.NotificationEnabled,
+func (r *userRepository) CreateAnonymous(ctx context.Context) (database.User, error) {
+	return r.queries.CreateAnonymousUser(ctx, database.CreateAnonymousUserParams{
+		LowStockThreshold:   100,
+		NotificationEnabled: true,
 	})
 }

@@ -20,7 +20,6 @@ const (
 
 type TokenClaims struct {
 	UserID string `json:"user_id"`
-	Email  string `json:"email,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -37,13 +36,13 @@ func NewJWTManager(secret string) *JWTManager {
 	return &JWTManager{secret: []byte(secret)}
 }
 
-func (m *JWTManager) GenerateTokenPair(userID uuid.UUID, email string) (*TokenPair, error) {
-	accessToken, err := m.generateToken(userID.String(), email, AccessTokenDuration)
+func (m *JWTManager) GenerateTokenPair(userID uuid.UUID) (*TokenPair, error) {
+	accessToken, err := m.generateToken(userID.String(), AccessTokenDuration)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := m.generateToken(userID.String(), "", RefreshTokenDuration)
+	refreshToken, err := m.generateToken(userID.String(), RefreshTokenDuration)
 	if err != nil {
 		return nil, err
 	}
@@ -76,11 +75,10 @@ func (m *JWTManager) ValidateToken(tokenStr string) (*TokenClaims, error) {
 	return claims, nil
 }
 
-func (m *JWTManager) generateToken(userID, email string, duration time.Duration) (string, error) {
+func (m *JWTManager) generateToken(userID string, duration time.Duration) (string, error) {
 	now := time.Now()
 	claims := &TokenClaims{
 		UserID: userID,
-		Email:  email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(duration)),
 			IssuedAt:  jwt.NewNumericDate(now),
