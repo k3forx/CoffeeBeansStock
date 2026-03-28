@@ -50,7 +50,7 @@ export default function LoginScreen() {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.footer}>— craft your cup —</Text>
+      <Text style={styles.footer}>— 珈琲のある暮らし —</Text>
     </View>
   );
 }
