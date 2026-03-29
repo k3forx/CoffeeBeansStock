@@ -90,6 +90,14 @@ func (r *coffeeBeanRepository) Update(ctx context.Context, bean *coffeebean.Coff
 	return err
 }
 
+func (r *coffeeBeanRepository) UpdateStock(ctx context.Context, id uuid.UUID, stock coffeebean.Stock) error {
+	_, err := r.queries.UpdateCoffeeBeanStock(ctx, database.UpdateCoffeeBeanStockParams{
+		ID:           toUUID(id),
+		CurrentStock: stock.Value(),
+	})
+	return err
+}
+
 func (r *coffeeBeanRepository) SoftDelete(ctx context.Context, id, userID uuid.UUID) error {
 	return r.queries.SoftDeleteCoffeeBean(ctx, database.SoftDeleteCoffeeBeanParams{
 		ID:     toUUID(id),

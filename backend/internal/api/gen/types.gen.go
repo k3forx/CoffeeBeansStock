@@ -73,6 +73,24 @@ func (e RoastLevel) Valid() bool {
 	}
 }
 
+// Defines values for UsageType.
+const (
+	Manual      UsageType = "manual"
+	QuickButton UsageType = "quick_button"
+)
+
+// Valid indicates whether the value is a known member of the UsageType enum.
+func (e UsageType) Valid() bool {
+	switch e {
+	case Manual:
+		return true
+	case QuickButton:
+		return true
+	default:
+		return false
+	}
+}
+
 // AuthResponse defines model for AuthResponse.
 type AuthResponse struct {
 	AccessToken  string       `json:"access_token"`
@@ -103,6 +121,14 @@ type CreateBeanRequest struct {
 	RoastLevel   RoastLevel   `json:"roast_level"`
 }
 
+// CreateUsageHistoryRequest defines model for CreateUsageHistoryRequest.
+type CreateUsageHistoryRequest struct {
+	Notes     *string            `json:"notes,omitempty"`
+	Quantity  int32              `json:"quantity"`
+	UsageDate openapi_types.Date `json:"usage_date"`
+	UsageType UsageType          `json:"usage_type"`
+}
+
 // DeleteResponse defines model for DeleteResponse.
 type DeleteResponse struct {
 	Message string `json:"message"`
@@ -125,6 +151,12 @@ type FieldError struct {
 type ListBeansResponse struct {
 	Beans      []CoffeeBeanResponse `json:"beans"`
 	Pagination PaginationResponse   `json:"pagination"`
+}
+
+// ListUsageHistoryResponse defines model for ListUsageHistoryResponse.
+type ListUsageHistoryResponse struct {
+	Pagination PaginationResponse     `json:"pagination"`
+	Usages     []UsageHistoryResponse `json:"usages"`
 }
 
 // PaginationResponse defines model for PaginationResponse.
@@ -162,6 +194,20 @@ type UpdateBeanRequest struct {
 	RoastLevel   *RoastLevel  `json:"roast_level,omitempty"`
 }
 
+// UsageHistoryResponse defines model for UsageHistoryResponse.
+type UsageHistoryResponse struct {
+	CoffeeBeanId openapi_types.UUID `json:"coffee_bean_id"`
+	CreatedAt    time.Time          `json:"created_at"`
+	Id           openapi_types.UUID `json:"id"`
+	Notes        *string            `json:"notes,omitempty"`
+	Quantity     int32              `json:"quantity"`
+	UsageDate    openapi_types.Date `json:"usage_date"`
+	UsageType    UsageType          `json:"usage_type"`
+}
+
+// UsageType defines model for UsageType.
+type UsageType string
+
 // UserResponse defines model for UserResponse.
 type UserResponse struct {
 	CreatedAt           time.Time          `json:"created_at"`
@@ -178,6 +224,12 @@ type ListBeansParams struct {
 	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
+// ListUsageHistoriesParams defines parameters for ListUsageHistories.
+type ListUsageHistoriesParams struct {
+	Limit  *int32 `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
 // RefreshTokenJSONRequestBody defines body for RefreshToken for application/json ContentType.
 type RefreshTokenJSONRequestBody = RefreshRequest
 
@@ -186,3 +238,6 @@ type CreateBeanJSONRequestBody = CreateBeanRequest
 
 // UpdateBeanJSONRequestBody defines body for UpdateBean for application/json ContentType.
 type UpdateBeanJSONRequestBody = UpdateBeanRequest
+
+// CreateUsageHistoryJSONRequestBody defines body for CreateUsageHistory for application/json ContentType.
+type CreateUsageHistoryJSONRequestBody = CreateUsageHistoryRequest

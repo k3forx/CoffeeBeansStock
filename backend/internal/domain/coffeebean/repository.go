@@ -12,5 +12,6 @@ type Repository interface {
 	CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error)
 	Save(ctx context.Context, bean *CoffeeBean) error
 	Update(ctx context.Context, bean *CoffeeBean) error
+	UpdateStock(ctx context.Context, id uuid.UUID, stock Stock) error
 	SoftDelete(ctx context.Context, id, userID uuid.UUID) error
 }
