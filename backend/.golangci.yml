@@ -4,21 +4,39 @@ run:
   timeout: 3m
 
 linters:
-  default: standard
-  enable:
-    - bodyclose
-    - errname
-    - errorlint
-    - gosec
-    - misspell
-    - nilerr
-    - noctx
-    - prealloc
-    - revive
-    - unconvert
-    - unparam
+  default: all
+  disable:
+    # Too opinionated / noisy
+    - depguard
+    - gochecknoglobals
+    - ireturn
+    - lll
+    - mnd
+    - nlreturn
+    - noinlineerr
+    - varnamelen
+    - wrapcheck
+    # Style preferences (not team convention)
+    - dogsled
+    - embeddedstructfieldcheck
+    - funlen
+    - tagliatelle
+    - testpackage
+    - wsl_v5
+    # Not relevant to this project
+    - arangolint
+    - ginkgolinter
+    - gosmopolitan
+    - promlinter
+    - protogetter
+    - spancheck
+    - zerologlint
+    # Deprecated
+    - wsl
 
   settings:
+    cyclop:
+      max-complexity: 15
     govet:
       enable-all: true
     revive:
@@ -37,16 +55,29 @@ linters:
         - name: time-naming
         - name: unexported-return
         - name: var-declaration
+    exhaustruct:
+      exclude:
+        # stdlib
+        - '^net/http\.Server$'
+        - '^log/slog\.HandlerOptions$'
+        # third-party
+        - '^github\.com/golang-jwt/jwt/v5\.RegisteredClaims$'
+        - '^github\.com/jackc/pgx/v5/pgtype\..*$'
+        # generated code (sqlc, oapi-codegen)
+        - '^github\.com/k3forx/CoffeeBeansStock/backend/internal/database\..*$'
+        - '^github\.com/k3forx/CoffeeBeansStock/backend/internal/api/gen\..*$'
     errcheck:
       check-type-assertions: true
     gosec:
       excludes:
         - G115
+        - G117
 
   exclusions:
     generated: strict
     paths:
       - internal/database
+      - _test\.go
 
 formatters:
   enable:

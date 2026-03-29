@@ -50,7 +50,7 @@ func (m *JWTManager) GenerateTokenPair(userID uuid.UUID) (*domainauth.TokenPair,
 }
 
 func (m *JWTManager) ValidateToken(tokenStr string) (*domainauth.TokenClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &jwtClaims{}, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &jwtClaims{UserID: "", RegisteredClaims: jwt.RegisteredClaims{}}, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, domain.ErrInvalidToken
 		}

@@ -23,7 +23,7 @@ func (u *unitOfWorkImpl) RunInTx(ctx context.Context, fn func(store unitofwork.S
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	store := &txStore{
 		userRepo:       NewUserRepository(tx),

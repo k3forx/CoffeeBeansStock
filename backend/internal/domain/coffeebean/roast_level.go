@@ -8,14 +8,14 @@ type RoastLevel struct {
 
 var (
 	RoastShallow    = RoastLevel{"shallow"}
-	RoastMedium     = RoastLevel{"medium"}
+	RoastMedium     = RoastLevel{roastMediumValue}
 	RoastMediumDeep = RoastLevel{"medium_deep"}
 	RoastDeep       = RoastLevel{"deep"}
 )
 
 func NewRoastLevel(v string) (RoastLevel, error) {
 	switch v {
-	case "shallow", "medium", "medium_deep", "deep":
+	case "shallow", roastMediumValue, "medium_deep", "deep":
 		return RoastLevel{value: v}, nil
 	default:
 		return RoastLevel{}, &domain.ValidationError{
@@ -34,8 +34,8 @@ func (r RoastLevel) ValidDetailFor(detail RoastDetail) bool {
 	switch r.value {
 	case "shallow":
 		return detail.value == "light" || detail.value == "cinnamon"
-	case "medium":
-		return detail.value == "medium" || detail.value == "high"
+	case roastMediumValue:
+		return detail.value == roastMediumValue || detail.value == "high"
 	case "medium_deep":
 		return detail.value == "city" || detail.value == "full_city"
 	case "deep":

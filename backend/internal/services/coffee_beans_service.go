@@ -37,11 +37,11 @@ type PaginationResponse struct {
 
 // CreateBeanInput holds input for creating a coffee bean.
 type CreateBeanInput struct {
-	Name         string
-	RoastLevel   string
 	Origin       *string
 	RoastDetail  *string
 	Notes        *string
+	Name         string
+	RoastLevel   string
 	CurrentStock int32
 }
 

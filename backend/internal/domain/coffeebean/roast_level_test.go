@@ -4,47 +4,47 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
-
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 )
 
 func TestNewRoastLevel(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name    string
+	tests := map[string]struct {
 		input   string
 		want    RoastLevel
 		wantErr bool
 	}{
-		{name: "shallow", input: "shallow", want: RoastShallow},
-		{name: "medium", input: "medium", want: RoastMedium},
-		{name: "medium_deep", input: "medium_deep", want: RoastMediumDeep},
-		{name: "deep", input: "deep", want: RoastDeep},
-		{name: "invalid", input: "light", wantErr: true},
-		{name: "empty", input: "", wantErr: true},
+		"shallow":     {input: "shallow", want: RoastShallow},
+		"medium":      {input: "medium", want: RoastMedium},
+		"medium_deep": {input: "medium_deep", want: RoastMediumDeep},
+		"deep":        {input: "deep", want: RoastDeep},
+		"invalid":     {input: "light", wantErr: true},
+		"empty":       {input: "", wantErr: true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
 			got, err := NewRoastLevel(tt.input)
+
 			if tt.wantErr {
-				var ve *domain.ValidationError
 				if err == nil {
-					t.Fatal("expected error, got nil")
+					t.Errorf("expected error, got nil")
 				}
-				if !errors.As(err, &ve) {
-					t.Fatalf("expected ValidationError, got %T", err)
+				var ve *domain.ValidationError
+				if err != nil && !errors.As(err, &ve) {
+					t.Errorf("expected ValidationError, got %T", err)
 				}
 				return
 			}
 			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
+				t.Errorf("unexpected error: %v", err)
+				return
 			}
-			if diff := cmp.Diff(tt.want, got, cmpopts.IgnoreUnexported(RoastLevel{})); diff != "" {
-				t.Errorf("mismatch (-want +got):\n%s", diff)
+			if got != tt.want {
+				t.Errorf("NewRoastLevel() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -53,31 +53,29 @@ func TestNewRoastLevel(t *testing.T) {
 func TestRoastLevel_ValidDetailFor(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
+	tests := map[string]struct {
 		level  RoastLevel
 		detail RoastDetail
 		want   bool
 	}{
-		// shallow
-		{RoastShallow, RoastDetailLight, true},
-		{RoastShallow, RoastDetailCinnamon, true},
-		{RoastShallow, RoastDetailMedium, false},
-		// medium
-		{RoastMedium, RoastDetailMedium, true},
-		{RoastMedium, RoastDetailHigh, true},
-		{RoastMedium, RoastDetailCity, false},
-		// medium_deep
-		{RoastMediumDeep, RoastDetailCity, true},
-		{RoastMediumDeep, RoastDetailFullCity, true},
-		{RoastMediumDeep, RoastDetailFrench, false},
-		// deep
-		{RoastDeep, RoastDetailFrench, true},
-		{RoastDeep, RoastDetailItalian, true},
-		{RoastDeep, RoastDetailLight, false},
+		"shallow_light":         {level: RoastShallow, detail: RoastDetailLight, want: true},
+		"shallow_cinnamon":      {level: RoastShallow, detail: RoastDetailCinnamon, want: true},
+		"shallow_medium":        {level: RoastShallow, detail: RoastDetailMedium, want: false},
+		"medium_medium":         {level: RoastMedium, detail: RoastDetailMedium, want: true},
+		"medium_high":           {level: RoastMedium, detail: RoastDetailHigh, want: true},
+		"medium_city":           {level: RoastMedium, detail: RoastDetailCity, want: false},
+		"medium_deep_city":      {level: RoastMediumDeep, detail: RoastDetailCity, want: true},
+		"medium_deep_full_city": {level: RoastMediumDeep, detail: RoastDetailFullCity, want: true},
+		"medium_deep_french":    {level: RoastMediumDeep, detail: RoastDetailFrench, want: false},
+		"deep_french":           {level: RoastDeep, detail: RoastDetailFrench, want: true},
+		"deep_italian":          {level: RoastDeep, detail: RoastDetailItalian, want: true},
+		"deep_light":            {level: RoastDeep, detail: RoastDetailLight, want: false},
 	}
-	for _, tt := range tests {
-		t.Run(tt.level.String()+"_"+tt.detail.String(), func(t *testing.T) {
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
 			got := tt.level.ValidDetailFor(tt.detail)
 			if got != tt.want {
 				t.Errorf("ValidDetailFor(%s) = %v, want %v", tt.detail, got, tt.want)

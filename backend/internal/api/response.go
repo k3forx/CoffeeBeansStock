@@ -2,14 +2,15 @@ package api
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 )
 
 // Response is the standard API response envelope.
 type Response struct {
-	Data    interface{} `json:"data,omitempty"`
-	Error   *ErrorBody  `json:"error,omitempty"`
-	Success bool        `json:"success"`
+	Data    any        `json:"data,omitempty"`
+	Error   *ErrorBody `json:"error,omitempty"`
+	Success bool       `json:"success"`
 }
 
 // ErrorBody contains error details in the API response.
@@ -26,22 +27,25 @@ type FieldError struct {
 }
 
 // WriteJSON writes a JSON response with the given status code.
-func WriteJSON(w http.ResponseWriter, status int, v interface{}) {
+func WriteJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		slog.Error("failed to encode JSON response", "error", err)
+	}
 }
 
 // WriteSuccess writes a successful JSON response.
-func WriteSuccess(w http.ResponseWriter, status int, data interface{}) {
-	WriteJSON(w, status, Response{Success: true, Data: data})
+func WriteSuccess(w http.ResponseWriter, status int, data any) {
+	WriteJSON(w, status, Response{Success: true, Data: data, Error: nil})
 }
 
 // WriteError writes an error JSON response.
 func WriteError(w http.ResponseWriter, status int, code, message string) {
 	WriteJSON(w, status, Response{
 		Success: false,
-		Error:   &ErrorBody{Code: code, Message: message},
+		Data:    nil,
+		Error:   &ErrorBody{Code: code, Message: message, Details: nil},
 	})
 }
 
@@ -49,6 +53,7 @@ func WriteError(w http.ResponseWriter, status int, code, message string) {
 func WriteValidationError(w http.ResponseWriter, details []FieldError) {
 	WriteJSON(w, http.StatusBadRequest, Response{
 		Success: false,
+		Data:    nil,
 		Error: &ErrorBody{
 			Code:    "VALIDATION_ERROR",
 			Message: "入力値が不正です",

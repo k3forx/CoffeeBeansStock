@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -24,23 +25,27 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
+	if err := run(); err != nil {
+		slog.Error("application error", "error", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	cfg, err := config.Load()
 	if err != nil {
-		slog.Error("failed to load config", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to load config: %w", err)
 	}
 
 	ctx := context.Background()
 	pool, err := pgxpool.New(ctx, cfg.DatabaseURL())
 	if err != nil {
-		slog.Error("failed to create connection pool", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to create connection pool: %w", err)
 	}
 	defer pool.Close()
 
 	if err := pool.Ping(ctx); err != nil {
-		slog.Error("failed to ping database", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to ping database: %w", err)
 	}
 	slog.Info("database connection established")
 
@@ -77,25 +82,30 @@ func main() {
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
+	errCh := make(chan error, 1)
 	go func() {
 		slog.Info("server starting", "port", cfg.Port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("server error", "error", err)
-			os.Exit(1)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errCh <- err
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+
+	select {
+	case err := <-errCh:
+		return fmt.Errorf("server error: %w", err)
+	case <-quit:
+	}
 
 	slog.Info("shutting down server")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		slog.Error("server forced to shutdown", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("server forced to shutdown: %w", err)
 	}
 	slog.Info("server stopped")
+	return nil
 }

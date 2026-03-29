@@ -6,10 +6,12 @@ type RoastDetail struct {
 	value string
 }
 
+const roastMediumValue = "medium"
+
 var (
 	RoastDetailLight    = RoastDetail{"light"}
 	RoastDetailCinnamon = RoastDetail{"cinnamon"}
-	RoastDetailMedium   = RoastDetail{"medium"}
+	RoastDetailMedium   = RoastDetail{roastMediumValue}
 	RoastDetailHigh     = RoastDetail{"high"}
 	RoastDetailCity     = RoastDetail{"city"}
 	RoastDetailFullCity = RoastDetail{"full_city"}
@@ -19,7 +21,7 @@ var (
 
 func NewRoastDetail(v string) (RoastDetail, error) {
 	switch v {
-	case "light", "cinnamon", "medium", "high",
+	case "light", "cinnamon", roastMediumValue, "high",
 		"city", "full_city", "french", "italian":
 		return RoastDetail{value: v}, nil
 	default:

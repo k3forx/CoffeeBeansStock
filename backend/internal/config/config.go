@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -16,7 +17,7 @@ type Config struct {
 	DBPass    string
 	DBName    string
 	DBSSLMode string
-	JWTSecret string //nolint:gosec // config field loaded from env, not a hardcoded secret
+	JWTSecret string
 }
 
 // Load reads configuration from environment variables with sensible defaults.
@@ -40,8 +41,8 @@ func Load() (*Config, error) {
 // DatabaseURL returns the PostgreSQL connection string.
 func (c *Config) DatabaseURL() string {
 	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		c.DBUser, c.DBPass, c.DBHost, c.DBPort, c.DBName, c.DBSSLMode,
+		"postgres://%s:%s@%s/%s?sslmode=%s",
+		c.DBUser, c.DBPass, net.JoinHostPort(c.DBHost, c.DBPort), c.DBName, c.DBSSLMode,
 	)
 }
 

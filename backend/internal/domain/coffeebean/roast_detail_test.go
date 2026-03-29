@@ -4,39 +4,51 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
-
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 )
 
 func TestNewRoastDetail(t *testing.T) {
 	t.Parallel()
 
-	validValues := []string{"light", "cinnamon", "medium", "high", "city", "full_city", "french", "italian"}
-	for _, v := range validValues {
-		t.Run("valid_"+v, func(t *testing.T) {
+	tests := map[string]struct {
+		input   string
+		want    RoastDetail
+		wantErr bool
+	}{
+		"valid_light":     {input: "light", want: RoastDetailLight},
+		"valid_cinnamon":  {input: "cinnamon", want: RoastDetailCinnamon},
+		"valid_medium":    {input: "medium", want: RoastDetailMedium},
+		"valid_high":      {input: "high", want: RoastDetailHigh},
+		"valid_city":      {input: "city", want: RoastDetailCity},
+		"valid_full_city": {input: "full_city", want: RoastDetailFullCity},
+		"valid_french":    {input: "french", want: RoastDetailFrench},
+		"valid_italian":   {input: "italian", want: RoastDetailItalian},
+		"invalid":         {input: "invalid", wantErr: true},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got, err := NewRoastDetail(v)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
+
+			got, err := NewRoastDetail(tt.input)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("expected error, got nil")
+				}
+				var ve *domain.ValidationError
+				if err != nil && !errors.As(err, &ve) {
+					t.Errorf("expected ValidationError, got %T", err)
+				}
+				return
 			}
-			want := RoastDetail{value: v}
-			if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(RoastDetail{})); diff != "" {
-				t.Errorf("mismatch (-want +got):\n%s", diff)
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("NewRoastDetail() = %v, want %v", got, tt.want)
 			}
 		})
 	}
-
-	t.Run("invalid", func(t *testing.T) {
-		t.Parallel()
-		_, err := NewRoastDetail("invalid")
-		var ve *domain.ValidationError
-		if err == nil {
-			t.Fatal("expected error, got nil")
-		}
-		if !errors.As(err, &ve) {
-			t.Fatalf("expected ValidationError, got %T", err)
-		}
-	})
 }

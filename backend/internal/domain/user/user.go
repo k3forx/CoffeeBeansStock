@@ -7,14 +7,14 @@ import (
 )
 
 type User struct {
-	id                  uuid.UUID
+	createdAt           time.Time
+	updatedAt           time.Time
 	email               string
 	passwordHash        string
 	name                string
 	lowStockThreshold   int32
+	id                  uuid.UUID
 	notificationEnabled bool
-	createdAt           time.Time
-	updatedAt           time.Time
 }
 
 // NewAnonymousUser creates a new anonymous user with default settings.
@@ -22,6 +22,9 @@ func NewAnonymousUser() *User {
 	now := time.Now()
 	return &User{
 		id:                  uuid.New(),
+		email:               "",
+		passwordHash:        "",
+		name:                "",
 		lowStockThreshold:   100,
 		notificationEnabled: true,
 		createdAt:           now,
@@ -47,7 +50,7 @@ func Reconstruct(
 	}
 }
 
-func (u *User) ID() uuid.UUID            { return u.id }
+func (u *User) ID() uuid.UUID             { return u.id }
 func (u *User) Email() string             { return u.email }
 func (u *User) PasswordHash() string      { return u.passwordHash }
 func (u *User) Name() string              { return u.name }

@@ -9,16 +9,16 @@ import (
 )
 
 type CoffeeBean struct {
-	id           uuid.UUID
-	userID       uuid.UUID
-	name         string
-	origin       *string
-	roastLevel   RoastLevel
-	roastDetail  *RoastDetail
-	currentStock Stock
-	notes        *string
 	createdAt    time.Time
 	updatedAt    time.Time
+	origin       *string
+	roastDetail  *RoastDetail
+	notes        *string
+	roastLevel   RoastLevel
+	name         string
+	currentStock Stock
+	id           uuid.UUID
+	userID       uuid.UUID
 }
 
 // New creates a new CoffeeBean with validation.

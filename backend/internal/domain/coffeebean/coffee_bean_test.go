@@ -14,45 +14,65 @@ func TestNew_RoastDetailConsistency(t *testing.T) {
 
 	userID := uuid.New()
 	stock, _ := NewStock(100)
+	detailLight := RoastDetailLight
+	detailItalian := RoastDetailItalian
 
-	t.Run("category_only", func(t *testing.T) {
-		t.Parallel()
-		bean, err := New(userID, "Test Bean", RoastShallow, nil, nil, nil, stock)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if bean.RoastLevel() != RoastShallow {
-			t.Errorf("RoastLevel = %v, want shallow", bean.RoastLevel())
-		}
-		if bean.RoastDetail() != nil {
-			t.Errorf("RoastDetail = %v, want nil", bean.RoastDetail())
-		}
-	})
+	tests := map[string]struct {
+		roastLevel  RoastLevel
+		roastDetail *RoastDetail
+		wantErr     bool
+		wantDetail  *RoastDetail
+	}{
+		"category_only": {
+			roastLevel: RoastShallow,
+			wantDetail: nil,
+		},
+		"consistent_category_and_detail": {
+			roastLevel:  RoastShallow,
+			roastDetail: &detailLight,
+			wantDetail:  &detailLight,
+		},
+		"inconsistent_category_and_detail": {
+			roastLevel:  RoastShallow,
+			roastDetail: &detailItalian,
+			wantErr:     true,
+		},
+	}
 
-	t.Run("consistent_category_and_detail", func(t *testing.T) {
-		t.Parallel()
-		detail := RoastDetailLight
-		bean, err := New(userID, "Test Bean", RoastShallow, &detail, nil, nil, stock)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if bean.RoastDetail() == nil || *bean.RoastDetail() != RoastDetailLight {
-			t.Errorf("RoastDetail = %v, want light", bean.RoastDetail())
-		}
-	})
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	t.Run("inconsistent_category_and_detail", func(t *testing.T) {
-		t.Parallel()
-		detail := RoastDetailItalian
-		_, err := New(userID, "Test Bean", RoastShallow, &detail, nil, nil, stock)
-		if err == nil {
-			t.Fatal("expected error for inconsistent roast level and detail")
-		}
-		var ve domain.ValidationErrors
-		if !errors.As(err, &ve) {
-			t.Fatalf("expected ValidationErrors, got %T", err)
-		}
-	})
+			bean, err := New(userID, "Test Bean", tt.roastLevel, tt.roastDetail, nil, nil, stock)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("expected error, got nil")
+				}
+				var ve domain.ValidationErrors
+				if err != nil && !errors.As(err, &ve) {
+					t.Errorf("expected ValidationErrors, got %T", err)
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+				return
+			}
+			if bean.RoastLevel() != tt.roastLevel {
+				t.Errorf("RoastLevel() = %v, want %v", bean.RoastLevel(), tt.roastLevel)
+			}
+			if tt.wantDetail == nil {
+				if bean.RoastDetail() != nil {
+					t.Errorf("RoastDetail() = %v, want nil", bean.RoastDetail())
+				}
+			} else {
+				if bean.RoastDetail() == nil || *bean.RoastDetail() != *tt.wantDetail {
+					t.Errorf("RoastDetail() = %v, want %v", bean.RoastDetail(), tt.wantDetail)
+				}
+			}
+		})
+	}
 }
 
 func TestUpdate_RoastDetailConsistency(t *testing.T) {
@@ -60,38 +80,63 @@ func TestUpdate_RoastDetailConsistency(t *testing.T) {
 
 	userID := uuid.New()
 	stock, _ := NewStock(100)
+	detailLight := RoastDetailLight
+	detailCinnamon := RoastDetailCinnamon
+	detailFrench := RoastDetailFrench
+	levelDeep := RoastDeep
 
-	t.Run("update_detail_consistent", func(t *testing.T) {
-		t.Parallel()
-		bean, _ := New(userID, "Test Bean", RoastShallow, nil, nil, nil, stock)
-		detail := RoastDetailCinnamon
-		err := bean.Update(nil, nil, nil, &detail, nil, nil)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if bean.RoastDetail() == nil || *bean.RoastDetail() != RoastDetailCinnamon {
-			t.Errorf("RoastDetail = %v, want cinnamon", bean.RoastDetail())
-		}
-	})
+	tests := map[string]struct {
+		initLevel    RoastLevel
+		initDetail   *RoastDetail
+		updateLevel  *RoastLevel
+		updateDetail *RoastDetail
+		wantErr      bool
+		wantDetail   *RoastDetail
+	}{
+		"update_detail_consistent": {
+			initLevel:    RoastShallow,
+			updateDetail: &detailCinnamon,
+			wantDetail:   &detailCinnamon,
+		},
+		"update_detail_inconsistent": {
+			initLevel:    RoastShallow,
+			updateDetail: &detailFrench,
+			wantErr:      true,
+		},
+		"update_level_makes_existing_detail_inconsistent": {
+			initLevel:   RoastShallow,
+			initDetail:  &detailLight,
+			updateLevel: &levelDeep,
+			wantErr:     true,
+		},
+	}
 
-	t.Run("update_detail_inconsistent", func(t *testing.T) {
-		t.Parallel()
-		bean, _ := New(userID, "Test Bean", RoastShallow, nil, nil, nil, stock)
-		detail := RoastDetailFrench
-		err := bean.Update(nil, nil, nil, &detail, nil, nil)
-		if err == nil {
-			t.Fatal("expected error for inconsistent update")
-		}
-	})
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	t.Run("update_level_makes_existing_detail_inconsistent", func(t *testing.T) {
-		t.Parallel()
-		detail := RoastDetailLight
-		bean, _ := New(userID, "Test Bean", RoastShallow, &detail, nil, nil, stock)
-		newLevel := RoastDeep
-		err := bean.Update(nil, nil, &newLevel, nil, nil, nil)
-		if err == nil {
-			t.Fatal("expected error when changing level makes existing detail inconsistent")
-		}
-	})
+			bean, _ := New(userID, "Test Bean", tt.initLevel, tt.initDetail, nil, nil, stock)
+			err := bean.Update(nil, nil, tt.updateLevel, tt.updateDetail, nil, nil)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+				return
+			}
+			if tt.wantDetail == nil {
+				if bean.RoastDetail() != nil {
+					t.Errorf("RoastDetail() = %v, want nil", bean.RoastDetail())
+				}
+			} else {
+				if bean.RoastDetail() == nil || *bean.RoastDetail() != *tt.wantDetail {
+					t.Errorf("RoastDetail() = %v, want %v", bean.RoastDetail(), tt.wantDetail)
+				}
+			}
+		})
+	}
 }

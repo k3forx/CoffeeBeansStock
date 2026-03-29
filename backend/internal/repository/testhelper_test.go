@@ -20,6 +20,11 @@ import (
 var testPool *pgxpool.Pool
 
 func TestMain(m *testing.M) {
+	code := setupAndRun(m)
+	os.Exit(code)
+}
+
+func setupAndRun(m *testing.M) int {
 	ctx := context.Background()
 
 	pgContainer, err := postgres.Run(ctx,
@@ -35,39 +40,29 @@ func TestMain(m *testing.M) {
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to start postgres container: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 	defer func() { _ = pgContainer.Terminate(ctx) }()
 
 	connStr, err := pgContainer.ConnectionString(ctx, "sslmode=disable")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to get connection string: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
 	testPool, err = pgxpool.New(ctx, connStr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to create pool: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 	defer testPool.Close()
 
 	if err := runMigrations(ctx, testPool); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to run migrations: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
-	os.Exit(m.Run())
-}
-
-func newTestQueries(t *testing.T) *database.Queries {
-	t.Helper()
-	tx, err := testPool.Begin(t.Context())
-	if err != nil {
-		t.Fatalf("begin tx: %v", err)
-	}
-	t.Cleanup(func() { _ = tx.Rollback(t.Context()) })
-	return database.New(tx)
+	return m.Run()
 }
 
 func newTestTx(t *testing.T) database.DBTX {
