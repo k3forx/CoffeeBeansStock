@@ -146,20 +146,3 @@ func (b *CoffeeBean) Update(
 	b.updatedAt = time.Now()
 	return nil
 }
-
-// ConsumeStock reduces stock by the given quantity.
-func (b *CoffeeBean) ConsumeStock(qty domain.Quantity) error {
-	if !b.currentStock.CanConsume(qty) {
-		return domain.ErrInsufficientStock
-	}
-	b.currentStock = b.currentStock.Consume(qty)
-	b.updatedAt = time.Now()
-	return nil
-}
-
-// AddStock increases stock by the given quantity.
-func (b *CoffeeBean) AddStock(qty domain.Quantity) error {
-	b.currentStock = b.currentStock.Add(qty)
-	b.updatedAt = time.Now()
-	return nil
-}
