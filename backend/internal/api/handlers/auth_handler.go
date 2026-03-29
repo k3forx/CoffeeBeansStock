@@ -10,16 +10,16 @@ import (
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/middleware"
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/user"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/services"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase"
 )
 
 // AuthHandler handles authentication-related HTTP requests.
 type AuthHandler struct {
-	authService *services.AuthService
+	authService *usecase.AuthService
 }
 
 // NewAuthHandler creates a new AuthHandler.
-func NewAuthHandler(authService *services.AuthService) *AuthHandler {
+func NewAuthHandler(authService *usecase.AuthService) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 

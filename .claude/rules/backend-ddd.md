@@ -18,7 +18,7 @@ domain/          ビジネスルールの中核。外部依存なし（標準ラ
   errors.go      共通ドメインエラー（ErrNotFound, ErrForbidden等）+ ValidationError
   quantity.go    共通VO（複数集約で利用）
 
-services/        アプリケーション層。ユースケースの組み立て。ドメインロジックは書かない
+usecase/         アプリケーション層。ユースケースの組み立て。ドメインロジックは書かない
 repository/      domain層インターフェースの実装（SQLC経由）
 api/handlers/    HTTPリクエスト/レスポンス変換。domain型↔JSON変換はここで行う
 api/middleware/  認証ミドルウェア等
@@ -59,7 +59,7 @@ database/        SQLC生成コード（手動編集禁止）
 ```
 domain層: domain.ErrNotFound, domain.ErrForbidden, domain.ValidationError 等を返す
   ↓
-service層: そのまま伝播（エラー変換しない）
+usecase層: そのまま伝播（エラー変換しない）
   ↓
 handler層: errors.Is/errors.As で判別し HTTPステータスに変換
   domain.ErrNotFound       → 404

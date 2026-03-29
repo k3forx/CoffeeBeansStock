@@ -14,16 +14,16 @@ import (
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/middleware"
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/coffeebean"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/services"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase"
 )
 
 // CoffeeBeansHandler handles coffee beans CRUD HTTP requests.
 type CoffeeBeansHandler struct {
-	service *services.CoffeeBeansService
+	service *usecase.CoffeeBeansService
 }
 
 // NewCoffeeBeansHandler creates a new CoffeeBeansHandler.
-func NewCoffeeBeansHandler(service *services.CoffeeBeansService) *CoffeeBeansHandler {
+func NewCoffeeBeansHandler(service *usecase.CoffeeBeansService) *CoffeeBeansHandler {
 	return &CoffeeBeansHandler{service: service}
 }
 
@@ -98,7 +98,7 @@ func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
 		roastDetail = &s
 	}
 
-	bean, err := h.service.Create(r.Context(), userID, &services.CreateBeanInput{
+	bean, err := h.service.Create(r.Context(), userID, &usecase.CreateBeanInput{
 		Name:         req.Name,
 		Origin:       req.Origin,
 		RoastLevel:   string(req.RoastLevel),
@@ -168,7 +168,7 @@ func (h *CoffeeBeansHandler) Update(w http.ResponseWriter, r *http.Request) {
 		roastDetail = &s
 	}
 
-	bean, err := h.service.Update(r.Context(), userID, beanID, &services.UpdateBeanInput{
+	bean, err := h.service.Update(r.Context(), userID, beanID, &usecase.UpdateBeanInput{
 		Name:         req.Name,
 		Origin:       req.Origin,
 		RoastLevel:   roastLevel,

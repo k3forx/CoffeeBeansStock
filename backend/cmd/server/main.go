@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -18,16 +19,26 @@ import (
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/config"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/repository"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/router"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/services"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase"
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-	slog.SetDefault(logger)
-
 	if err := run(); err != nil {
 		slog.Error("application error", "error", err)
 		os.Exit(1)
+	}
+}
+
+func parseLogLevel(s string) slog.Level {
+	switch strings.ToLower(s) {
+	case "debug":
+		return slog.LevelDebug
+	case "warn", "warning":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
 	}
 }
 
@@ -36,6 +47,10 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
+
+	level := parseLogLevel(cfg.LogLevel)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level}))
+	slog.SetDefault(logger)
 
 	ctx := context.Background()
 	pool, err := pgxpool.New(ctx, cfg.DatabaseURL())
@@ -55,9 +70,9 @@ func run() error {
 	coffeeBeanRepo := repository.NewCoffeeBeanRepository(pool)
 	uow := repository.NewUnitOfWork(pool)
 
-	authService := services.NewAuthService(userRepo, jwtManager)
+	authService := usecase.NewAuthService(userRepo, jwtManager)
 	authHandler := handlers.NewAuthHandler(authService)
-	coffeeBeansService := services.NewCoffeeBeansService(coffeeBeanRepo, uow)
+	coffeeBeansService := usecase.NewCoffeeBeansService(coffeeBeanRepo, uow)
 	coffeeBeansHandler := handlers.NewCoffeeBeansHandler(coffeeBeansService)
 
 	r := router.New(router.Deps{
