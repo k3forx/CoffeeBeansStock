@@ -34,6 +34,7 @@ type Querier interface {
 	DeletePurchaseHistory(ctx context.Context, arg DeletePurchaseHistoryParams) error
 	DeleteUsageHistory(ctx context.Context, arg DeleteUsageHistoryParams) error
 	GetCoffeeBeanByID(ctx context.Context, id pgtype.UUID) (CoffeeBean, error)
+	GetCoffeeBeanByIDForUpdate(ctx context.Context, id pgtype.UUID) (CoffeeBean, error)
 	GetLatestPurchaseHistoryByCoffeeBeanID(ctx context.Context, coffeeBeanID pgtype.UUID) (PurchaseHistory, error)
 	GetPurchaseHistoriesByCoffeeBeanID(ctx context.Context, arg GetPurchaseHistoriesByCoffeeBeanIDParams) ([]PurchaseHistory, error)
 	GetPurchaseHistoryByID(ctx context.Context, id pgtype.UUID) (PurchaseHistory, error)

@@ -31,6 +31,17 @@ func (r *coffeeBeanRepository) GetByID(ctx context.Context, id uuid.UUID) (*coff
 	return toDomainCoffeeBean(b), nil
 }
 
+func (r *coffeeBeanRepository) GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*coffeebean.CoffeeBean, error) {
+	b, err := r.queries.GetCoffeeBeanByIDForUpdate(ctx, toUUID(id))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
+	}
+	return toDomainCoffeeBean(b), nil
+}
+
 func (r *coffeeBeanRepository) ListByUserID(ctx context.Context, userID uuid.UUID, limit, offset int32) ([]*coffeebean.CoffeeBean, error) {
 	rows, err := r.queries.ListCoffeeBeansByUserID(ctx, database.ListCoffeeBeansByUserIDParams{
 		UserID: toUUID(userID),
@@ -87,6 +98,9 @@ func (r *coffeeBeanRepository) Update(ctx context.Context, bean *coffeebean.Coff
 		params.RoastDetail = toPgText(&s)
 	}
 	_, err := r.queries.UpdateCoffeeBean(ctx, params)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.ErrNotFound
+	}
 	return err
 }
 

@@ -8,6 +8,7 @@ import (
 
 type Repository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*CoffeeBean, error)
+	GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*CoffeeBean, error)
 	ListByUserID(ctx context.Context, userID uuid.UUID, limit, offset int32) ([]*CoffeeBean, error)
 	CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error)
 	Save(ctx context.Context, bean *CoffeeBean) error

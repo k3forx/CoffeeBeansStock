@@ -40,6 +40,11 @@ RETURNING *;
 SELECT * FROM coffee_beans
 WHERE id = $1 AND deleted_at IS NULL;
 
+-- name: GetCoffeeBeanByIDForUpdate :one
+SELECT * FROM coffee_beans
+WHERE id = $1 AND deleted_at IS NULL
+FOR UPDATE;
+
 -- name: ListCoffeeBeansByUserID :many
 SELECT * FROM coffee_beans
 WHERE user_id = $1 AND deleted_at IS NULL

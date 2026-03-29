@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -11,6 +12,7 @@ import (
 
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/coffeebean"
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/unitofwork"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase/mock"
 )
@@ -342,6 +344,17 @@ func TestCoffeeBeansService_GetByID(t *testing.T) {
 	}
 }
 
+// fakeRunInTx returns a mock UoW whose RunInTx executes the callback with the given store.
+func fakeRunInTx(ctrl *gomock.Controller, store *mock.MockStore) *mock.MockUnitOfWork {
+	uow := mock.NewMockUnitOfWork(ctrl)
+	uow.EXPECT().RunInTx(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, fn func(unitofwork.Store) error) error {
+			return fn(store)
+		},
+	)
+	return uow
+}
+
 func TestCoffeeBeansService_Update(t *testing.T) {
 	t.Parallel()
 
@@ -355,11 +368,22 @@ func TestCoffeeBeansService_Update(t *testing.T) {
 		wantValidation bool
 		wantErr        error
 	}{
+		"無効なRoastLevelはValidationErrorを返す（トランザクション前に失敗）": {
+			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
+				r := mock.NewMockCoffeeBeanRepository(ctrl)
+				return usecase.NewCoffeeBeansService(r, nil)
+			},
+			in:             usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, RoastLevel: ptr("invalid")},
+			wantValidation: true,
+		},
 		"ErrNotFoundが伝播する": {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
-				r.EXPECT().GetByID(gomock.Any(), beanID).Return(nil, domain.ErrNotFound)
-				return usecase.NewCoffeeBeansService(r, nil)
+				store := mock.NewMockStore(ctrl)
+				store.EXPECT().CoffeeBeanRepo().Return(r).AnyTimes()
+				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(nil, domain.ErrNotFound)
+				uow := fakeRunInTx(ctrl, store)
+				return usecase.NewCoffeeBeansService(r, uow)
 			},
 			in:      usecase.UpdateBeanInput{UserID: userID, BeanID: beanID},
 			wantErr: domain.ErrNotFound,
@@ -372,25 +396,14 @@ func TestCoffeeBeansService_Update(t *testing.T) {
 					coffeebean.RoastShallow, nil, coffeebean.ReconstructStock(100), nil,
 					time.Now(), time.Now(),
 				)
-				r.EXPECT().GetByID(gomock.Any(), beanID).Return(testBean, nil)
-				return usecase.NewCoffeeBeansService(r, nil)
+				store := mock.NewMockStore(ctrl)
+				store.EXPECT().CoffeeBeanRepo().Return(r).AnyTimes()
+				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(testBean, nil)
+				uow := fakeRunInTx(ctrl, store)
+				return usecase.NewCoffeeBeansService(r, uow)
 			},
 			in:      usecase.UpdateBeanInput{UserID: otherUserID, BeanID: beanID},
 			wantErr: domain.ErrForbidden,
-		},
-		"無効なRoastLevelはValidationErrorを返す": {
-			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
-				r := mock.NewMockCoffeeBeanRepository(ctrl)
-				testBean := coffeebean.Reconstruct(
-					beanID, userID, "Test Bean", nil,
-					coffeebean.RoastShallow, nil, coffeebean.ReconstructStock(100), nil,
-					time.Now(), time.Now(),
-				)
-				r.EXPECT().GetByID(gomock.Any(), beanID).Return(testBean, nil)
-				return usecase.NewCoffeeBeansService(r, nil)
-			},
-			in:             usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, RoastLevel: ptr("invalid")},
-			wantValidation: true,
 		},
 		"Repo.Updateのエラーが伝播する": {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
@@ -400,9 +413,12 @@ func TestCoffeeBeansService_Update(t *testing.T) {
 					coffeebean.RoastShallow, nil, coffeebean.ReconstructStock(100), nil,
 					time.Now(), time.Now(),
 				)
-				r.EXPECT().GetByID(gomock.Any(), beanID).Return(testBean, nil)
+				store := mock.NewMockStore(ctrl)
+				store.EXPECT().CoffeeBeanRepo().Return(r).AnyTimes()
+				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(testBean, nil)
 				r.EXPECT().Update(gomock.Any(), gomock.Any()).Return(errors.New("db error"))
-				return usecase.NewCoffeeBeansService(r, nil)
+				uow := fakeRunInTx(ctrl, store)
+				return usecase.NewCoffeeBeansService(r, uow)
 			},
 			in: usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, Name: ptr("Updated")},
 		},
@@ -414,9 +430,12 @@ func TestCoffeeBeansService_Update(t *testing.T) {
 					coffeebean.RoastShallow, nil, coffeebean.ReconstructStock(100), nil,
 					time.Now(), time.Now(),
 				)
-				r.EXPECT().GetByID(gomock.Any(), beanID).Return(testBean, nil)
+				store := mock.NewMockStore(ctrl)
+				store.EXPECT().CoffeeBeanRepo().Return(r).AnyTimes()
+				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(testBean, nil)
 				r.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil)
-				return usecase.NewCoffeeBeansService(r, nil)
+				uow := fakeRunInTx(ctrl, store)
+				return usecase.NewCoffeeBeansService(r, uow)
 			},
 			in: usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, Name: ptr("New Name")},
 		},
@@ -482,17 +501,23 @@ func TestCoffeeBeansService_Delete(t *testing.T) {
 		"正常に削除できる": {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
-				r.EXPECT().GetByID(gomock.Any(), beanID).Return(testBean, nil)
+				store := mock.NewMockStore(ctrl)
+				store.EXPECT().CoffeeBeanRepo().Return(r).AnyTimes()
+				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(testBean, nil)
 				r.EXPECT().SoftDelete(gomock.Any(), beanID, userID).Return(nil)
-				return usecase.NewCoffeeBeansService(r, nil)
+				uow := fakeRunInTx(ctrl, store)
+				return usecase.NewCoffeeBeansService(r, uow)
 			},
 			in: usecase.DeleteBeanInput{UserID: userID, BeanID: beanID},
 		},
 		"ErrNotFoundが伝播する": {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
-				r.EXPECT().GetByID(gomock.Any(), beanID).Return(nil, domain.ErrNotFound)
-				return usecase.NewCoffeeBeansService(r, nil)
+				store := mock.NewMockStore(ctrl)
+				store.EXPECT().CoffeeBeanRepo().Return(r).AnyTimes()
+				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(nil, domain.ErrNotFound)
+				uow := fakeRunInTx(ctrl, store)
+				return usecase.NewCoffeeBeansService(r, uow)
 			},
 			in:      usecase.DeleteBeanInput{UserID: userID, BeanID: beanID},
 			wantErr: domain.ErrNotFound,
@@ -500,8 +525,11 @@ func TestCoffeeBeansService_Delete(t *testing.T) {
 		"別ユーザーのbeanはErrForbiddenを返す": {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
-				r.EXPECT().GetByID(gomock.Any(), beanID).Return(testBean, nil)
-				return usecase.NewCoffeeBeansService(r, nil)
+				store := mock.NewMockStore(ctrl)
+				store.EXPECT().CoffeeBeanRepo().Return(r).AnyTimes()
+				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(testBean, nil)
+				uow := fakeRunInTx(ctrl, store)
+				return usecase.NewCoffeeBeansService(r, uow)
 			},
 			in:      usecase.DeleteBeanInput{UserID: otherUserID, BeanID: beanID},
 			wantErr: domain.ErrForbidden,
@@ -509,9 +537,12 @@ func TestCoffeeBeansService_Delete(t *testing.T) {
 		"SoftDeleteのエラーが伝播する": {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
-				r.EXPECT().GetByID(gomock.Any(), beanID).Return(testBean, nil)
+				store := mock.NewMockStore(ctrl)
+				store.EXPECT().CoffeeBeanRepo().Return(r).AnyTimes()
+				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(testBean, nil)
 				r.EXPECT().SoftDelete(gomock.Any(), beanID, userID).Return(errors.New("db error"))
-				return usecase.NewCoffeeBeansService(r, nil)
+				uow := fakeRunInTx(ctrl, store)
+				return usecase.NewCoffeeBeansService(r, uow)
 			},
 			in: usecase.DeleteBeanInput{UserID: userID, BeanID: beanID},
 		},
