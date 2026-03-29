@@ -33,6 +33,9 @@ func toUserResponse(u *user.User) gen.UserResponse {
 	if enabled := u.NotificationEnabled(); enabled {
 		resp.NotificationEnabled = &enabled
 	}
+	if gpc := u.GramsPerCup().Value(); gpc != 0 {
+		resp.GramsPerCup = &gpc
+	}
 	if !u.UpdatedAt().IsZero() {
 		updatedAt := u.UpdatedAt()
 		resp.UpdatedAt = &updatedAt
@@ -93,6 +96,32 @@ func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	output, err := h.authService.GetMe(r.Context(), usecase.GetMeInput{UserID: userID})
 	if err != nil {
 		api.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "サーバーエラーが発生しました")
+		return
+	}
+
+	api.WriteSuccess(w, http.StatusOK, toUserResponse(output.User))
+}
+
+// UpdateMe updates the authenticated user's settings.
+func (h *AuthHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
+	userID, ok := requireUserID(w, r)
+	if !ok {
+		return
+	}
+
+	var req gen.UpdateUserRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+
+	output, err := h.authService.UpdateMe(r.Context(), usecase.UpdateMeInput{
+		UserID:              userID,
+		GramsPerCup:         req.GramsPerCup,
+		LowStockThreshold:   req.LowStockThreshold,
+		NotificationEnabled: req.NotificationEnabled,
+	})
+	if err != nil {
+		handleDomainError(w, err, "ユーザーが見つかりません")
 		return
 	}
 

@@ -175,6 +175,13 @@ type UpdateBeanRequest struct {
 	RoastLevel   *RoastLevel  `json:"roast_level,omitempty"`
 }
 
+// UpdateUserRequest defines model for UpdateUserRequest.
+type UpdateUserRequest struct {
+	GramsPerCup         *int32 `json:"grams_per_cup,omitempty"`
+	LowStockThreshold   *int32 `json:"low_stock_threshold,omitempty"`
+	NotificationEnabled *bool  `json:"notification_enabled,omitempty"`
+}
+
 // UsageHistoryResponse defines model for UsageHistoryResponse.
 type UsageHistoryResponse struct {
 	CoffeeBeanId openapi_types.UUID `json:"coffee_bean_id"`
@@ -188,6 +195,7 @@ type UsageHistoryResponse struct {
 // UserResponse defines model for UserResponse.
 type UserResponse struct {
 	CreatedAt           time.Time          `json:"created_at"`
+	GramsPerCup         *int32             `json:"grams_per_cup,omitempty"`
 	Id                  openapi_types.UUID `json:"id"`
 	LowStockThreshold   *int32             `json:"low_stock_threshold,omitempty"`
 	Name                *string            `json:"name,omitempty"`
@@ -206,6 +214,9 @@ type ListUsageHistoriesParams struct {
 	Limit  *int32 `form:"limit,omitempty" json:"limit,omitempty"`
 	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
 }
+
+// UpdateMeJSONRequestBody defines body for UpdateMe for application/json ContentType.
+type UpdateMeJSONRequestBody = UpdateUserRequest
 
 // RefreshTokenJSONRequestBody defines body for RefreshToken for application/json ContentType.
 type RefreshTokenJSONRequestBody = RefreshRequest

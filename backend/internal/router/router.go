@@ -38,6 +38,7 @@ func New(deps Deps) chi.Router {
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.Auth(deps.TokenManager))
 				r.Get("/me", deps.AuthHandler.GetMe)
+			r.Put("/me", deps.AuthHandler.UpdateMe)
 			})
 		})
 

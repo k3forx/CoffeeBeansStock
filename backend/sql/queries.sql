@@ -3,8 +3,8 @@
 -- ============================================================================
 
 -- name: CreateAnonymousUser :one
-INSERT INTO users (id, low_stock_threshold, notification_enabled)
-VALUES ($1, $2, $3)
+INSERT INTO users (id, low_stock_threshold, notification_enabled, grams_per_cup)
+VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: GetUserByID :one
@@ -17,6 +17,7 @@ SET
     name = COALESCE(sqlc.narg('name'), name),
     low_stock_threshold = COALESCE(sqlc.narg('low_stock_threshold'), low_stock_threshold),
     notification_enabled = COALESCE(sqlc.narg('notification_enabled'), notification_enabled),
+    grams_per_cup = COALESCE(sqlc.narg('grams_per_cup'), grams_per_cup),
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;

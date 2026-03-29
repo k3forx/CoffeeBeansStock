@@ -109,3 +109,34 @@ func (s *AuthService) GetMe(ctx context.Context, in GetMeInput) (*GetMeOutput, e
 	}
 	return &GetMeOutput{User: u}, nil
 }
+
+// UpdateMeInput holds input for updating the current user's settings.
+type UpdateMeInput struct {
+	UserID              uuid.UUID
+	GramsPerCup         *int32
+	LowStockThreshold   *int32
+	NotificationEnabled *bool
+}
+
+// UpdateMeOutput holds the result of updating the current user.
+type UpdateMeOutput struct {
+	User *user.User
+}
+
+// UpdateMe updates the authenticated user's settings.
+func (s *AuthService) UpdateMe(ctx context.Context, in UpdateMeInput) (*UpdateMeOutput, error) {
+	u, err := s.userRepo.GetByID(ctx, in.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := u.Update(in.GramsPerCup, in.LowStockThreshold, in.NotificationEnabled); err != nil {
+		return nil, err
+	}
+
+	if err := s.userRepo.Update(ctx, u); err != nil {
+		return nil, err
+	}
+
+	return &UpdateMeOutput{User: u}, nil
+}

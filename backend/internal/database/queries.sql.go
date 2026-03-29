@@ -61,22 +61,28 @@ func (q *Queries) CountUsageHistoriesByUserID(ctx context.Context, userID pgtype
 
 const createAnonymousUser = `-- name: CreateAnonymousUser :one
 
-INSERT INTO users (id, low_stock_threshold, notification_enabled)
-VALUES ($1, $2, $3)
-RETURNING id, email, password_hash, name, low_stock_threshold, notification_enabled, created_at, updated_at, deleted_at
+INSERT INTO users (id, low_stock_threshold, notification_enabled, grams_per_cup)
+VALUES ($1, $2, $3, $4)
+RETURNING id, email, password_hash, name, low_stock_threshold, notification_enabled, grams_per_cup, created_at, updated_at, deleted_at
 `
 
 type CreateAnonymousUserParams struct {
 	ID                  pgtype.UUID `json:"id"`
 	LowStockThreshold   int32       `json:"low_stock_threshold"`
 	NotificationEnabled bool        `json:"notification_enabled"`
+	GramsPerCup         int32       `json:"grams_per_cup"`
 }
 
 // ============================================================================
 // Users Queries
 // ============================================================================
 func (q *Queries) CreateAnonymousUser(ctx context.Context, arg CreateAnonymousUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, createAnonymousUser, arg.ID, arg.LowStockThreshold, arg.NotificationEnabled)
+	row := q.db.QueryRow(ctx, createAnonymousUser,
+		arg.ID,
+		arg.LowStockThreshold,
+		arg.NotificationEnabled,
+		arg.GramsPerCup,
+	)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -85,6 +91,7 @@ func (q *Queries) CreateAnonymousUser(ctx context.Context, arg CreateAnonymousUs
 		&i.Name,
 		&i.LowStockThreshold,
 		&i.NotificationEnabled,
+		&i.GramsPerCup,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -455,7 +462,7 @@ func (q *Queries) GetUsageHistoryByID(ctx context.Context, id pgtype.UUID) (Usag
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, password_hash, name, low_stock_threshold, notification_enabled, created_at, updated_at, deleted_at FROM users
+SELECT id, email, password_hash, name, low_stock_threshold, notification_enabled, grams_per_cup, created_at, updated_at, deleted_at FROM users
 WHERE id = $1 AND deleted_at IS NULL
 `
 
@@ -469,6 +476,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 		&i.Name,
 		&i.LowStockThreshold,
 		&i.NotificationEnabled,
+		&i.GramsPerCup,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -929,9 +937,10 @@ SET
     name = COALESCE($2, name),
     low_stock_threshold = COALESCE($3, low_stock_threshold),
     notification_enabled = COALESCE($4, notification_enabled),
+    grams_per_cup = COALESCE($5, grams_per_cup),
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, email, password_hash, name, low_stock_threshold, notification_enabled, created_at, updated_at, deleted_at
+RETURNING id, email, password_hash, name, low_stock_threshold, notification_enabled, grams_per_cup, created_at, updated_at, deleted_at
 `
 
 type UpdateUserParams struct {
@@ -939,6 +948,7 @@ type UpdateUserParams struct {
 	Name                pgtype.Text `json:"name"`
 	LowStockThreshold   pgtype.Int4 `json:"low_stock_threshold"`
 	NotificationEnabled pgtype.Bool `json:"notification_enabled"`
+	GramsPerCup         pgtype.Int4 `json:"grams_per_cup"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
@@ -947,6 +957,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Name,
 		arg.LowStockThreshold,
 		arg.NotificationEnabled,
+		arg.GramsPerCup,
 	)
 	var i User
 	err := row.Scan(
@@ -956,6 +967,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Name,
 		&i.LowStockThreshold,
 		&i.NotificationEnabled,
+		&i.GramsPerCup,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,

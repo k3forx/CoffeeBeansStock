@@ -9,4 +9,5 @@ import (
 type Repository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*User, error)
 	Save(ctx context.Context, user *User) error
+	Update(ctx context.Context, user *User) error
 }
