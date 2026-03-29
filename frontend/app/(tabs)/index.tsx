@@ -11,15 +11,9 @@ import {
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { beansApi } from "../../src/api/beans";
-import type { CoffeeBean, RoastLevel } from "../../src/types/api";
+import type { CoffeeBean } from "../../src/types/api";
 import { colors, typography, spacing, radius, shadows, getStockColor } from "@/theme";
-
-const ROAST_LEVEL_LABELS: Record<RoastLevel, string> = {
-  shallow: "浅煎り",
-  medium: "中煎り",
-  medium_deep: "中深煎り",
-  deep: "深煎り",
-};
+import { ROAST_LEVEL_LABELS } from "../../src/constants/roastLevels";
 
 export default function BeansListScreen() {
   const [beans, setBeans] = useState<CoffeeBean[]>([]);

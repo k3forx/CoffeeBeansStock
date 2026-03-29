@@ -17,50 +17,7 @@ import { usagesApi } from "../../../src/api/usages";
 import { ApiError } from "../../../src/api/client";
 import type { CoffeeBean, RoastLevel, RoastDetail, UsageHistory } from "../../../src/types/api";
 import { colors, typography, spacing, radius, shadows, getStockColor } from "@/theme";
-
-const ROAST_LEVELS: { value: RoastLevel; label: string }[] = [
-  { value: "shallow", label: "浅煎り" },
-  { value: "medium", label: "中煎り" },
-  { value: "medium_deep", label: "中深煎り" },
-  { value: "deep", label: "深煎り" },
-];
-
-const ROAST_DETAILS: Record<RoastLevel, { value: RoastDetail; label: string }[]> = {
-  shallow: [
-    { value: "light", label: "ライトロースト" },
-    { value: "cinnamon", label: "シナモンロースト" },
-  ],
-  medium: [
-    { value: "medium", label: "ミディアムロースト" },
-    { value: "high", label: "ハイロースト" },
-  ],
-  medium_deep: [
-    { value: "city", label: "シティロースト" },
-    { value: "full_city", label: "フルシティロースト" },
-  ],
-  deep: [
-    { value: "french", label: "フレンチロースト" },
-    { value: "italian", label: "イタリアンロースト" },
-  ],
-};
-
-const ROAST_LEVEL_LABELS: Record<RoastLevel, string> = {
-  shallow: "浅煎り",
-  medium: "中煎り",
-  medium_deep: "中深煎り",
-  deep: "深煎り",
-};
-
-const ROAST_DETAIL_LABELS: Record<RoastDetail, string> = {
-  light: "ライトロースト",
-  cinnamon: "シナモンロースト",
-  medium: "ミディアムロースト",
-  high: "ハイロースト",
-  city: "シティロースト",
-  full_city: "フルシティロースト",
-  french: "フレンチロースト",
-  italian: "イタリアンロースト",
-};
+import { ROAST_LEVELS, ROAST_DETAILS, ROAST_LEVEL_LABELS, ROAST_DETAIL_LABELS } from "../../../src/constants/roastLevels";
 
 export default function BeanDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
