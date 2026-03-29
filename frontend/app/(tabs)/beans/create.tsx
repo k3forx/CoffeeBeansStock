@@ -4,10 +4,10 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
@@ -16,6 +16,7 @@ import type { RoastLevel, RoastDetail } from "../../../src/types/api";
 import { colors, typography, spacing, radius, shadows } from "@/theme";
 import { ROAST_LEVELS, ROAST_DETAILS } from "../../../src/constants/roastLevels";
 import { ChipSelector } from "../../../src/components/ChipSelector";
+import { validateBeanForm } from "../../../src/utils/validation";
 
 export default function CreateBeanScreen() {
   const [name, setName] = useState("");
@@ -33,28 +34,17 @@ export default function CreateBeanScreen() {
   };
 
   const handleCreate = async () => {
-    if (!name) {
-      Alert.alert("エラー", "名前は必須です");
-      return;
-    }
-    if (!roastLevel) {
-      Alert.alert("エラー", "焙煎度を選択してください");
-      return;
-    }
-    const stock = parseInt(currentStock, 10);
-    if (isNaN(stock) || stock < 0) {
-      Alert.alert("エラー", "在庫数は0以上の数値を入力してください");
-      return;
-    }
+    const result = validateBeanForm({ name, roastLevel, currentStock });
+    if (!result.valid) return;
 
     setLoading(true);
     try {
       await beansApi.create({
         name,
         origin: origin || undefined,
-        roast_level: roastLevel,
+        roast_level: roastLevel as RoastLevel,
         roast_detail: roastDetail || undefined,
-        current_stock: stock,
+        current_stock: result.stock,
         notes: notes || undefined,
       });
       router.back();
