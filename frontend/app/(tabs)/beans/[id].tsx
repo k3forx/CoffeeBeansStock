@@ -13,8 +13,9 @@ import {
 } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
+import { usagesApi } from "../../../src/api/usages";
 import { ApiError } from "../../../src/api/client";
-import type { CoffeeBean, RoastLevel, RoastDetail } from "../../../src/types/api";
+import type { CoffeeBean, RoastLevel, RoastDetail, UsageHistory } from "../../../src/types/api";
 import { colors, typography, spacing, radius, shadows, getStockColor } from "@/theme";
 
 const ROAST_LEVELS: { value: RoastLevel; label: string }[] = [
@@ -76,6 +77,15 @@ export default function BeanDetailScreen() {
   const [currentStock, setCurrentStock] = useState("");
   const [notes, setNotes] = useState("");
 
+  const [usages, setUsages] = useState<UsageHistory[]>([]);
+  const [usageLoading, setUsageLoading] = useState(false);
+  const [quickButtonLoading, setQuickButtonLoading] = useState(false);
+  const [manualGrams, setManualGrams] = useState("");
+  const [manualLoading, setManualLoading] = useState(false);
+  const [deletingUsageId, setDeletingUsageId] = useState<string | null>(null);
+
+  const QUICK_USAGE_GRAMS = 15;
+
   const loadBean = useCallback(async () => {
     try {
       const data = await beansApi.get(id);
@@ -93,11 +103,111 @@ export default function BeanDetailScreen() {
     }
   }, [id, router]);
 
+  const loadUsages = useCallback(async () => {
+    setUsageLoading(true);
+    try {
+      const data = await usagesApi.list(id, 10, 0);
+      setUsages(data.usages);
+    } catch {
+      // Silent fail — usage list is supplementary
+    } finally {
+      setUsageLoading(false);
+    }
+  }, [id]);
+
   useFocusEffect(
     useCallback(() => {
       loadBean();
-    }, [loadBean])
+      loadUsages();
+    }, [loadBean, loadUsages])
   );
+
+  const getTodayDate = () => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const refreshAfterUsage = async () => {
+    const [updatedBean, updatedUsages] = await Promise.all([
+      beansApi.get(id),
+      usagesApi.list(id, 10, 0),
+    ]);
+    setBean(updatedBean);
+    setCurrentStock(String(updatedBean.current_stock));
+    setUsages(updatedUsages.usages);
+  };
+
+  const handleQuickUsage = async () => {
+    setQuickButtonLoading(true);
+    try {
+      await usagesApi.create(id, {
+        usage_date: getTodayDate(),
+        quantity: QUICK_USAGE_GRAMS,
+        usage_type: "quick_button",
+      });
+      await refreshAfterUsage();
+    } catch (e) {
+      if (e instanceof ApiError && e.code === "INSUFFICIENT_STOCK") {
+        Alert.alert("エラー", "在庫が不足しています");
+      } else {
+        const msg = e instanceof ApiError ? e.message : "記録に失敗しました";
+        Alert.alert("エラー", msg);
+      }
+    } finally {
+      setQuickButtonLoading(false);
+    }
+  };
+
+  const handleManualUsage = async () => {
+    const grams = parseInt(manualGrams, 10);
+    if (isNaN(grams) || grams <= 0) {
+      Alert.alert("エラー", "1g以上の数値を入力してください");
+      return;
+    }
+    setManualLoading(true);
+    try {
+      await usagesApi.create(id, {
+        usage_date: getTodayDate(),
+        quantity: grams,
+        usage_type: "manual",
+      });
+      await refreshAfterUsage();
+      setManualGrams("");
+    } catch (e) {
+      if (e instanceof ApiError && e.code === "INSUFFICIENT_STOCK") {
+        Alert.alert("エラー", "在庫が不足しています");
+      } else {
+        const msg = e instanceof ApiError ? e.message : "記録に失敗しました";
+        Alert.alert("エラー", msg);
+      }
+    } finally {
+      setManualLoading(false);
+    }
+  };
+
+  const handleDeleteUsage = (usageId: string) => {
+    Alert.alert("削除確認", "この使用記録を削除しますか？", [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "削除",
+        style: "destructive",
+        onPress: async () => {
+          setDeletingUsageId(usageId);
+          try {
+            await usagesApi.delete(id, usageId);
+            await refreshAfterUsage();
+          } catch {
+            Alert.alert("エラー", "削除に失敗しました");
+          } finally {
+            setDeletingUsageId(null);
+          }
+        },
+      },
+    ]);
+  };
 
   const handleRoastLevelSelect = (level: RoastLevel) => {
     setRoastLevel(level);
@@ -334,6 +444,71 @@ export default function BeanDetailScreen() {
                 </Text>
               </View>
             </View>
+
+            <View style={styles.usageSection}>
+              <Text style={styles.sectionTitle}>使用記録</Text>
+
+              <TouchableOpacity
+                style={[styles.quickButton, quickButtonLoading && styles.buttonDisabled]}
+                onPress={handleQuickUsage}
+                disabled={quickButtonLoading}
+              >
+                <Text style={styles.quickButtonText}>
+                  {quickButtonLoading ? "記録中..." : "1杯使った (15g)"}
+                </Text>
+              </TouchableOpacity>
+
+              <View style={styles.manualInputRow}>
+                <TextInput
+                  style={styles.manualInput}
+                  value={manualGrams}
+                  onChangeText={setManualGrams}
+                  keyboardType="numeric"
+                  placeholder="グラム数"
+                  placeholderTextColor={colors.textTertiary}
+                  underlineColorAndroid="transparent"
+                />
+                <Text style={styles.manualInputUnit}>g</Text>
+                <TouchableOpacity
+                  style={[styles.manualButton, (manualLoading || !manualGrams) && styles.buttonDisabled]}
+                  onPress={handleManualUsage}
+                  disabled={manualLoading || !manualGrams}
+                >
+                  <Text style={styles.manualButtonText}>
+                    {manualLoading ? "記録中..." : "記録"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.historyTitle}>最近の使用履歴</Text>
+              {usageLoading ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : usages.length === 0 ? (
+                <Text style={styles.emptyText}>まだ使用記録がありません</Text>
+              ) : (
+                usages.map((usage) => (
+                  <View key={usage.id} style={styles.historyItem}>
+                    <View style={styles.historyInfo}>
+                      <Text style={styles.historyDate}>
+                        {new Date(usage.usage_date).toLocaleDateString("ja-JP")}
+                      </Text>
+                      <Text style={styles.historyGrams}>{usage.quantity}g</Text>
+                      <Text style={styles.historyType}>
+                        {usage.usage_type === "quick_button" ? "クイック" : "手動"}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => handleDeleteUsage(usage.id)}
+                      disabled={deletingUsageId === usage.id}
+                    >
+                      <Text style={styles.historyDeleteText}>
+                        {deletingUsageId === usage.id ? "..." : "削除"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+            </View>
           </>
         )}
       </ScrollView>
@@ -485,6 +660,95 @@ const styles = StyleSheet.create({
   saveButtonText: {
     ...typography.labelLarge,
     color: colors.textInverse,
+  },
+
+  // Usage section
+  usageSection: {
+    marginTop: spacing["3xl"],
+  },
+  sectionTitle: {
+    ...typography.labelLarge,
+    color: colors.textPrimary,
+    marginBottom: spacing.lg,
+  },
+  quickButton: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    padding: spacing.lg,
+    alignItems: "center" as const,
+    marginBottom: spacing.lg,
+  },
+  quickButtonText: {
+    ...typography.labelLarge,
+    color: colors.textInverse,
+  },
+  manualInputRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: spacing.sm,
+    marginBottom: spacing["2xl"],
+  },
+  manualInput: {
+    flex: 1,
+    height: 48,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    ...typography.bodyLarge,
+    color: colors.textPrimary,
+  },
+  manualInputUnit: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+  },
+  manualButton: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+  },
+  manualButtonText: {
+    ...typography.labelLarge,
+    color: colors.textInverse,
+  },
+  historyTitle: {
+    ...typography.labelMedium,
+    color: colors.textSecondary,
+    marginBottom: spacing.md,
+  },
+  emptyText: {
+    ...typography.bodySmall,
+    color: colors.textTertiary,
+    textAlign: "center" as const,
+    paddingVertical: spacing.xl,
+  },
+  historyItem: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderLight,
+  },
+  historyInfo: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: spacing.md,
+  },
+  historyDate: {
+    ...typography.bodyMedium,
+    color: colors.textPrimary,
+  },
+  historyGrams: {
+    ...typography.labelLarge,
+    color: colors.textPrimary,
+  },
+  historyType: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+  },
+  historyDeleteText: {
+    ...typography.bodySmall,
+    color: colors.danger,
   },
 
   // Bottom
