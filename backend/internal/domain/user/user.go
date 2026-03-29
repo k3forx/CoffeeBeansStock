@@ -1,6 +1,7 @@
 package user
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -57,14 +58,17 @@ func Reconstruct(
 }
 
 // Update modifies the user's settings with validation.
-func (u *User) Update(gramsPerCup *int32, lowStockThreshold *int32, notificationEnabled *bool) error {
+func (u *User) Update(gramsPerCup, lowStockThreshold *int32, notificationEnabled *bool) error {
 	var errs domain.ValidationErrors
+
 	if gramsPerCup != nil {
 		gpc, err := NewGramsPerCup(*gramsPerCup)
-		if err != nil {
-			errs = append(errs, err.(*domain.ValidationError))
-		} else {
+		if err == nil {
 			u.gramsPerCup = gpc
+		} else if ve, ok := errors.AsType[*domain.ValidationError](err); ok {
+			errs = append(errs, ve)
+		} else {
+			return err
 		}
 	}
 	if lowStockThreshold != nil {
