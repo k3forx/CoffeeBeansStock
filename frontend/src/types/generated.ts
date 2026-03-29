@@ -64,7 +64,8 @@ export interface paths {
         };
         /** 認証ユーザー情報取得 */
         get: operations["getMe"];
-        put?: never;
+        /** ユーザー設定更新 */
+        put: operations["updateMe"];
         post?: never;
         delete?: never;
         options?: never;
@@ -162,6 +163,8 @@ export interface components {
             /** Format: int32 */
             low_stock_threshold?: number;
             notification_enabled?: boolean;
+            /** Format: int32 */
+            grams_per_cup?: number;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -178,6 +181,13 @@ export interface components {
         RefreshResult: {
             access_token: string;
             refresh_token: string;
+        };
+        UpdateUserRequest: {
+            /** Format: int32 */
+            low_stock_threshold?: number;
+            notification_enabled?: boolean;
+            /** Format: int32 */
+            grams_per_cup?: number;
         };
         /** @enum {string} */
         RoastLevel: "shallow" | "medium" | "medium_deep" | "deep";
@@ -360,6 +370,44 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["UserResponse"];
                 };
+            };
+            /** @description 認証エラー */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserRequest"];
+            };
+        };
+        responses: {
+            /** @description 更新成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description バリデーションエラー */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description 認証エラー */
             401: {

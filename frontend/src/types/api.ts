@@ -14,6 +14,7 @@ export type RoastDetail = components["schemas"]["RoastDetail"];
 export type CreateUsageInput = components["schemas"]["CreateUsageHistoryRequest"];
 export type UsageHistory = components["schemas"]["UsageHistoryResponse"];
 export type ListUsageHistoryResult = components["schemas"]["ListUsageHistoryResponse"];
+export type UpdateUserInput = components["schemas"]["UpdateUserRequest"];
 
 // Envelope type used internally by client.ts
 export type ApiResponse<T> = {
