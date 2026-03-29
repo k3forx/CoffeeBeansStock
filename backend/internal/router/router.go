@@ -13,10 +13,11 @@ import (
 
 // Deps holds the dependencies required to set up routes.
 type Deps struct {
-	AuthHandler        *handlers.AuthHandler
-	CoffeeBeansHandler *handlers.CoffeeBeansHandler
-	TokenManager       domainauth.TokenManager
-	HealthCheck        http.HandlerFunc
+	AuthHandler         *handlers.AuthHandler
+	CoffeeBeansHandler  *handlers.CoffeeBeansHandler
+	UsageHistoryHandler *handlers.UsageHistoryHandler
+	TokenManager        domainauth.TokenManager
+	HealthCheck         http.HandlerFunc
 }
 
 // New creates and configures the application router.
@@ -48,6 +49,12 @@ func New(deps Deps) chi.Router {
 				r.Get("/{id}", deps.CoffeeBeansHandler.Get)
 				r.Put("/{id}", deps.CoffeeBeansHandler.Update)
 				r.Delete("/{id}", deps.CoffeeBeansHandler.Delete)
+
+				r.Route("/{id}/usages", func(r chi.Router) {
+					r.Post("/", deps.UsageHistoryHandler.Create)
+					r.Get("/", deps.UsageHistoryHandler.List)
+					r.Delete("/{usageId}", deps.UsageHistoryHandler.Delete)
+				})
 			})
 		})
 	})

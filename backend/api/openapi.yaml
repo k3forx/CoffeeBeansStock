@@ -201,6 +201,114 @@ paths:
         "404":
           description: 見つかりません
 
+  /api/v1/coffee-beans/{id}/usages:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      operationId: createUsageHistory
+      summary: 使用記録作成
+      tags: [usage-history]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUsageHistoryRequest"
+      responses:
+        "201":
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsageHistoryResponse"
+        "400":
+          description: バリデーションエラー
+        "401":
+          description: 認証エラー
+        "403":
+          description: アクセス権限なし
+        "404":
+          description: コーヒー豆が見つかりません
+        "409":
+          description: 在庫不足
+
+    get:
+      operationId: listUsageHistories
+      summary: 使用記録一覧取得
+      tags: [usage-history]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListUsageHistoryResponse"
+        "401":
+          description: 認証エラー
+        "403":
+          description: アクセス権限なし
+        "404":
+          description: コーヒー豆が見つかりません
+
+  /api/v1/coffee-beans/{id}/usages/{usageId}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: usageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    delete:
+      operationId: deleteUsageHistory
+      summary: 使用記録削除
+      tags: [usage-history]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: 削除成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+        "401":
+          description: 認証エラー
+        "403":
+          description: アクセス権限なし
+        "404":
+          description: 使用記録が見つかりません
+
 components:
   securitySchemes:
     bearerAuth:
@@ -398,6 +506,74 @@ components:
       properties:
         message:
           type: string
+
+    # ── Usage History ─────────────────────────────────────
+    UsageType:
+      type: string
+      enum:
+        - manual
+        - quick_button
+
+    CreateUsageHistoryRequest:
+      type: object
+      required:
+        - usage_date
+        - quantity
+        - usage_type
+      properties:
+        usage_date:
+          type: string
+          format: date
+        quantity:
+          type: integer
+          format: int32
+        usage_type:
+          $ref: "#/components/schemas/UsageType"
+        notes:
+          type: string
+
+    UsageHistoryResponse:
+      type: object
+      required:
+        - id
+        - coffee_bean_id
+        - usage_date
+        - quantity
+        - usage_type
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        coffee_bean_id:
+          type: string
+          format: uuid
+        usage_date:
+          type: string
+          format: date
+        quantity:
+          type: integer
+          format: int32
+        usage_type:
+          $ref: "#/components/schemas/UsageType"
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    ListUsageHistoryResponse:
+      type: object
+      required:
+        - usages
+        - pagination
+      properties:
+        usages:
+          type: array
+          items:
+            $ref: "#/components/schemas/UsageHistoryResponse"
+        pagination:
+          $ref: "#/components/schemas/PaginationResponse"
 
     # ── Envelope (TS 生成用) ─────────────────────────────
     ErrorBody:

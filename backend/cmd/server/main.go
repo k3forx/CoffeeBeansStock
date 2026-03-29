@@ -68,17 +68,21 @@ func run() error {
 
 	userRepo := repository.NewUserRepository(pool)
 	coffeeBeanRepo := repository.NewCoffeeBeanRepository(pool)
+	usageHistoryRepo := repository.NewUsageHistoryRepository(pool)
 	uow := repository.NewUnitOfWork(pool)
 
 	authService := usecase.NewAuthService(userRepo, jwtManager)
 	authHandler := handlers.NewAuthHandler(authService)
 	coffeeBeansService := usecase.NewCoffeeBeansService(coffeeBeanRepo, uow)
 	coffeeBeansHandler := handlers.NewCoffeeBeansHandler(coffeeBeansService)
+	usageHistoryService := usecase.NewUsageHistoryService(usageHistoryRepo, coffeeBeanRepo, uow)
+	usageHistoryHandler := handlers.NewUsageHistoryHandler(usageHistoryService)
 
 	r := router.New(router.Deps{
-		AuthHandler:        authHandler,
-		CoffeeBeansHandler: coffeeBeansHandler,
-		TokenManager:       jwtManager,
+		AuthHandler:         authHandler,
+		CoffeeBeansHandler:  coffeeBeansHandler,
+		UsageHistoryHandler: usageHistoryHandler,
+		TokenManager:        jwtManager,
 		HealthCheck: func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			if err := pool.Ping(r.Context()); err != nil {

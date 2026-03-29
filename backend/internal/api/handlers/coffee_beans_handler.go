@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -12,7 +11,6 @@ import (
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/gen"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/middleware"
-	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/coffeebean"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase"
 )
@@ -112,7 +110,7 @@ func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
 		CurrentStock: req.CurrentStock,
 	})
 	if err != nil {
-		handleBeanError(w, err)
+		handleDomainError(w, err, "コーヒー豆が見つかりません")
 		return
 	}
 
@@ -138,7 +136,7 @@ func (h *CoffeeBeansHandler) Get(w http.ResponseWriter, r *http.Request) {
 		BeanID: beanID,
 	})
 	if err != nil {
-		handleBeanError(w, err)
+		handleDomainError(w, err, "コーヒー豆が見つかりません")
 		return
 	}
 
@@ -187,7 +185,7 @@ func (h *CoffeeBeansHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Notes:        req.Notes,
 	})
 	if err != nil {
-		handleBeanError(w, err)
+		handleDomainError(w, err, "コーヒー豆が見つかりません")
 		return
 	}
 
@@ -212,36 +210,11 @@ func (h *CoffeeBeansHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		UserID: userID,
 		BeanID: beanID,
 	}); err != nil {
-		handleBeanError(w, err)
+		handleDomainError(w, err, "コーヒー豆が見つかりません")
 		return
 	}
 
 	api.WriteSuccess(w, http.StatusOK, gen.DeleteResponse{Message: "コーヒー豆を削除しました"})
-}
-
-func handleBeanError(w http.ResponseWriter, err error) {
-	var validationErrs domain.ValidationErrors
-	var validationErr *domain.ValidationError
-	switch {
-	case errors.As(err, &validationErrs):
-		details := make([]api.FieldError, len(validationErrs))
-		for i, ve := range validationErrs {
-			details[i] = api.FieldError{Field: ve.Field, Message: ve.Message}
-		}
-		api.WriteValidationError(w, details)
-	case errors.As(err, &validationErr):
-		api.WriteValidationError(w, []api.FieldError{
-			{Field: validationErr.Field, Message: validationErr.Message},
-		})
-	case errors.Is(err, domain.ErrNotFound):
-		api.WriteError(w, http.StatusNotFound, "NOT_FOUND", "コーヒー豆が見つかりません")
-	case errors.Is(err, domain.ErrForbidden):
-		api.WriteError(w, http.StatusForbidden, "FORBIDDEN", "このリソースにアクセスする権限がありません")
-	case errors.Is(err, domain.ErrInsufficientStock):
-		api.WriteError(w, http.StatusConflict, "INSUFFICIENT_STOCK", "在庫が不足しています")
-	default:
-		api.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "サーバーエラーが発生しました")
-	}
 }
 
 func parseQueryInt(r *http.Request, key string, defaultVal int) int {

@@ -15,6 +15,7 @@ import (
 
 	coffeebean "github.com/k3forx/CoffeeBeansStock/backend/internal/domain/coffeebean"
 	unitofwork "github.com/k3forx/CoffeeBeansStock/backend/internal/domain/unitofwork"
+	usagehistory "github.com/k3forx/CoffeeBeansStock/backend/internal/domain/usagehistory"
 	user "github.com/k3forx/CoffeeBeansStock/backend/internal/domain/user"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -93,6 +94,20 @@ func (m *MockStore) CoffeeBeanRepo() coffeebean.Repository {
 func (mr *MockStoreMockRecorder) CoffeeBeanRepo() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CoffeeBeanRepo", reflect.TypeOf((*MockStore)(nil).CoffeeBeanRepo))
+}
+
+// UsageHistoryRepo mocks base method.
+func (m *MockStore) UsageHistoryRepo() usagehistory.Repository {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UsageHistoryRepo")
+	ret0, _ := ret[0].(usagehistory.Repository)
+	return ret0
+}
+
+// UsageHistoryRepo indicates an expected call of UsageHistoryRepo.
+func (mr *MockStoreMockRecorder) UsageHistoryRepo() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsageHistoryRepo", reflect.TypeOf((*MockStore)(nil).UsageHistoryRepo))
 }
 
 // UserRepo mocks base method.
