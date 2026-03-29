@@ -39,6 +39,8 @@ linters:
       max-complexity: 15
     govet:
       enable-all: true
+      disable:
+        - fieldalignment
     revive:
       rules:
         - name: blank-imports
