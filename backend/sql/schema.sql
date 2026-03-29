@@ -81,7 +81,6 @@ CREATE TABLE usage_history (
     user_id UUID NOT NULL,
     usage_date DATE NOT NULL,
     quantity INTEGER NOT NULL CHECK (quantity > 0),
-    usage_type VARCHAR(50) NOT NULL,
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
@@ -93,10 +92,7 @@ CREATE TABLE usage_history (
     CONSTRAINT fk_usage_history_user
         FOREIGN KEY (user_id)
         REFERENCES users(id)
-        ON DELETE CASCADE,
-
-    CONSTRAINT check_usage_type
-        CHECK (usage_type IN ('manual', 'quick_button'))
+        ON DELETE CASCADE
 );
 
 -- Indexes for users (email index removed for anonymous auth)

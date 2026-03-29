@@ -40,7 +40,6 @@ type UsageHistory struct {
 	UserID       pgtype.UUID        `json:"user_id"`
 	UsageDate    pgtype.Date        `json:"usage_date"`
 	Quantity     int32              `json:"quantity"`
-	UsageType    string             `json:"usage_type"`
 	Notes        pgtype.Text        `json:"notes"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 }

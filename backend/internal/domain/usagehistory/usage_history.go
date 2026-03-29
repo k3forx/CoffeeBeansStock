@@ -15,7 +15,6 @@ type UsageHistory struct {
 	userID       uuid.UUID
 	usageDate    time.Time
 	quantity     domain.Quantity
-	usageType    UsageType
 	notes        *string
 	createdAt    time.Time
 }
@@ -25,7 +24,6 @@ func New(
 	coffeeBeanID, userID uuid.UUID,
 	usageDate time.Time,
 	quantity domain.Quantity,
-	usageType UsageType,
 	notes *string,
 ) *UsageHistory {
 	return &UsageHistory{
@@ -34,7 +32,6 @@ func New(
 		userID:       userID,
 		usageDate:    usageDate,
 		quantity:     quantity,
-		usageType:    usageType,
 		notes:        notes,
 		createdAt:    time.Now().UTC(),
 	}
@@ -45,7 +42,6 @@ func Reconstruct(
 	id, coffeeBeanID, userID uuid.UUID,
 	usageDate time.Time,
 	quantity domain.Quantity,
-	usageType UsageType,
 	notes *string,
 	createdAt time.Time,
 ) *UsageHistory {
@@ -55,7 +51,6 @@ func Reconstruct(
 		userID:       userID,
 		usageDate:    usageDate,
 		quantity:     quantity,
-		usageType:    usageType,
 		notes:        notes,
 		createdAt:    createdAt,
 	}
@@ -66,7 +61,6 @@ func (h *UsageHistory) CoffeeBeanID() uuid.UUID   { return h.coffeeBeanID }
 func (h *UsageHistory) UserID() uuid.UUID         { return h.userID }
 func (h *UsageHistory) UsageDate() time.Time      { return h.usageDate }
 func (h *UsageHistory) Quantity() domain.Quantity { return h.quantity }
-func (h *UsageHistory) UsageType() UsageType      { return h.usageType }
 func (h *UsageHistory) Notes() *string            { return h.notes }
 func (h *UsageHistory) CreatedAt() time.Time      { return h.createdAt }
 

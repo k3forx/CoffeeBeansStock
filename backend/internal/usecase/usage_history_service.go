@@ -38,7 +38,6 @@ type CreateUsageInput struct {
 	CoffeeBeanID uuid.UUID
 	UsageDate    time.Time
 	Quantity     int32
-	UsageType    string
 	Notes        *string
 }
 
@@ -75,11 +74,6 @@ func (s *UsageHistoryService) Create(ctx context.Context, in CreateUsageInput) (
 		return nil, err
 	}
 
-	usageType, err := usagehistory.NewUsageType(in.UsageType)
-	if err != nil {
-		return nil, err
-	}
-
 	var usage *usagehistory.UsageHistory
 	err = s.uow.RunInTx(ctx, func(store unitofwork.Store) error {
 		bean, txErr := store.CoffeeBeanRepo().GetByID(ctx, in.CoffeeBeanID)
@@ -99,7 +93,7 @@ func (s *UsageHistoryService) Create(ctx context.Context, in CreateUsageInput) (
 			return updateErr
 		}
 
-		usage = usagehistory.New(in.CoffeeBeanID, in.UserID, in.UsageDate, qty, usageType, in.Notes)
+		usage = usagehistory.New(in.CoffeeBeanID, in.UserID, in.UsageDate, qty, in.Notes)
 		return store.UsageHistoryRepo().Save(ctx, usage)
 	})
 	if err != nil {

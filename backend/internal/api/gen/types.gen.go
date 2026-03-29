@@ -73,24 +73,6 @@ func (e RoastLevel) Valid() bool {
 	}
 }
 
-// Defines values for UsageType.
-const (
-	Manual      UsageType = "manual"
-	QuickButton UsageType = "quick_button"
-)
-
-// Valid indicates whether the value is a known member of the UsageType enum.
-func (e UsageType) Valid() bool {
-	switch e {
-	case Manual:
-		return true
-	case QuickButton:
-		return true
-	default:
-		return false
-	}
-}
-
 // AuthResponse defines model for AuthResponse.
 type AuthResponse struct {
 	AccessToken  string       `json:"access_token"`
@@ -126,7 +108,6 @@ type CreateUsageHistoryRequest struct {
 	Notes     *string            `json:"notes,omitempty"`
 	Quantity  int32              `json:"quantity"`
 	UsageDate openapi_types.Date `json:"usage_date"`
-	UsageType UsageType          `json:"usage_type"`
 }
 
 // DeleteResponse defines model for DeleteResponse.
@@ -202,11 +183,7 @@ type UsageHistoryResponse struct {
 	Notes        *string            `json:"notes,omitempty"`
 	Quantity     int32              `json:"quantity"`
 	UsageDate    openapi_types.Date `json:"usage_date"`
-	UsageType    UsageType          `json:"usage_type"`
 }
-
-// UsageType defines model for UsageType.
-type UsageType string
 
 // UserResponse defines model for UserResponse.
 type UserResponse struct {

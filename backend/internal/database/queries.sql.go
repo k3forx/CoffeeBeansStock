@@ -192,9 +192,9 @@ func (q *Queries) CreatePurchaseHistory(ctx context.Context, arg CreatePurchaseH
 const createUsageHistory = `-- name: CreateUsageHistory :one
 
 INSERT INTO usage_history (
-    coffee_bean_id, user_id, usage_date, quantity, usage_type, notes
-) VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, coffee_bean_id, user_id, usage_date, quantity, usage_type, notes, created_at
+    coffee_bean_id, user_id, usage_date, quantity, notes
+) VALUES ($1, $2, $3, $4, $5)
+RETURNING id, coffee_bean_id, user_id, usage_date, quantity, notes, created_at
 `
 
 type CreateUsageHistoryParams struct {
@@ -202,7 +202,6 @@ type CreateUsageHistoryParams struct {
 	UserID       pgtype.UUID `json:"user_id"`
 	UsageDate    pgtype.Date `json:"usage_date"`
 	Quantity     int32       `json:"quantity"`
-	UsageType    string      `json:"usage_type"`
 	Notes        pgtype.Text `json:"notes"`
 }
 
@@ -215,7 +214,6 @@ func (q *Queries) CreateUsageHistory(ctx context.Context, arg CreateUsageHistory
 		arg.UserID,
 		arg.UsageDate,
 		arg.Quantity,
-		arg.UsageType,
 		arg.Notes,
 	)
 	var i UsageHistory
@@ -225,7 +223,6 @@ func (q *Queries) CreateUsageHistory(ctx context.Context, arg CreateUsageHistory
 		&i.UserID,
 		&i.UsageDate,
 		&i.Quantity,
-		&i.UsageType,
 		&i.Notes,
 		&i.CreatedAt,
 	)
@@ -438,7 +435,7 @@ func (q *Queries) GetRecentUsageHistoryForConsumptionRate(ctx context.Context, a
 }
 
 const getUsageHistoryByID = `-- name: GetUsageHistoryByID :one
-SELECT id, coffee_bean_id, user_id, usage_date, quantity, usage_type, notes, created_at FROM usage_history
+SELECT id, coffee_bean_id, user_id, usage_date, quantity, notes, created_at FROM usage_history
 WHERE id = $1
 `
 
@@ -451,7 +448,6 @@ func (q *Queries) GetUsageHistoryByID(ctx context.Context, id pgtype.UUID) (Usag
 		&i.UserID,
 		&i.UsageDate,
 		&i.Quantity,
-		&i.UsageType,
 		&i.Notes,
 		&i.CreatedAt,
 	)
@@ -672,7 +668,7 @@ func (q *Queries) ListPurchaseHistoriesByUserID(ctx context.Context, arg ListPur
 }
 
 const listUsageHistoriesByCoffeeBeanID = `-- name: ListUsageHistoriesByCoffeeBeanID :many
-SELECT id, coffee_bean_id, user_id, usage_date, quantity, usage_type, notes, created_at FROM usage_history
+SELECT id, coffee_bean_id, user_id, usage_date, quantity, notes, created_at FROM usage_history
 WHERE coffee_bean_id = $1
 ORDER BY usage_date DESC, created_at DESC
 LIMIT $2 OFFSET $3
@@ -699,7 +695,6 @@ func (q *Queries) ListUsageHistoriesByCoffeeBeanID(ctx context.Context, arg List
 			&i.UserID,
 			&i.UsageDate,
 			&i.Quantity,
-			&i.UsageType,
 			&i.Notes,
 			&i.CreatedAt,
 		); err != nil {
@@ -714,7 +709,7 @@ func (q *Queries) ListUsageHistoriesByCoffeeBeanID(ctx context.Context, arg List
 }
 
 const listUsageHistoriesByUserID = `-- name: ListUsageHistoriesByUserID :many
-SELECT uh.id, uh.coffee_bean_id, uh.user_id, uh.usage_date, uh.quantity, uh.usage_type, uh.notes, uh.created_at, cb.name as coffee_bean_name
+SELECT uh.id, uh.coffee_bean_id, uh.user_id, uh.usage_date, uh.quantity, uh.notes, uh.created_at, cb.name as coffee_bean_name
 FROM usage_history uh
 JOIN coffee_beans cb ON uh.coffee_bean_id = cb.id
 WHERE uh.user_id = $1 AND cb.deleted_at IS NULL
@@ -734,7 +729,6 @@ type ListUsageHistoriesByUserIDRow struct {
 	UserID         pgtype.UUID        `json:"user_id"`
 	UsageDate      pgtype.Date        `json:"usage_date"`
 	Quantity       int32              `json:"quantity"`
-	UsageType      string             `json:"usage_type"`
 	Notes          pgtype.Text        `json:"notes"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 	CoffeeBeanName string             `json:"coffee_bean_name"`
@@ -755,7 +749,6 @@ func (q *Queries) ListUsageHistoriesByUserID(ctx context.Context, arg ListUsageH
 			&i.UserID,
 			&i.UsageDate,
 			&i.Quantity,
-			&i.UsageType,
 			&i.Notes,
 			&i.CreatedAt,
 			&i.CoffeeBeanName,

@@ -43,7 +43,6 @@ func (h *UsageHistoryHandler) Create(w http.ResponseWriter, r *http.Request) {
 		CoffeeBeanID: beanID,
 		UsageDate:    req.UsageDate.Time,
 		Quantity:     req.Quantity,
-		UsageType:    string(req.UsageType),
 		Notes:        req.Notes,
 	})
 	if err != nil {
@@ -131,7 +130,6 @@ func toUsageHistoryResponse(u *usagehistory.UsageHistory) gen.UsageHistoryRespon
 		CoffeeBeanId: u.CoffeeBeanID(),
 		UsageDate:    types.Date{Time: u.UsageDate()},
 		Quantity:     u.Quantity().Value(),
-		UsageType:    gen.UsageType(u.UsageType().String()),
 		Notes:        u.Notes(),
 		CreatedAt:    u.CreatedAt(),
 	}

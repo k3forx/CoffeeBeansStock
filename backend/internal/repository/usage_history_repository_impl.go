@@ -53,7 +53,6 @@ func (r *usageHistoryRepository) Save(ctx context.Context, usage *usagehistory.U
 		UserID:       toUUID(usage.UserID()),
 		UsageDate:    toPgDate(usage.UsageDate()),
 		Quantity:     usage.Quantity().Value(),
-		UsageType:    usage.UsageType().String(),
 		Notes:        toPgText(usage.Notes()),
 	})
 	return err
@@ -87,7 +86,6 @@ func toDomainUsageHistory(row database.UsageHistory) *usagehistory.UsageHistory 
 		id, coffeeBeanID, userID,
 		row.UsageDate.Time,
 		domain.ReconstructQuantity(row.Quantity),
-		usagehistory.ReconstructUsageType(row.UsageType),
 		notes,
 		row.CreatedAt.Time,
 	)

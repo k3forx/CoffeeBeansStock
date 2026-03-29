@@ -232,14 +232,11 @@ export interface components {
         DeleteResponse: {
             message: string;
         };
-        /** @enum {string} */
-        UsageType: "manual" | "quick_button";
         CreateUsageHistoryRequest: {
             /** Format: date */
             usage_date: string;
             /** Format: int32 */
             quantity: number;
-            usage_type: components["schemas"]["UsageType"];
             notes?: string;
         };
         UsageHistoryResponse: {
@@ -251,7 +248,6 @@ export interface components {
             usage_date: string;
             /** Format: int32 */
             quantity: number;
-            usage_type: components["schemas"]["UsageType"];
             notes?: string;
             /** Format: date-time */
             created_at: string;

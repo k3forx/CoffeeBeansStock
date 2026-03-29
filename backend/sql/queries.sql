@@ -169,8 +169,8 @@ WHERE coffee_bean_id = $1;
 
 -- name: CreateUsageHistory :one
 INSERT INTO usage_history (
-    coffee_bean_id, user_id, usage_date, quantity, usage_type, notes
-) VALUES ($1, $2, $3, $4, $5, $6)
+    coffee_bean_id, user_id, usage_date, quantity, notes
+) VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
 -- name: GetUsageHistoryByID :one

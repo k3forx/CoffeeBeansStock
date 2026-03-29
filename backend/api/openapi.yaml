@@ -508,18 +508,11 @@ components:
           type: string
 
     # ── Usage History ─────────────────────────────────────
-    UsageType:
-      type: string
-      enum:
-        - manual
-        - quick_button
-
     CreateUsageHistoryRequest:
       type: object
       required:
         - usage_date
         - quantity
-        - usage_type
       properties:
         usage_date:
           type: string
@@ -527,8 +520,6 @@ components:
         quantity:
           type: integer
           format: int32
-        usage_type:
-          $ref: "#/components/schemas/UsageType"
         notes:
           type: string
 
@@ -539,7 +530,6 @@ components:
         - coffee_bean_id
         - usage_date
         - quantity
-        - usage_type
         - created_at
       properties:
         id:
@@ -554,8 +544,6 @@ components:
         quantity:
           type: integer
           format: int32
-        usage_type:
-          $ref: "#/components/schemas/UsageType"
         notes:
           type: string
         created_at:
