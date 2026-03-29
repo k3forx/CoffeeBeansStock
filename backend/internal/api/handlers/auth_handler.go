@@ -1,14 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/gen"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/middleware"
-	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/user"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase"
 )
@@ -62,8 +58,7 @@ func (h *AuthHandler) RegisterAnonymous(w http.ResponseWriter, r *http.Request) 
 // Refresh handles token refresh requests.
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	var req gen.RefreshRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "リクエストの形式が不正です")
+	if !decodeJSON(w, r, &req) {
 		return
 	}
 
@@ -78,11 +73,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		RefreshToken: req.RefreshToken,
 	})
 	if err != nil {
-		if errors.Is(err, domain.ErrInvalidToken) || errors.Is(err, domain.ErrExpiredToken) {
-			api.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "リフレッシュトークンが無効です")
-			return
-		}
-		api.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "サーバーエラーが発生しました")
+		handleDomainError(w, err, "リフレッシュトークンが無効です")
 		return
 	}
 
@@ -94,9 +85,8 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 
 // GetMe returns the authenticated user's profile.
 func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.GetUserID(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		api.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "認証が必要です")
 		return
 	}
 

@@ -20,7 +20,7 @@ migrate-down: ## Run migrations down (1 step)
 	$(GOBIN)/migrate -path $(MIGRATIONS_DIR) -database "$(DB_URL)" down 1
 
 test: ## Run tests
-	go test -v ./...
+	go test -v -race ./...
 
 build: ## Build the binary
 	go build -o bin/server cmd/server/main.go

@@ -111,6 +111,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/coffee-beans/{id}/usages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** 使用記録一覧取得 */
+        get: operations["listUsageHistories"];
+        put?: never;
+        /** 使用記録作成 */
+        post: operations["createUsageHistory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/coffee-beans/{id}/usages/{usageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                usageId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 使用記録削除 */
+        delete: operations["deleteUsageHistory"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -191,6 +231,34 @@ export interface components {
         };
         DeleteResponse: {
             message: string;
+        };
+        /** @enum {string} */
+        UsageType: "manual" | "quick_button";
+        CreateUsageHistoryRequest: {
+            /** Format: date */
+            usage_date: string;
+            /** Format: int32 */
+            quantity: number;
+            usage_type: components["schemas"]["UsageType"];
+            notes?: string;
+        };
+        UsageHistoryResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            coffee_bean_id: string;
+            /** Format: date */
+            usage_date: string;
+            /** Format: int32 */
+            quantity: number;
+            usage_type: components["schemas"]["UsageType"];
+            notes?: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        ListUsageHistoryResponse: {
+            usages: components["schemas"]["UsageHistoryResponse"][];
+            pagination: components["schemas"]["PaginationResponse"];
         };
         ErrorBody: {
             code: string;
@@ -506,6 +574,157 @@ export interface operations {
                 content?: never;
             };
             /** @description 見つかりません */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listUsageHistories: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListUsageHistoryResponse"];
+                };
+            };
+            /** @description 認証エラー */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description アクセス権限なし */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description コーヒー豆が見つかりません */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createUsageHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUsageHistoryRequest"];
+            };
+        };
+        responses: {
+            /** @description 作成成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageHistoryResponse"];
+                };
+            };
+            /** @description バリデーションエラー */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 認証エラー */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description アクセス権限なし */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description コーヒー豆が見つかりません */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 在庫不足 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteUsageHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                usageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 削除成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteResponse"];
+                };
+            };
+            /** @description 認証エラー */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description アクセス権限なし */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 使用記録が見つかりません */
             404: {
                 headers: {
                     [name: string]: unknown;

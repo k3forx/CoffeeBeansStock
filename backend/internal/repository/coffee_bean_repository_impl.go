@@ -2,13 +2,10 @@ package repository
 
 import (
 	"context"
-	"errors"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
-	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/coffeebean"
 )
 
@@ -23,10 +20,7 @@ func NewCoffeeBeanRepository(db database.DBTX) coffeebean.Repository {
 func (r *coffeeBeanRepository) GetByID(ctx context.Context, id uuid.UUID) (*coffeebean.CoffeeBean, error) {
 	b, err := r.queries.GetCoffeeBeanByID(ctx, toUUID(id))
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, domain.ErrNotFound
-		}
-		return nil, err
+		return nil, notFoundOrErr(err)
 	}
 	return toDomainCoffeeBean(b), nil
 }
@@ -34,10 +28,7 @@ func (r *coffeeBeanRepository) GetByID(ctx context.Context, id uuid.UUID) (*coff
 func (r *coffeeBeanRepository) GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*coffeebean.CoffeeBean, error) {
 	b, err := r.queries.GetCoffeeBeanByIDForUpdate(ctx, toUUID(id))
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, domain.ErrNotFound
-		}
-		return nil, err
+		return nil, notFoundOrErr(err)
 	}
 	return toDomainCoffeeBean(b), nil
 }
@@ -98,10 +89,7 @@ func (r *coffeeBeanRepository) Update(ctx context.Context, bean *coffeebean.Coff
 		params.RoastDetail = toPgText(&s)
 	}
 	_, err := r.queries.UpdateCoffeeBean(ctx, params)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return domain.ErrNotFound
-	}
-	return err
+	return notFoundOrErr(err)
 }
 
 func (r *coffeeBeanRepository) UpdateStock(ctx context.Context, id uuid.UUID, stock coffeebean.Stock) error {

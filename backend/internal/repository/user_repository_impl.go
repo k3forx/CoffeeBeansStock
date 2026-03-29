@@ -2,13 +2,10 @@ package repository
 
 import (
 	"context"
-	"errors"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
-	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/user"
 )
 
@@ -23,10 +20,7 @@ func NewUserRepository(db database.DBTX) user.Repository {
 func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*user.User, error) {
 	u, err := r.queries.GetUserByID(ctx, toUUID(id))
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, domain.ErrNotFound
-		}
-		return nil, err
+		return nil, notFoundOrErr(err)
 	}
 	return toDomainUser(u), nil
 }

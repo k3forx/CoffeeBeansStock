@@ -3,22 +3,14 @@ package usecase_test
 import (
 	"errors"
 	"testing"
-	"time"
-
 	"github.com/google/uuid"
 	"go.uber.org/mock/gomock"
 
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	domainauth "github.com/k3forx/CoffeeBeansStock/backend/internal/domain/auth"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/user"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase/mock"
 )
-
-func newTestUser(id uuid.UUID) *user.User {
-	now := time.Now()
-	return user.Reconstruct(id, "", "", "", 100, true, now, now)
-}
 
 func TestAuthService_RegisterAnonymous(t *testing.T) {
 	t.Parallel()

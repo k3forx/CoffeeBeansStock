@@ -147,14 +147,7 @@ func (s *UsageHistoryService) ListByCoffeeBean(ctx context.Context, in ListUsage
 		return nil, domain.ErrForbidden
 	}
 
-	limit := in.Limit
-	offset := in.Offset
-	if limit <= 0 || limit > 100 {
-		limit = 20
-	}
-	if offset < 0 {
-		offset = 0
-	}
+	limit, offset := normalizePagination(in.Limit, in.Offset)
 
 	total, err := s.usageRepo.CountByCoffeeBeanID(ctx, in.CoffeeBeanID)
 	if err != nil {
@@ -167,12 +160,7 @@ func (s *UsageHistoryService) ListByCoffeeBean(ctx context.Context, in ListUsage
 	}
 
 	return &ListUsageResult{
-		Usages: usages,
-		Pagination: PaginationResponse{
-			Total:   total,
-			Limit:   limit,
-			Offset:  offset,
-			HasMore: int64(offset+limit) < total,
-		},
+		Usages:     usages,
+		Pagination: newPaginationResponse(total, limit, offset),
 	}, nil
 }

@@ -11,20 +11,10 @@ import (
 
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/coffeebean"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/unitofwork"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/usagehistory"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase/mock"
 )
-
-// setupUoWWithStore creates a mock UoW that executes the fn with the given store.
-func setupUoWWithStore(uow *mock.MockUnitOfWork, store *mock.MockStore) {
-	uow.EXPECT().RunInTx(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(_ interface{}, fn func(unitofwork.Store) error) error {
-			return fn(store)
-		},
-	)
-}
 
 func TestUsageHistoryService_Create(t *testing.T) {
 	t.Parallel()

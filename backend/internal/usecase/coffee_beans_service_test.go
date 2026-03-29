@@ -1,7 +1,6 @@
 package usecase_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 	"time"
@@ -12,20 +11,9 @@ import (
 
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/coffeebean"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/unitofwork"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase/mock"
 )
-
-func ptr[T any](v T) *T { return &v }
-
-func newTestBean(userID uuid.UUID) *coffeebean.CoffeeBean {
-	return coffeebean.Reconstruct(
-		uuid.New(), userID, "Test Bean", nil,
-		coffeebean.RoastShallow, nil, coffeebean.ReconstructStock(100), nil,
-		time.Now(), time.Now(),
-	)
-}
 
 func TestCoffeeBeansService_List(t *testing.T) {
 	t.Parallel()
@@ -342,17 +330,6 @@ func TestCoffeeBeansService_GetByID(t *testing.T) {
 			}
 		})
 	}
-}
-
-// fakeRunInTx returns a mock UoW whose RunInTx executes the callback with the given store.
-func fakeRunInTx(ctrl *gomock.Controller, store *mock.MockStore) *mock.MockUnitOfWork {
-	uow := mock.NewMockUnitOfWork(ctrl)
-	uow.EXPECT().RunInTx(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, fn func(unitofwork.Store) error) error {
-			return fn(store)
-		},
-	)
-	return uow
 }
 
 func TestCoffeeBeansService_Update(t *testing.T) {

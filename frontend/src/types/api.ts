@@ -11,6 +11,10 @@ export type UpdateBeanInput = components["schemas"]["UpdateBeanRequest"];
 export type ListBeansResult = components["schemas"]["ListBeansResponse"];
 export type RoastLevel = components["schemas"]["RoastLevel"];
 export type RoastDetail = components["schemas"]["RoastDetail"];
+export type UsageType = components["schemas"]["UsageType"];
+export type CreateUsageInput = components["schemas"]["CreateUsageHistoryRequest"];
+export type UsageHistory = components["schemas"]["UsageHistoryResponse"];
+export type ListUsageHistoryResult = components["schemas"]["ListUsageHistoryResponse"];
 
 // Envelope type used internally by client.ts
 export type ApiResponse<T> = {

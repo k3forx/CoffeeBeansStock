@@ -30,6 +30,8 @@ func handleDomainError(w http.ResponseWriter, err error, notFoundMsg string) {
 		api.WriteError(w, http.StatusForbidden, "FORBIDDEN", "このリソースにアクセスする権限がありません")
 	case errors.Is(err, domain.ErrInsufficientStock):
 		api.WriteError(w, http.StatusConflict, "INSUFFICIENT_STOCK", "在庫が不足しています")
+	case errors.Is(err, domain.ErrInvalidToken), errors.Is(err, domain.ErrExpiredToken):
+		api.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", notFoundMsg)
 	default:
 		api.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "サーバーエラーが発生しました")
 	}

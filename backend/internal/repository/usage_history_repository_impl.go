@@ -2,10 +2,8 @@ package repository
 
 import (
 	"context"
-	"errors"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
@@ -24,10 +22,7 @@ func NewUsageHistoryRepository(db database.DBTX) usagehistory.Repository {
 func (r *usageHistoryRepository) GetByID(ctx context.Context, id uuid.UUID) (*usagehistory.UsageHistory, error) {
 	row, err := r.queries.GetUsageHistoryByID(ctx, toUUID(id))
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, domain.ErrNotFound
-		}
-		return nil, err
+		return nil, notFoundOrErr(err)
 	}
 	return toDomainUsageHistory(row), nil
 }
