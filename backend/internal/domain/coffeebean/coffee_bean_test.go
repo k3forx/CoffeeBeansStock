@@ -9,6 +9,109 @@ import (
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 )
 
+func TestCoffeeBean_IsOwnedBy(t *testing.T) {
+	t.Parallel()
+
+	ownerID := uuid.New()
+	otherID := uuid.New()
+	stock, _ := NewStock(100)
+	bean, _ := New(ownerID, "Test Bean", RoastShallow, nil, nil, nil, stock)
+
+	tests := map[string]struct {
+		userID uuid.UUID
+		want   bool
+	}{
+		"owned":     {userID: ownerID, want: true},
+		"not_owned": {userID: otherID, want: false},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := bean.IsOwnedBy(tt.userID)
+			if got != tt.want {
+				t.Errorf("IsOwnedBy() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCoffeeBean_ConsumeStock(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		initStock   int32
+		consumeQty  int32
+		wantErr     bool
+		wantStock   int32
+	}{
+		"sufficient":   {initStock: 100, consumeQty: 50, wantStock: 50},
+		"insufficient": {initStock: 10, consumeQty: 50, wantErr: true},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			userID := uuid.New()
+			stock, _ := NewStock(tt.initStock)
+			bean, _ := New(userID, "Test Bean", RoastShallow, nil, nil, nil, stock)
+			qty, _ := domain.NewQuantity(tt.consumeQty)
+
+			err := bean.ConsumeStock(qty)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("expected error, got nil")
+				}
+				if err != nil && !errors.Is(err, domain.ErrInsufficientStock) {
+					t.Errorf("expected ErrInsufficientStock, got %v", err)
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+				return
+			}
+			if bean.CurrentStock().Value() != tt.wantStock {
+				t.Errorf("CurrentStock() = %v, want %v", bean.CurrentStock().Value(), tt.wantStock)
+			}
+		})
+	}
+}
+
+func TestCoffeeBean_AddStock(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		initStock int32
+		addQty    int32
+		wantStock int32
+	}{
+		"add": {initStock: 100, addQty: 50, wantStock: 150},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			userID := uuid.New()
+			stock, _ := NewStock(tt.initStock)
+			bean, _ := New(userID, "Test Bean", RoastShallow, nil, nil, nil, stock)
+			qty, _ := domain.NewQuantity(tt.addQty)
+
+			if err := bean.AddStock(qty); err != nil {
+				t.Errorf("unexpected error: %v", err)
+				return
+			}
+			if bean.CurrentStock().Value() != tt.wantStock {
+				t.Errorf("CurrentStock() = %v, want %v", bean.CurrentStock().Value(), tt.wantStock)
+			}
+		})
+	}
+}
+
 func TestNew_RoastDetailConsistency(t *testing.T) {
 	t.Parallel()
 
