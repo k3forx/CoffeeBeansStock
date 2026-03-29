@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  View,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
@@ -16,6 +15,7 @@ import { ApiError } from "../../../src/api/client";
 import type { RoastLevel, RoastDetail } from "../../../src/types/api";
 import { colors, typography, spacing, radius, shadows } from "@/theme";
 import { ROAST_LEVELS, ROAST_DETAILS } from "../../../src/constants/roastLevels";
+import { ChipSelector } from "../../../src/components/ChipSelector";
 
 export default function CreateBeanScreen() {
   const [name, setName] = useState("");
@@ -93,45 +93,20 @@ export default function CreateBeanScreen() {
         />
 
         <Text style={styles.label}>焙煎度 *</Text>
-        <View style={styles.chipContainer}>
-          {ROAST_LEVELS.map((level) => (
-            <TouchableOpacity
-              key={level.value}
-              style={[styles.chip, roastLevel === level.value && styles.chipSelected]}
-              onPress={() => handleRoastLevelSelect(level.value)}
-            >
-              <Text
-                style={[styles.chipText, roastLevel === level.value && styles.chipTextSelected]}
-              >
-                {level.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <ChipSelector
+          items={ROAST_LEVELS}
+          selected={roastLevel}
+          onSelect={handleRoastLevelSelect}
+        />
 
         {roastLevel !== "" && (
           <>
             <Text style={styles.label}>焙煎度（詳細）</Text>
-            <View style={styles.chipContainer}>
-              {ROAST_DETAILS[roastLevel].map((detail) => (
-                <TouchableOpacity
-                  key={detail.value}
-                  style={[styles.chip, roastDetail === detail.value && styles.chipSelected]}
-                  onPress={() =>
-                    setRoastDetail(roastDetail === detail.value ? "" : detail.value)
-                  }
-                >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      roastDetail === detail.value && styles.chipTextSelected,
-                    ]}
-                  >
-                    {detail.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <ChipSelector
+              items={ROAST_DETAILS[roastLevel]}
+              selected={roastDetail}
+              onSelect={(v) => setRoastDetail(roastDetail === v ? "" : v)}
+            />
           </>
         )}
 
@@ -193,30 +168,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   textArea: { height: 100, textAlignVertical: "top" },
-  chipContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  chip: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
-  },
-  chipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  chipText: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-  },
-  chipTextSelected: {
-    color: colors.textInverse,
-  },
   button: {
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
