@@ -39,7 +39,7 @@ func New(
 		return nil, errs
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	return &CoffeeBean{
 		id:           uuid.New(),
 		userID:       userID,
@@ -143,6 +143,6 @@ func (b *CoffeeBean) Update(
 	if notes != nil {
 		b.notes = notes
 	}
-	b.updatedAt = time.Now()
+	b.updatedAt = time.Now().UTC()
 	return nil
 }
