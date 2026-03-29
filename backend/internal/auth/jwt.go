@@ -74,7 +74,7 @@ func (m *JWTManager) ValidateToken(tokenStr string) (*domainauth.TokenClaims, er
 }
 
 func (m *JWTManager) generateToken(userID string, duration time.Duration) (string, error) {
-	now := time.Now()
+	now := time.Now().UTC()
 	claims := &jwtClaims{
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{

@@ -19,7 +19,7 @@ type User struct {
 
 // NewAnonymousUser creates a new anonymous user with default settings.
 func NewAnonymousUser() *User {
-	now := time.Now()
+	now := time.Now().UTC()
 	return &User{
 		id:                  uuid.New(),
 		email:               "",
