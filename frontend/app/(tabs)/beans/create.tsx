@@ -15,32 +15,7 @@ import { beansApi } from "../../../src/api/beans";
 import { ApiError } from "../../../src/api/client";
 import type { RoastLevel, RoastDetail } from "../../../src/types/api";
 import { colors, typography, spacing, radius, shadows } from "@/theme";
-
-const ROAST_LEVELS: { value: RoastLevel; label: string }[] = [
-  { value: "shallow", label: "浅煎り" },
-  { value: "medium", label: "中煎り" },
-  { value: "medium_deep", label: "中深煎り" },
-  { value: "deep", label: "深煎り" },
-];
-
-const ROAST_DETAILS: Record<RoastLevel, { value: RoastDetail; label: string }[]> = {
-  shallow: [
-    { value: "light", label: "ライトロースト" },
-    { value: "cinnamon", label: "シナモンロースト" },
-  ],
-  medium: [
-    { value: "medium", label: "ミディアムロースト" },
-    { value: "high", label: "ハイロースト" },
-  ],
-  medium_deep: [
-    { value: "city", label: "シティロースト" },
-    { value: "full_city", label: "フルシティロースト" },
-  ],
-  deep: [
-    { value: "french", label: "フレンチロースト" },
-    { value: "italian", label: "イタリアンロースト" },
-  ],
-};
+import { ROAST_LEVELS, ROAST_DETAILS } from "../../../src/constants/roastLevels";
 
 export default function CreateBeanScreen() {
   const [name, setName] = useState("");
