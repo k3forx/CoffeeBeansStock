@@ -168,14 +168,6 @@ func (s *CoffeeBeansService) GetByID(ctx context.Context, in GetBeanByIDInput) (
 
 // Update updates a coffee bean, verifying ownership.
 func (s *CoffeeBeansService) Update(ctx context.Context, in UpdateBeanInput) (*UpdateBeanOutput, error) {
-	bean, err := s.beanRepo.GetByID(ctx, in.BeanID)
-	if err != nil {
-		return nil, err
-	}
-	if !bean.IsOwnedBy(in.UserID) {
-		return nil, domain.ErrForbidden
-	}
-
 	var rl *coffeebean.RoastLevel
 	if in.RoastLevel != nil {
 		r, err := coffeebean.NewRoastLevel(*in.RoastLevel)
@@ -201,23 +193,40 @@ func (s *CoffeeBeansService) Update(ctx context.Context, in UpdateBeanInput) (*U
 		st = &stk
 	}
 
-	if err := bean.Update(in.Name, in.Origin, rl, rd, in.Notes, st); err != nil {
+	var result *UpdateBeanOutput
+	err := s.uow.RunInTx(ctx, func(store unitofwork.Store) error {
+		bean, err := store.CoffeeBeanRepo().GetByIDForUpdate(ctx, in.BeanID)
+		if err != nil {
+			return err
+		}
+		if !bean.IsOwnedBy(in.UserID) {
+			return domain.ErrForbidden
+		}
+		if err := bean.Update(in.Name, in.Origin, rl, rd, in.Notes, st); err != nil {
+			return err
+		}
+		if err := store.CoffeeBeanRepo().Update(ctx, bean); err != nil {
+			return err
+		}
+		result = &UpdateBeanOutput{Bean: bean}
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
-	if err := s.beanRepo.Update(ctx, bean); err != nil {
-		return nil, err
-	}
-	return &UpdateBeanOutput{Bean: bean}, nil
+	return result, nil
 }
 
 // Delete soft-deletes a coffee bean, verifying ownership.
 func (s *CoffeeBeansService) Delete(ctx context.Context, in DeleteBeanInput) error {
-	bean, err := s.beanRepo.GetByID(ctx, in.BeanID)
-	if err != nil {
-		return err
-	}
-	if !bean.IsOwnedBy(in.UserID) {
-		return domain.ErrForbidden
-	}
-	return s.beanRepo.SoftDelete(ctx, in.BeanID, in.UserID)
+	return s.uow.RunInTx(ctx, func(store unitofwork.Store) error {
+		bean, err := store.CoffeeBeanRepo().GetByIDForUpdate(ctx, in.BeanID)
+		if err != nil {
+			return err
+		}
+		if !bean.IsOwnedBy(in.UserID) {
+			return domain.ErrForbidden
+		}
+		return store.CoffeeBeanRepo().SoftDelete(ctx, in.BeanID, in.UserID)
+	})
 }

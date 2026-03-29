@@ -286,6 +286,31 @@ func (q *Queries) GetCoffeeBeanByID(ctx context.Context, id pgtype.UUID) (Coffee
 	return i, err
 }
 
+const getCoffeeBeanByIDForUpdate = `-- name: GetCoffeeBeanByIDForUpdate :one
+SELECT id, user_id, name, origin, roast_level, roast_detail, current_stock, notes, created_at, updated_at, deleted_at FROM coffee_beans
+WHERE id = $1 AND deleted_at IS NULL
+FOR UPDATE
+`
+
+func (q *Queries) GetCoffeeBeanByIDForUpdate(ctx context.Context, id pgtype.UUID) (CoffeeBean, error) {
+	row := q.db.QueryRow(ctx, getCoffeeBeanByIDForUpdate, id)
+	var i CoffeeBean
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Name,
+		&i.Origin,
+		&i.RoastLevel,
+		&i.RoastDetail,
+		&i.CurrentStock,
+		&i.Notes,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const getLatestPurchaseHistoryByCoffeeBeanID = `-- name: GetLatestPurchaseHistoryByCoffeeBeanID :one
 SELECT id, coffee_bean_id, user_id, purchase_date, purchase_price, purchase_store, quantity, notes, created_at FROM purchase_history
 WHERE coffee_bean_id = $1

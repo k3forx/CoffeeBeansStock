@@ -32,12 +32,13 @@ type AuthResult struct {
 // RegisterAnonymous creates a new anonymous user and returns tokens.
 func (s *AuthService) RegisterAnonymous(ctx context.Context) (*AuthResult, error) {
 	u := user.NewAnonymousUser()
-	if err := s.userRepo.Save(ctx, u); err != nil {
-		return nil, err
-	}
 
 	tokens, err := s.tokens.GenerateTokenPair(u.ID())
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.userRepo.Save(ctx, u); err != nil {
 		return nil, err
 	}
 

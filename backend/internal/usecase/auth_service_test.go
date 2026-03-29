@@ -39,21 +39,24 @@ func TestAuthService_RegisterAnonymous(t *testing.T) {
 				return usecase.NewAuthService(ur, tm)
 			},
 		},
-		"userRepo.Saveのエラーが伝播する": {
-			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
-				ur := mock.NewMockUserRepository(ctrl)
-				tm := mock.NewMockTokenManager(ctrl)
-				ur.EXPECT().Save(gomock.Any(), gomock.Any()).Return(errors.New("db error"))
-				return usecase.NewAuthService(ur, tm)
-			},
-			wantErr: true,
-		},
 		"GenerateTokenPairのエラーが伝播する": {
 			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
 				ur := mock.NewMockUserRepository(ctrl)
 				tm := mock.NewMockTokenManager(ctrl)
-				ur.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil)
 				tm.EXPECT().GenerateTokenPair(gomock.Any()).Return(nil, errors.New("token error"))
+				return usecase.NewAuthService(ur, tm)
+			},
+			wantErr: true,
+		},
+		"userRepo.Saveのエラーが伝播する": {
+			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
+				ur := mock.NewMockUserRepository(ctrl)
+				tm := mock.NewMockTokenManager(ctrl)
+				tm.EXPECT().GenerateTokenPair(gomock.Any()).Return(&domainauth.TokenPair{
+					AccessToken:  "access-token",
+					RefreshToken: "refresh-token",
+				}, nil)
+				ur.EXPECT().Save(gomock.Any(), gomock.Any()).Return(errors.New("db error"))
 				return usecase.NewAuthService(ur, tm)
 			},
 			wantErr: true,
