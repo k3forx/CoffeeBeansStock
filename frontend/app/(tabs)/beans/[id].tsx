@@ -104,7 +104,6 @@ export default function BeanDetailScreen() {
       await usagesApi.create(id, {
         usage_date: getTodayDate(),
         quantity: QUICK_USAGE_GRAMS,
-        usage_type: "quick_button",
       });
       await refreshAfterUsage();
     } catch (e) {
@@ -130,7 +129,6 @@ export default function BeanDetailScreen() {
       await usagesApi.create(id, {
         usage_date: getTodayDate(),
         quantity: grams,
-        usage_type: "manual",
       });
       await refreshAfterUsage();
       setManualGrams("");
@@ -426,9 +424,6 @@ export default function BeanDetailScreen() {
                         {new Date(usage.usage_date).toLocaleDateString("ja-JP")}
                       </Text>
                       <Text style={styles.historyGrams}>{usage.quantity}g</Text>
-                      <Text style={styles.historyType}>
-                        {usage.usage_type === "quick_button" ? "クイック" : "手動"}
-                      </Text>
                     </View>
                     <TouchableOpacity
                       onPress={() => handleDeleteUsage(usage.id)}
@@ -650,10 +645,6 @@ const styles = StyleSheet.create({
   historyGrams: {
     ...typography.labelLarge,
     color: colors.textPrimary,
-  },
-  historyType: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
   },
   historyDeleteText: {
     ...typography.bodySmall,

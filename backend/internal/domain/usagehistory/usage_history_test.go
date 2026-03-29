@@ -20,7 +20,7 @@ func TestNew(t *testing.T) {
 	qty := domain.ReconstructQuantity(10)
 	notes := "test notes"
 
-	got := usagehistory.New(coffeeBeanID, userID, usageDate, qty, usagehistory.UsageTypeManual, &notes)
+	got := usagehistory.New(coffeeBeanID, userID, usageDate, qty, &notes)
 
 	if got.ID() == uuid.Nil {
 		t.Errorf("ID should not be nil")
@@ -36,9 +36,6 @@ func TestNew(t *testing.T) {
 	}
 	if got.Quantity().Value() != 10 {
 		t.Errorf("Quantity().Value() = %d, want 10", got.Quantity().Value())
-	}
-	if got.UsageType() != usagehistory.UsageTypeManual {
-		t.Errorf("UsageType() = %v, want manual", got.UsageType())
 	}
 	if got.Notes() == nil || *got.Notes() != "test notes" {
 		t.Errorf("Notes() = %v, want \"test notes\"", got.Notes())
@@ -59,12 +56,12 @@ func TestReconstruct(t *testing.T) {
 	createdAt := time.Date(2026, 3, 29, 12, 0, 0, 0, time.UTC)
 	notes := "reconstructed"
 
-	got := usagehistory.Reconstruct(id, coffeeBeanID, userID, usageDate, qty, usagehistory.UsageTypeQuickButton, &notes, createdAt)
+	got := usagehistory.Reconstruct(id, coffeeBeanID, userID, usageDate, qty, &notes, createdAt)
 
-	want := usagehistory.Reconstruct(id, coffeeBeanID, userID, usageDate, qty, usagehistory.UsageTypeQuickButton, &notes, createdAt)
+	want := usagehistory.Reconstruct(id, coffeeBeanID, userID, usageDate, qty, &notes, createdAt)
 
 	if diff := cmp.Diff(want, got,
-		cmp.AllowUnexported(usagehistory.UsageHistory{}, usagehistory.UsageType{}, domain.Quantity{}),
+		cmp.AllowUnexported(usagehistory.UsageHistory{}, domain.Quantity{}),
 	); diff != "" {
 		t.Errorf("Reconstruct mismatch (-want +got):\n%s", diff)
 	}
@@ -78,7 +75,7 @@ func TestUsageHistory_IsOwnedBy(t *testing.T) {
 	usage := usagehistory.Reconstruct(
 		uuid.New(), uuid.New(), userID,
 		time.Now(), domain.ReconstructQuantity(5),
-		usagehistory.UsageTypeManual, nil, time.Now(),
+		nil, time.Now(),
 	)
 
 	tests := map[string]struct {

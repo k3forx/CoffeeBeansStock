@@ -60,7 +60,6 @@ func TestUsageHistoryService_Create(t *testing.T) {
 				CoffeeBeanID: beanID,
 				UsageDate:    usageDate,
 				Quantity:     10,
-				UsageType:    "manual",
 			},
 		},
 		"数量0はValidationErrorを返す": {
@@ -75,23 +74,6 @@ func TestUsageHistoryService_Create(t *testing.T) {
 				CoffeeBeanID: beanID,
 				UsageDate:    usageDate,
 				Quantity:     0,
-				UsageType:    "manual",
-			},
-			wantAny: true,
-		},
-		"不正なUsageTypeはValidationErrorを返す": {
-			setup: func(ctrl *gomock.Controller) *usecase.UsageHistoryService {
-				usageRepo := mock.NewMockUsageHistoryRepository(ctrl)
-				beanRepo := mock.NewMockCoffeeBeanRepository(ctrl)
-				uow := mock.NewMockUnitOfWork(ctrl)
-				return usecase.NewUsageHistoryService(usageRepo, beanRepo, uow)
-			},
-			in: usecase.CreateUsageInput{
-				UserID:       userID,
-				CoffeeBeanID: beanID,
-				UsageDate:    usageDate,
-				Quantity:     10,
-				UsageType:    "invalid",
 			},
 			wantAny: true,
 		},
@@ -115,7 +97,6 @@ func TestUsageHistoryService_Create(t *testing.T) {
 				CoffeeBeanID: beanID,
 				UsageDate:    usageDate,
 				Quantity:     10,
-				UsageType:    "manual",
 			},
 			wantErr: domain.ErrNotFound,
 		},
@@ -145,7 +126,6 @@ func TestUsageHistoryService_Create(t *testing.T) {
 				CoffeeBeanID: beanID,
 				UsageDate:    usageDate,
 				Quantity:     10,
-				UsageType:    "manual",
 			},
 			wantErr: domain.ErrForbidden,
 		},
@@ -175,7 +155,6 @@ func TestUsageHistoryService_Create(t *testing.T) {
 				CoffeeBeanID: beanID,
 				UsageDate:    usageDate,
 				Quantity:     10,
-				UsageType:    "manual",
 			},
 			wantErr: domain.ErrInsufficientStock,
 		},
@@ -232,7 +211,7 @@ func TestUsageHistoryService_Delete(t *testing.T) {
 		usageID, beanID, userID,
 		time.Date(2026, 3, 29, 0, 0, 0, 0, time.UTC),
 		domain.ReconstructQuantity(10),
-		usagehistory.UsageTypeManual, nil, time.Now(),
+		nil, time.Now(),
 	)
 
 	cases := map[string]struct {
