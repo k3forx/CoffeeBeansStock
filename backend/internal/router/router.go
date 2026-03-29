@@ -24,6 +24,7 @@ func New(deps Deps) chi.Router {
 	r := chi.NewRouter()
 	r.Use(chimiddleware.RequestID)
 	r.Use(chimiddleware.RealIP)
+	r.Use(middleware.RequestLogger)
 	r.Use(chimiddleware.Recoverer)
 
 	r.Get("/health", deps.HealthCheck)

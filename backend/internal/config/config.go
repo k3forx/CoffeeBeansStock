@@ -18,6 +18,7 @@ type Config struct {
 	DBName    string
 	DBSSLMode string
 	JWTSecret string
+	LogLevel  string
 }
 
 // Load reads configuration from environment variables with sensible defaults.
@@ -33,6 +34,7 @@ func Load() (*Config, error) {
 		DBName:    getEnv("DB_NAME", "coffee_stock"),
 		DBSSLMode: getEnv("DB_SSLMODE", "disable"),
 		JWTSecret: getEnv("JWT_SECRET", "dev-secret-change-in-production"),
+		LogLevel:  getEnv("LOG_LEVEL", "info"),
 	}
 
 	return cfg, nil

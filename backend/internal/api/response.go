@@ -41,7 +41,15 @@ func WriteSuccess(w http.ResponseWriter, status int, data any) {
 }
 
 // WriteError writes an error JSON response.
+// For 5xx errors, it also logs the error details server-side.
 func WriteError(w http.ResponseWriter, status int, code, message string) {
+	if status >= 500 {
+		slog.Error("server error",
+			"status", status,
+			"code", code,
+			"message", message,
+		)
+	}
 	WriteJSON(w, status, Response{
 		Success: false,
 		Data:    nil,
