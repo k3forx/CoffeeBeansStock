@@ -74,7 +74,9 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.authService.Refresh(r.Context(), req.RefreshToken)
+	result, err := h.authService.Refresh(r.Context(), usecase.RefreshInput{
+		RefreshToken: req.RefreshToken,
+	})
 	if err != nil {
 		if errors.Is(err, domain.ErrInvalidToken) || errors.Is(err, domain.ErrExpiredToken) {
 			api.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "リフレッシュトークンが無効です")
@@ -98,11 +100,11 @@ func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := h.authService.GetMe(r.Context(), userID)
+	output, err := h.authService.GetMe(r.Context(), usecase.GetMeInput{UserID: userID})
 	if err != nil {
 		api.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "サーバーエラーが発生しました")
 		return
 	}
 
-	api.WriteSuccess(w, http.StatusOK, toUserResponse(u))
+	api.WriteSuccess(w, http.StatusOK, toUserResponse(output.User))
 }

@@ -48,6 +48,11 @@ func (s *AuthService) RegisterAnonymous(ctx context.Context) (*AuthResult, error
 	}, nil
 }
 
+// RefreshInput holds input for refreshing tokens.
+type RefreshInput struct {
+	RefreshToken string
+}
+
 // RefreshResult holds new tokens after a refresh operation.
 type RefreshResult struct {
 	AccessToken  string
@@ -55,8 +60,8 @@ type RefreshResult struct {
 }
 
 // Refresh validates a refresh token and issues a new token pair.
-func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*RefreshResult, error) {
-	claims, err := s.tokens.ValidateToken(refreshToken)
+func (s *AuthService) Refresh(ctx context.Context, in RefreshInput) (*RefreshResult, error) {
+	claims, err := s.tokens.ValidateToken(in.RefreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +90,21 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*Refres
 	}, nil
 }
 
+// GetMeInput holds input for getting the current user.
+type GetMeInput struct {
+	UserID uuid.UUID
+}
+
+// GetMeOutput holds the result of getting the current user.
+type GetMeOutput struct {
+	User *user.User
+}
+
 // GetMe returns the user for the given user ID.
-func (s *AuthService) GetMe(ctx context.Context, userID uuid.UUID) (*user.User, error) {
-	return s.userRepo.GetByID(ctx, userID)
+func (s *AuthService) GetMe(ctx context.Context, in GetMeInput) (*GetMeOutput, error) {
+	u, err := s.userRepo.GetByID(ctx, in.UserID)
+	if err != nil {
+		return nil, err
+	}
+	return &GetMeOutput{User: u}, nil
 }

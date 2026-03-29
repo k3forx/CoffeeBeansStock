@@ -56,7 +56,11 @@ func (h *CoffeeBeansHandler) List(w http.ResponseWriter, r *http.Request) {
 	limit := int32(parseQueryInt(r, "limit", 20))
 	offset := int32(parseQueryInt(r, "offset", 0))
 
-	result, err := h.service.List(r.Context(), userID, limit, offset)
+	result, err := h.service.List(r.Context(), usecase.ListBeansInput{
+		UserID: userID,
+		Limit:  limit,
+		Offset: offset,
+	})
 	if err != nil {
 		api.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "サーバーエラーが発生しました")
 		return
@@ -98,7 +102,8 @@ func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
 		roastDetail = &s
 	}
 
-	bean, err := h.service.Create(r.Context(), userID, &usecase.CreateBeanInput{
+	output, err := h.service.Create(r.Context(), usecase.CreateBeanInput{
+		UserID:       userID,
 		Name:         req.Name,
 		Origin:       req.Origin,
 		RoastLevel:   string(req.RoastLevel),
@@ -111,7 +116,7 @@ func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteSuccess(w, http.StatusCreated, toCoffeeBeanResponse(bean))
+	api.WriteSuccess(w, http.StatusCreated, toCoffeeBeanResponse(output.Bean))
 }
 
 // Get returns a single coffee bean by ID.
@@ -128,13 +133,16 @@ func (h *CoffeeBeansHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bean, err := h.service.GetByID(r.Context(), userID, beanID)
+	output, err := h.service.GetByID(r.Context(), usecase.GetBeanByIDInput{
+		UserID: userID,
+		BeanID: beanID,
+	})
 	if err != nil {
 		handleBeanError(w, err)
 		return
 	}
 
-	api.WriteSuccess(w, http.StatusOK, toCoffeeBeanResponse(bean))
+	api.WriteSuccess(w, http.StatusOK, toCoffeeBeanResponse(output.Bean))
 }
 
 // Update handles coffee bean updates.
@@ -168,7 +176,9 @@ func (h *CoffeeBeansHandler) Update(w http.ResponseWriter, r *http.Request) {
 		roastDetail = &s
 	}
 
-	bean, err := h.service.Update(r.Context(), userID, beanID, &usecase.UpdateBeanInput{
+	output, err := h.service.Update(r.Context(), usecase.UpdateBeanInput{
+		UserID:       userID,
+		BeanID:       beanID,
 		Name:         req.Name,
 		Origin:       req.Origin,
 		RoastLevel:   roastLevel,
@@ -181,7 +191,7 @@ func (h *CoffeeBeansHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteSuccess(w, http.StatusOK, toCoffeeBeanResponse(bean))
+	api.WriteSuccess(w, http.StatusOK, toCoffeeBeanResponse(output.Bean))
 }
 
 // Delete handles coffee bean deletion.
@@ -198,7 +208,10 @@ func (h *CoffeeBeansHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.Delete(r.Context(), userID, beanID); err != nil {
+	if err := h.service.Delete(r.Context(), usecase.DeleteBeanInput{
+		UserID: userID,
+		BeanID: beanID,
+	}); err != nil {
 		handleBeanError(w, err)
 		return
 	}
