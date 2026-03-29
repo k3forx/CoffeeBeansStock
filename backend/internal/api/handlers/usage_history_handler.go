@@ -1,16 +1,12 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"github.com/oapi-codegen/runtime/types"
 
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/gen"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/middleware"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/usagehistory"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase"
 )
@@ -27,21 +23,18 @@ func NewUsageHistoryHandler(service *usecase.UsageHistoryService) *UsageHistoryH
 
 // Create handles usage history creation.
 func (h *UsageHistoryHandler) Create(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.GetUserID(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		api.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "認証が必要です")
 		return
 	}
 
-	beanID, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "不正なIDです")
+	beanID, ok := parseUUIDParam(w, r, "id")
+	if !ok {
 		return
 	}
 
 	var req gen.CreateUsageHistoryRequest
-	if decodeErr := json.NewDecoder(r.Body).Decode(&req); decodeErr != nil {
-		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "リクエストの形式が不正です")
+	if !decodeJSON(w, r, &req) {
 		return
 	}
 
@@ -63,15 +56,13 @@ func (h *UsageHistoryHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // List handles listing usage history records.
 func (h *UsageHistoryHandler) List(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.GetUserID(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		api.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "認証が必要です")
 		return
 	}
 
-	beanID, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "不正なIDです")
+	beanID, ok := parseUUIDParam(w, r, "id")
+	if !ok {
 		return
 	}
 
@@ -107,30 +98,27 @@ func (h *UsageHistoryHandler) List(w http.ResponseWriter, r *http.Request) {
 
 // Delete handles usage history deletion.
 func (h *UsageHistoryHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.GetUserID(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		api.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "認証が必要です")
 		return
 	}
 
-	beanID, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "不正なIDです")
+	beanID, ok := parseUUIDParam(w, r, "id")
+	if !ok {
 		return
 	}
 
-	usageID, err := uuid.Parse(chi.URLParam(r, "usageId"))
-	if err != nil {
-		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "不正な使用記録IDです")
+	usageID, ok := parseUUIDParam(w, r, "usageId")
+	if !ok {
 		return
 	}
 
-	if deleteErr := h.service.Delete(r.Context(), usecase.DeleteUsageInput{
+	if err := h.service.Delete(r.Context(), usecase.DeleteUsageInput{
 		UserID:       userID,
 		CoffeeBeanID: beanID,
 		UsageID:      usageID,
-	}); deleteErr != nil {
-		handleDomainError(w, deleteErr, "使用記録が見つかりません")
+	}); err != nil {
+		handleDomainError(w, err, "使用記録が見つかりません")
 		return
 	}
 

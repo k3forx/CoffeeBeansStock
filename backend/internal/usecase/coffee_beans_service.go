@@ -94,14 +94,7 @@ type DeleteBeanInput struct {
 
 // List returns a paginated list of coffee beans for the given user.
 func (s *CoffeeBeansService) List(ctx context.Context, in ListBeansInput) (*ListBeansResult, error) {
-	limit := in.Limit
-	offset := in.Offset
-	if limit <= 0 || limit > 100 {
-		limit = 20
-	}
-	if offset < 0 {
-		offset = 0
-	}
+	limit, offset := normalizePagination(in.Limit, in.Offset)
 
 	total, err := s.beanRepo.CountByUserID(ctx, in.UserID)
 	if err != nil {
@@ -114,13 +107,8 @@ func (s *CoffeeBeansService) List(ctx context.Context, in ListBeansInput) (*List
 	}
 
 	return &ListBeansResult{
-		Beans: beans,
-		Pagination: PaginationResponse{
-			Total:   total,
-			Limit:   limit,
-			Offset:  offset,
-			HasMore: int64(offset+limit) < total,
-		},
+		Beans:      beans,
+		Pagination: newPaginationResponse(total, limit, offset),
 	}, nil
 }
 

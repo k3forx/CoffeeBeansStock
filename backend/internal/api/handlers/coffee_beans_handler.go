@@ -1,16 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
-	"strconv"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/gen"
-	"github.com/k3forx/CoffeeBeansStock/backend/internal/api/middleware"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/coffeebean"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase"
 )
@@ -45,9 +39,8 @@ func toCoffeeBeanResponse(b *coffeebean.CoffeeBean) gen.CoffeeBeanResponse {
 
 // List returns a paginated list of coffee beans.
 func (h *CoffeeBeansHandler) List(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.GetUserID(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		api.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "認証が必要です")
 		return
 	}
 
@@ -82,22 +75,14 @@ func (h *CoffeeBeansHandler) List(w http.ResponseWriter, r *http.Request) {
 
 // Create handles coffee bean creation.
 func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.GetUserID(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		api.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "認証が必要です")
 		return
 	}
 
 	var req gen.CreateBeanRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "リクエストの形式が不正です")
+	if !decodeJSON(w, r, &req) {
 		return
-	}
-
-	var roastDetail *string
-	if req.RoastDetail != nil {
-		s := string(*req.RoastDetail)
-		roastDetail = &s
 	}
 
 	output, err := h.service.Create(r.Context(), usecase.CreateBeanInput{
@@ -105,7 +90,7 @@ func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Name:         req.Name,
 		Origin:       req.Origin,
 		RoastLevel:   string(req.RoastLevel),
-		RoastDetail:  roastDetail,
+		RoastDetail:  toStringPtr(req.RoastDetail),
 		Notes:        req.Notes,
 		CurrentStock: req.CurrentStock,
 	})
@@ -119,15 +104,13 @@ func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // Get returns a single coffee bean by ID.
 func (h *CoffeeBeansHandler) Get(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.GetUserID(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		api.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "認証が必要です")
 		return
 	}
 
-	beanID, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "不正なIDです")
+	beanID, ok := parseUUIDParam(w, r, "id")
+	if !ok {
 		return
 	}
 
@@ -145,33 +128,19 @@ func (h *CoffeeBeansHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 // Update handles coffee bean updates.
 func (h *CoffeeBeansHandler) Update(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.GetUserID(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		api.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "認証が必要です")
 		return
 	}
 
-	beanID, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "不正なIDです")
+	beanID, ok := parseUUIDParam(w, r, "id")
+	if !ok {
 		return
 	}
 
 	var req gen.UpdateBeanRequest
-	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
-		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "リクエストの形式が不正です")
+	if !decodeJSON(w, r, &req) {
 		return
-	}
-
-	var roastLevel *string
-	if req.RoastLevel != nil {
-		s := string(*req.RoastLevel)
-		roastLevel = &s
-	}
-	var roastDetail *string
-	if req.RoastDetail != nil {
-		s := string(*req.RoastDetail)
-		roastDetail = &s
 	}
 
 	output, err := h.service.Update(r.Context(), usecase.UpdateBeanInput{
@@ -179,8 +148,8 @@ func (h *CoffeeBeansHandler) Update(w http.ResponseWriter, r *http.Request) {
 		BeanID:       beanID,
 		Name:         req.Name,
 		Origin:       req.Origin,
-		RoastLevel:   roastLevel,
-		RoastDetail:  roastDetail,
+		RoastLevel:   toStringPtr(req.RoastLevel),
+		RoastDetail:  toStringPtr(req.RoastDetail),
 		CurrentStock: req.CurrentStock,
 		Notes:        req.Notes,
 	})
@@ -194,15 +163,13 @@ func (h *CoffeeBeansHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 // Delete handles coffee bean deletion.
 func (h *CoffeeBeansHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.GetUserID(r.Context())
+	userID, ok := requireUserID(w, r)
 	if !ok {
-		api.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "認証が必要です")
 		return
 	}
 
-	beanID, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		api.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "不正なIDです")
+	beanID, ok := parseUUIDParam(w, r, "id")
+	if !ok {
 		return
 	}
 
@@ -215,16 +182,4 @@ func (h *CoffeeBeansHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.WriteSuccess(w, http.StatusOK, gen.DeleteResponse{Message: "コーヒー豆を削除しました"})
-}
-
-func parseQueryInt(r *http.Request, key string, defaultVal int) int {
-	v := r.URL.Query().Get(key)
-	if v == "" {
-		return defaultVal
-	}
-	n, err := strconv.Atoi(v)
-	if err != nil {
-		return defaultVal
-	}
-	return n
 }

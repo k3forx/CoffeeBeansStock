@@ -1,11 +1,24 @@
 package repository
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+
+	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 )
+
+// notFoundOrErr converts pgx.ErrNoRows to domain.ErrNotFound.
+// All other errors (including nil) pass through unchanged.
+func notFoundOrErr(err error) error {
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.ErrNotFound
+	}
+	return err
+}
 
 func toUUID(id uuid.UUID) pgtype.UUID {
 	return pgtype.UUID{Bytes: id, Valid: true}
