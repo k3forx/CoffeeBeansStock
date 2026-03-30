@@ -15,6 +15,7 @@ import { Feather } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
 import { usagesApi } from "../../../src/api/usages";
+import { useAuthStore } from "../../../src/stores/auth";
 import { showApiError } from "../../../src/utils/errorHandler";
 import type { CoffeeBean, RoastLevel, RoastDetail, UsageHistory } from "../../../src/types/api";
 import { colors, typography, spacing, radius, shadows, getStockColor, formStyles } from "@/theme";
@@ -23,15 +24,15 @@ import { ChipSelector } from "../../../src/components/ChipSelector";
 import { FormInput } from "../../../src/components/FormInput";
 import { validateBeanForm } from "../../../src/utils/validation";
 
-const USAGE_PRESETS = [
-  { grams: 15, label: "1杯分" },
-  { grams: 20, label: "少し多め" },
-  { grams: 30, label: "2杯分" },
-];
-
 export default function BeanDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const gramsPerCup = user?.grams_per_cup ?? 15;
+  const usagePresets = [
+    { grams: gramsPerCup, label: "1杯分" },
+    { grams: gramsPerCup * 2, label: "2杯分" },
+  ];
   const [bean, setBean] = useState<CoffeeBean | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -375,7 +376,7 @@ export default function BeanDetailScreen() {
               <Text style={styles.sectionTitle}>使用記録</Text>
 
               <View style={styles.presetRow}>
-                {USAGE_PRESETS.map((preset, index) => (
+                {usagePresets.map((preset, index) => (
                   <TouchableOpacity
                     key={preset.grams}
                     style={[
