@@ -12,7 +12,7 @@ import { useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
 import { ApiError } from "../../../src/api/client";
 import type { RoastLevel, RoastDetail } from "../../../src/types/api";
-import { colors, typography, spacing, radius, shadows, formStyles } from "@/theme";
+import { colors, spacing, shadows, formStyles } from "@/theme";
 import { ROAST_LEVELS, ROAST_DETAILS } from "../../../src/constants/roastLevels";
 import { ChipSelector } from "../../../src/components/ChipSelector";
 import { validateBeanForm } from "../../../src/utils/validation";
