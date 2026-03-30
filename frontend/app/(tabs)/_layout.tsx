@@ -1,11 +1,12 @@
 import { Slot, usePathname, useRouter } from "expo-router";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { colors, typography, spacing } from "@/theme";
 
 const tabs = [
-  { name: "/(tabs)", label: "珈琲豆", icon: "☕" },
-  { name: "/(tabs)/profile", label: "マイページ", icon: "👤" },
+  { name: "/(tabs)", label: "珈琲豆", icon: "beans" },
+  { name: "/(tabs)/profile", label: "マイページ", icon: "profile" },
 ] as const;
 
 function getHeaderConfig(pathname: string) {
@@ -32,7 +33,10 @@ export default function TabLayout() {
       <View style={styles.header}>
         {showBack ? (
           <TouchableOpacity style={styles.headerLeft} onPress={() => router.back()}>
-            <Text style={styles.headerBackText}>‹ 戻る</Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Ionicons name="chevron-back" size={20} color={colors.primaryMuted} />
+              <Text style={styles.headerBackText}>戻る</Text>
+            </View>
           </TouchableOpacity>
         ) : (
           <View style={styles.headerLeft} />
@@ -56,9 +60,21 @@ export default function TabLayout() {
               onPress={() => router.replace(tab.name)}
             >
               {isFocused && <View style={styles.tabIndicator} />}
-              <Text style={[styles.tabIcon, isFocused && styles.tabIconActive]}>
-                {tab.icon}
-              </Text>
+              {tab.icon === "beans" ? (
+                <MaterialCommunityIcons
+                  name={isFocused ? "coffee" : "coffee-outline"}
+                  size={22}
+                  color={isFocused ? colors.primary : colors.textTertiary}
+                  style={{ opacity: isFocused ? 1 : 0.4 }}
+                />
+              ) : (
+                <Ionicons
+                  name={isFocused ? "person" : "person-outline"}
+                  size={22}
+                  color={isFocused ? colors.primary : colors.textTertiary}
+                  style={{ opacity: isFocused ? 1 : 0.4 }}
+                />
+              )}
               <Text style={[styles.tabLabel, isFocused && styles.tabLabelActive]}>
                 {tab.label}
               </Text>
@@ -89,6 +105,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     ...typography.titleMedium,
+    fontSize: 18,
     color: colors.textPrimary,
     textAlign: "center",
     letterSpacing: 0.5,
@@ -112,13 +129,11 @@ const styles = StyleSheet.create({
   tabIndicator: {
     position: "absolute",
     top: -10,
-    width: 16,
-    height: 1.5,
-    borderRadius: 1,
+    width: 24,
+    height: 2.5,
+    borderRadius: 1.25,
     backgroundColor: colors.primary,
   },
-  tabIcon: { fontSize: 18, opacity: 0.3 },
-  tabIconActive: { opacity: 0.9 },
   tabLabel: {
     ...typography.labelSmall,
     color: colors.textTertiary,

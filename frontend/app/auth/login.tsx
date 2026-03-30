@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Animated,
 } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { authApi } from "../../src/api/auth";
 import { useAuthStore } from "../../src/stores/auth";
 import { ApiError } from "../../src/api/client";
@@ -14,6 +16,19 @@ import { colors, typography, spacing, radius, shadows } from "@/theme";
 export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const setAuth = useAuthStore((s) => s.setAuth);
+
+  const fadeAnims = useRef([...Array(4)].map(() => new Animated.Value(0))).current;
+  const slideAnims = useRef([...Array(4)].map(() => new Animated.Value(10))).current;
+
+  useEffect(() => {
+    const animations = fadeAnims.map((anim, i) =>
+      Animated.parallel([
+        Animated.timing(anim, { toValue: 1, duration: 400, delay: i * 150, useNativeDriver: true }),
+        Animated.timing(slideAnims[i], { toValue: 0, duration: 400, delay: i * 150, useNativeDriver: true }),
+      ])
+    );
+    Animated.parallel(animations).start();
+  }, []);
 
   const handleStart = async () => {
     setLoading(true);
@@ -31,23 +46,32 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.iconCircle}>
-          <Text style={styles.iconEmoji}>☕</Text>
-        </View>
+        <Animated.View style={{ opacity: fadeAnims[0], transform: [{ translateY: slideAnims[0] }] }}>
+          <View style={styles.iconCircle}>
+            <MaterialCommunityIcons name="coffee" size={40} color={colors.primary} />
+          </View>
+        </Animated.View>
 
-        <Text style={styles.titleEn}>Coffee Beans Stock</Text>
-        <Text style={styles.titleJa}>珈琲豆の記録</Text>
-        <Text style={styles.subtitle}>コーヒー豆の在庫を簡単管理</Text>
+        <Animated.View style={{ opacity: fadeAnims[1], transform: [{ translateY: slideAnims[1] }] }}>
+          <Text style={styles.titleEn}>Coffee Beans Stock</Text>
+          <Text style={styles.titleJa}>珈琲豆の記録</Text>
+        </Animated.View>
 
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleStart}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>
-            {loading ? "準備中..." : "はじめる"}
-          </Text>
-        </TouchableOpacity>
+        <Animated.View style={{ opacity: fadeAnims[2], transform: [{ translateY: slideAnims[2] }] }}>
+          <Text style={styles.subtitle}>コーヒー豆の在庫を簡単管理</Text>
+        </Animated.View>
+
+        <Animated.View style={{ opacity: fadeAnims[3], transform: [{ translateY: slideAnims[3] }] }}>
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleStart}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? "準備中..." : "はじめる"}
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
 
       <Text style={styles.footer}>— 珈琲のある暮らし —</Text>
@@ -74,7 +98,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: spacing["3xl"],
   },
-  iconEmoji: { fontSize: 36 },
   titleEn: {
     ...typography.displaySub,
     color: colors.textPrimary,

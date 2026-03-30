@@ -11,16 +11,23 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
 import { usagesApi } from "../../../src/api/usages";
 import { ApiError } from "../../../src/api/client";
-import { useAuthStore } from "../../../src/stores/auth";
 import type { CoffeeBean, RoastLevel, RoastDetail, UsageHistory } from "../../../src/types/api";
 import { colors, typography, spacing, radius, shadows, getStockColor } from "@/theme";
 import { ROAST_LEVELS, ROAST_DETAILS, ROAST_LEVEL_LABELS, ROAST_DETAIL_LABELS } from "../../../src/constants/roastLevels";
 import { ChipSelector } from "../../../src/components/ChipSelector";
+import { FormInput } from "../../../src/components/FormInput";
 import { validateBeanForm } from "../../../src/utils/validation";
+
+const USAGE_PRESETS = [
+  { grams: 15, label: "1杯分" },
+  { grams: 20, label: "少し多め" },
+  { grams: 30, label: "2杯分" },
+];
 
 export default function BeanDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -39,13 +46,11 @@ export default function BeanDetailScreen() {
 
   const [usages, setUsages] = useState<UsageHistory[]>([]);
   const [usageLoading, setUsageLoading] = useState(false);
-  const [quickButtonLoading, setQuickButtonLoading] = useState(false);
+  const [quickButtonLoading, setQuickButtonLoading] = useState<number | null>(null);
   const [manualGrams, setManualGrams] = useState("");
   const [manualLoading, setManualLoading] = useState(false);
   const [deletingUsageId, setDeletingUsageId] = useState<string | null>(null);
-  const { user } = useAuthStore();
-
-  const QUICK_USAGE_GRAMS = user?.grams_per_cup ?? 15;
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const loadBean = useCallback(async () => {
     try {
@@ -101,12 +106,12 @@ export default function BeanDetailScreen() {
     setUsages(updatedUsages.usages);
   };
 
-  const handleQuickUsage = async () => {
-    setQuickButtonLoading(true);
+  const handleQuickUsage = async (grams: number) => {
+    setQuickButtonLoading(grams);
     try {
       await usagesApi.create(id, {
         usage_date: getTodayDate(),
-        quantity: QUICK_USAGE_GRAMS,
+        quantity: grams,
       });
       await refreshAfterUsage();
     } catch (e) {
@@ -117,7 +122,7 @@ export default function BeanDetailScreen() {
         Alert.alert("エラー", msg);
       }
     } finally {
-      setQuickButtonLoading(false);
+      setQuickButtonLoading(null);
     }
   };
 
@@ -175,7 +180,11 @@ export default function BeanDetailScreen() {
 
   const handleSave = async () => {
     const result = validateBeanForm({ name, roastLevel, currentStock });
-    if (!result.valid) return;
+    if (!result.valid) {
+      setErrors(result.errors);
+      return;
+    }
+    setErrors({});
 
     setSaving(true);
     try {
@@ -240,35 +249,37 @@ export default function BeanDetailScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      {!editing && (
+      {editing ? (
+        <View style={styles.editBanner}>
+          <Feather name="edit-2" size={14} color={colors.warning} />
+          <Text style={styles.editBannerText}>編集中</Text>
+        </View>
+      ) : (
         <View style={styles.editBar}>
-          <TouchableOpacity onPress={() => setEditing(true)}>
-            <Text style={styles.editLink}>編集</Text>
+          <TouchableOpacity style={styles.editPill} onPress={() => setEditing(true)}>
+            <Feather name="edit-2" size={14} color={colors.accentDark} />
+            <Text style={styles.editPillText}>編集</Text>
           </TouchableOpacity>
         </View>
       )}
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {editing ? (
           <>
-            <Text style={styles.label}>名前 *</Text>
-            <TextInput
-              style={styles.input}
+            <FormInput
+              label="名前"
+              required
               value={name}
-              onChangeText={setName}
-              placeholderTextColor={colors.textTertiary}
-              underlineColorAndroid="transparent"
+              onChangeText={(v) => { setName(v); setErrors(prev => { const { name: _, ...rest } = prev; return rest; }); }}
+              error={errors.name}
             />
 
-            <Text style={styles.label}>産地</Text>
-            <TextInput
-              style={styles.input}
+            <FormInput
+              label="産地"
               value={origin}
               onChangeText={setOrigin}
-              placeholderTextColor={colors.textTertiary}
-              underlineColorAndroid="transparent"
             />
 
-            <Text style={styles.label}>焙煎度 *</Text>
+            <Text style={styles.label}>焙煎度 <Text style={styles.required}>*</Text></Text>
             <ChipSelector
               items={ROAST_LEVELS}
               selected={roastLevel}
@@ -286,14 +297,13 @@ export default function BeanDetailScreen() {
               </>
             )}
 
-            <Text style={styles.label}>在庫数 (g) *</Text>
-            <TextInput
-              style={styles.input}
+            <FormInput
+              label="在庫数 (g)"
+              required
               value={currentStock}
-              onChangeText={setCurrentStock}
+              onChangeText={(v) => { setCurrentStock(v); setErrors(prev => { const { currentStock: _, ...rest } = prev; return rest; }); }}
+              error={errors.currentStock}
               keyboardType="numeric"
-              placeholderTextColor={colors.textTertiary}
-              underlineColorAndroid="transparent"
             />
 
             <Text style={styles.label}>メモ</Text>
@@ -371,15 +381,27 @@ export default function BeanDetailScreen() {
             <View style={styles.usageSection}>
               <Text style={styles.sectionTitle}>使用記録</Text>
 
-              <TouchableOpacity
-                style={[styles.quickButton, quickButtonLoading && styles.buttonDisabled]}
-                onPress={handleQuickUsage}
-                disabled={quickButtonLoading}
-              >
-                <Text style={styles.quickButtonText}>
-                  {quickButtonLoading ? "記録中..." : `1杯使った (${QUICK_USAGE_GRAMS}g)`}
-                </Text>
-              </TouchableOpacity>
+              <View style={styles.presetRow}>
+                {USAGE_PRESETS.map((preset, index) => (
+                  <TouchableOpacity
+                    key={preset.grams}
+                    style={[
+                      styles.presetBtn,
+                      index > 0 && styles.presetBtnOutline,
+                      quickButtonLoading !== null && styles.buttonDisabled,
+                    ]}
+                    onPress={() => handleQuickUsage(preset.grams)}
+                    disabled={quickButtonLoading !== null}
+                  >
+                    <Text style={[styles.presetBtnText, index > 0 && styles.presetBtnTextOutline]}>
+                      {quickButtonLoading === preset.grams ? "..." : `${preset.grams}g`}
+                    </Text>
+                    <Text style={[styles.presetBtnSub, index > 0 && styles.presetBtnSubOutline]}>
+                      {preset.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
               <View style={styles.manualInputRow}>
                 <TextInput
@@ -434,8 +456,9 @@ export default function BeanDetailScreen() {
       </ScrollView>
       {!editing && (
         <View style={styles.bottomBar}>
-          <TouchableOpacity onPress={handleDelete}>
-            <Text style={styles.deleteText}>この豆を削除する</Text>
+          <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
+            <Feather name="trash-2" size={16} color={colors.danger} />
+            <Text style={styles.deleteBtnText}>この豆を削除する</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -451,10 +474,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
   },
-  editLink: {
-    ...typography.labelLarge,
+  editPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: radius.full,
+  },
+  editPillText: {
+    ...typography.labelMedium,
     color: colors.accentDark,
-    letterSpacing: 1,
+    letterSpacing: 0.5,
+  },
+  editBanner: {
+    backgroundColor: colors.warningLight,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  editBannerText: {
+    ...typography.labelMedium,
+    color: colors.warning,
+    letterSpacing: 0.5,
   },
   scroll: { padding: spacing["2xl"] },
 
@@ -529,6 +575,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     marginTop: spacing.xl,
   },
+  required: {
+    color: colors.danger,
+  },
   input: {
     borderWidth: 0,
     borderBottomWidth: 1,
@@ -567,16 +616,41 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: spacing.lg,
   },
-  quickButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    padding: spacing.lg,
-    alignItems: "center" as const,
+  presetRow: {
+    flexDirection: "row" as const,
+    gap: spacing.sm,
     marginBottom: spacing.lg,
   },
-  quickButtonText: {
+  presetBtn: {
+    flex: 1,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    alignItems: "center" as const,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+  },
+  presetBtnOutline: {
+    backgroundColor: "transparent",
+    borderColor: colors.border,
+  },
+  presetBtnText: {
     ...typography.labelLarge,
     color: colors.textInverse,
+  },
+  presetBtnTextOutline: {
+    color: colors.textPrimary,
+  },
+  presetBtnSub: {
+    ...typography.labelSmall,
+    color: colors.textInverse,
+    opacity: 0.7,
+    marginTop: 2,
+  },
+  presetBtnSubOutline: {
+    color: colors.textSecondary,
+    opacity: 1,
   },
   manualInputRow: {
     flexDirection: "row" as const,
@@ -648,10 +722,20 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     alignItems: "center",
   },
-  deleteText: {
+  deleteBtn: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    borderRadius: radius.md,
+  },
+  deleteBtnText: {
     ...typography.bodySmall,
     color: colors.danger,
-    textDecorationLine: "underline",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
 });

@@ -21,22 +21,22 @@ export const shadows = {
   sm: {
     shadowColor: "#3A3228",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowOpacity: 0.10,
+    shadowRadius: 4,
     elevation: 1,
   },
   md: {
     shadowColor: "#3A3228",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
+    shadowOpacity: 0.14,
+    shadowRadius: 10,
     elevation: 3,
   },
   lg: {
     shadowColor: "#3A3228",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
     elevation: 6,
   },
 } as const;

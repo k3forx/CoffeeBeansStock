@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "expo-router";
 import { useAuthStore } from "../../src/stores/auth";
 import { usersApi } from "../../src/api/users";
+import { beansApi } from "../../src/api/beans";
 import { ApiError } from "../../src/api/client";
 import { colors, typography, spacing, radius, shadows } from "@/theme";
 
@@ -10,6 +13,13 @@ export default function ProfileScreen() {
   const [editingGrams, setEditingGrams] = useState(false);
   const [gramsInput, setGramsInput] = useState("");
   const [saving, setSaving] = useState(false);
+  const [beanCount, setBeanCount] = useState<number | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      beansApi.list(1000, 0).then(r => setBeanCount(r.beans.length)).catch(() => {});
+    }, [])
+  );
 
   const handleLogout = () => {
     Alert.alert("ログアウト", "ログアウトしますか？", [
@@ -54,23 +64,36 @@ export default function ProfileScreen() {
         </View>
         <Text style={styles.name}>{user?.name ?? "ゲスト"}</Text>
         <Text style={styles.sub}>ゲストアカウント</Text>
+        {beanCount !== null && (
+          <View style={styles.statBadge}>
+            <Text style={styles.statText}>
+              登録した珈琲豆: <Text style={styles.statNumber}>{beanCount}</Text> 種類
+            </Text>
+          </View>
+        )}
       </View>
 
       <Text style={styles.sectionTitle}>設定</Text>
       <View style={styles.settingsCard}>
-        <View style={styles.settingRow}>
+        <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
           <Text style={styles.settingLabel}>在庫アラート</Text>
-          <Text style={styles.settingValue}>
-            {user?.low_stock_threshold ?? 100}g以下
-          </Text>
-        </View>
-        <View style={styles.settingRow}>
+          <View style={styles.settingRight}>
+            <Text style={styles.settingValue}>
+              {user?.low_stock_threshold ?? 100}g以下
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
           <Text style={styles.settingLabel}>通知</Text>
-          <Text style={styles.settingValue}>
-            {user?.notification_enabled ? "ON" : "OFF"}
-          </Text>
-        </View>
-        <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
+          <View style={styles.settingRight}>
+            <Text style={styles.settingValue}>
+              {user?.notification_enabled ? "ON" : "OFF"}
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.settingRow, { borderBottomWidth: 0 }]} activeOpacity={0.7}>
           <Text style={styles.settingLabel}>1杯あたりのグラム数</Text>
           {editingGrams ? (
             <View style={styles.editGramsRow}>
@@ -105,7 +128,7 @@ export default function ProfileScreen() {
               </Text>
             </TouchableOpacity>
           )}
-        </View>
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity onPress={handleLogout}>
@@ -152,6 +175,22 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textSecondary,
   },
+  statBadge: {
+    marginTop: spacing.lg,
+    backgroundColor: "rgba(200,184,160,0.15)",
+    paddingVertical: 5,
+    paddingHorizontal: 14,
+    borderRadius: radius.full,
+    alignSelf: "center",
+  },
+  statText: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+  },
+  statNumber: {
+    fontWeight: "600",
+    color: colors.textPrimary,
+  },
   sectionTitle: {
     ...typography.labelMedium,
     color: colors.textSecondary,
@@ -182,6 +221,11 @@ const styles = StyleSheet.create({
   settingValue: {
     ...typography.bodyMedium,
     color: colors.textSecondary,
+  },
+  settingRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   settingValueTappable: {
     ...typography.bodyMedium,
