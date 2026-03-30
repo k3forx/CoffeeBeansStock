@@ -1,6 +1,7 @@
 export { colors } from "./colors";
 export { typography, fontFamily } from "./typography";
 export { spacing, radius, shadows } from "./spacing";
+export { formStyles } from "./formStyles";
 
 import { colors } from "./colors";
 

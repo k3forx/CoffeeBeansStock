@@ -17,7 +17,7 @@ import { beansApi } from "../../../src/api/beans";
 import { usagesApi } from "../../../src/api/usages";
 import { ApiError } from "../../../src/api/client";
 import type { CoffeeBean, RoastLevel, RoastDetail, UsageHistory } from "../../../src/types/api";
-import { colors, typography, spacing, radius, shadows, getStockColor } from "@/theme";
+import { colors, typography, spacing, radius, shadows, getStockColor, formStyles } from "@/theme";
 import { ROAST_LEVELS, ROAST_DETAILS, ROAST_LEVEL_LABELS, ROAST_DETAIL_LABELS } from "../../../src/constants/roastLevels";
 import { ChipSelector } from "../../../src/components/ChipSelector";
 import { FormInput } from "../../../src/components/FormInput";
@@ -279,7 +279,7 @@ export default function BeanDetailScreen() {
               onChangeText={setOrigin}
             />
 
-            <Text style={styles.label}>焙煎度 <Text style={styles.required}>*</Text></Text>
+            <Text style={formStyles.label}>焙煎度 <Text style={formStyles.required}>*</Text></Text>
             <ChipSelector
               items={ROAST_LEVELS}
               selected={roastLevel}
@@ -288,7 +288,7 @@ export default function BeanDetailScreen() {
 
             {roastLevel !== "" && (
               <>
-                <Text style={styles.label}>焙煎度（詳細）</Text>
+                <Text style={formStyles.label}>焙煎度（詳細）</Text>
                 <ChipSelector
                   items={ROAST_DETAILS[roastLevel]}
                   selected={roastDetail}
@@ -306,7 +306,7 @@ export default function BeanDetailScreen() {
               keyboardType="numeric"
             />
 
-            <Text style={styles.label}>メモ</Text>
+            <Text style={formStyles.label}>メモ</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={notes}
@@ -333,7 +333,7 @@ export default function BeanDetailScreen() {
                 <Text style={styles.cancelButtonText}>キャンセル</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.button, styles.saveButton, saving && styles.buttonDisabled]}
+                style={[styles.button, styles.saveButton, saving && formStyles.buttonDisabled]}
                 onPress={handleSave}
                 disabled={saving}
               >
@@ -388,7 +388,7 @@ export default function BeanDetailScreen() {
                     style={[
                       styles.presetBtn,
                       index > 0 && styles.presetBtnOutline,
-                      quickButtonLoading !== null && styles.buttonDisabled,
+                      quickButtonLoading !== null && formStyles.buttonDisabled,
                     ]}
                     onPress={() => handleQuickUsage(preset.grams)}
                     disabled={quickButtonLoading !== null}
@@ -415,7 +415,7 @@ export default function BeanDetailScreen() {
                 />
                 <Text style={styles.manualInputUnit}>g</Text>
                 <TouchableOpacity
-                  style={[styles.manualButton, (manualLoading || !manualGrams) && styles.buttonDisabled]}
+                  style={[styles.manualButton, (manualLoading || !manualGrams) && formStyles.buttonDisabled]}
                   onPress={handleManualUsage}
                   disabled={manualLoading || !manualGrams}
                 >
@@ -569,15 +569,6 @@ const styles = StyleSheet.create({
   },
 
   // Edit mode
-  label: {
-    ...typography.labelMedium,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-    marginTop: spacing.xl,
-  },
-  required: {
-    color: colors.danger,
-  },
   input: {
     borderWidth: 0,
     borderBottomWidth: 1,
@@ -590,7 +581,7 @@ const styles = StyleSheet.create({
   },
   textArea: { height: 100, textAlignVertical: "top" },
   editActions: { flexDirection: "row", gap: spacing.md, marginTop: spacing["3xl"] },
-  button: { flex: 1, borderRadius: radius.sm, padding: spacing.lg, alignItems: "center" },
+  button: { ...formStyles.buttonBase, flex: 1 },
   cancelButton: {
     backgroundColor: "transparent",
     borderWidth: 1,
@@ -601,10 +592,8 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   saveButton: { backgroundColor: colors.primary },
-  buttonDisabled: { opacity: 0.6 },
   saveButtonText: {
-    ...typography.labelLarge,
-    color: colors.textInverse,
+    ...formStyles.buttonTextBase,
   },
 
   // Usage section
