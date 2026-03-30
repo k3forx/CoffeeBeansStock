@@ -53,7 +53,8 @@ func toStringPtr[T ~string](v *T) *string {
 }
 
 // parseQueryInt parses an integer query parameter with a default value.
-func parseQueryInt(r *http.Request, key string, defaultVal int) int {
+// The result is clamped to [min, max].
+func parseQueryInt(r *http.Request, key string, defaultVal, min, max int) int {
 	v := r.URL.Query().Get(key)
 	if v == "" {
 		return defaultVal
@@ -61,6 +62,12 @@ func parseQueryInt(r *http.Request, key string, defaultVal int) int {
 	n, err := strconv.Atoi(v)
 	if err != nil {
 		return defaultVal
+	}
+	if n < min {
+		return min
+	}
+	if n > max {
+		return max
 	}
 	return n
 }

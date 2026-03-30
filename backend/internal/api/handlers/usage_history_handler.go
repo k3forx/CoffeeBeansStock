@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"math"
 	"net/http"
 
 	"github.com/oapi-codegen/runtime/types"
@@ -65,8 +66,8 @@ func (h *UsageHistoryHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	limit := int32(parseQueryInt(r, "limit", 20))
-	offset := int32(parseQueryInt(r, "offset", 0))
+	limit := int32(parseQueryInt(r, "limit", 20, 1, 100))
+	offset := int32(parseQueryInt(r, "offset", 0, 0, math.MaxInt32))
 
 	result, err := h.service.ListByCoffeeBean(r.Context(), usecase.ListUsageInput{
 		UserID:       userID,
