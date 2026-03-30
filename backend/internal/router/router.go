@@ -35,6 +35,7 @@ func New(deps Deps) chi.Router {
 		r.Route("/auth", func(r chi.Router) {
 			r.With(middleware.RateLimit(5, time.Hour)).Post("/register", deps.AuthHandler.RegisterAnonymous)
 			r.With(middleware.RateLimit(10, time.Minute)).Post("/refresh", deps.AuthHandler.Refresh)
+			r.With(middleware.RateLimit(10, time.Minute)).Post("/logout", deps.AuthHandler.Logout)
 
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.Auth(deps.TokenManager))

@@ -67,11 +67,12 @@ func run() error {
 	jwtManager := auth.NewJWTManager(cfg.JWTSecret)
 
 	userRepo := repository.NewUserRepository(pool)
+	refreshTokenRepo := repository.NewRefreshTokenRepository(pool)
 	coffeeBeanRepo := repository.NewCoffeeBeanRepository(pool)
 	usageHistoryRepo := repository.NewUsageHistoryRepository(pool)
 	uow := repository.NewUnitOfWork(pool)
 
-	authService := usecase.NewAuthService(userRepo, jwtManager)
+	authService := usecase.NewAuthService(userRepo, jwtManager, refreshTokenRepo)
 	authHandler := handlers.NewAuthHandler(authService)
 	coffeeBeansService := usecase.NewCoffeeBeansService(coffeeBeanRepo, uow)
 	coffeeBeansHandler := handlers.NewCoffeeBeansHandler(coffeeBeansService)
