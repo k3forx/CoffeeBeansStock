@@ -4,13 +4,12 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Animated,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { authApi } from "../../src/api/auth";
 import { useAuthStore } from "../../src/stores/auth";
-import { ApiError } from "../../src/api/client";
+import { showApiError } from "../../src/utils/errorHandler";
 import { colors, typography, spacing, radius, shadows } from "@/theme";
 
 export default function LoginScreen() {
@@ -36,8 +35,7 @@ export default function LoginScreen() {
       const result = await authApi.registerAnonymous();
       await setAuth(result.user, result.access_token, result.refresh_token);
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : String(e);
-      Alert.alert("エラー", msg);
+      showApiError(e, "ログインに失敗しました");
     } finally {
       setLoading(false);
     }

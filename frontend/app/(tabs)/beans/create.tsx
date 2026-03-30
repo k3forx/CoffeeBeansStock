@@ -6,11 +6,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
-import { ApiError } from "../../../src/api/client";
+import { showApiError } from "../../../src/utils/errorHandler";
 import type { RoastLevel, RoastDetail } from "../../../src/types/api";
 import { colors, typography, spacing, radius, shadows } from "@/theme";
 import { ROAST_LEVELS, ROAST_DETAILS } from "../../../src/constants/roastLevels";
@@ -54,8 +53,7 @@ export default function CreateBeanScreen() {
       });
       router.back();
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : "作成に失敗しました";
-      Alert.alert("エラー", msg);
+      showApiError(e, "作成に失敗しました");
     } finally {
       setLoading(false);
     }
