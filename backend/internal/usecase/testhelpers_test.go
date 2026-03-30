@@ -13,7 +13,8 @@ import (
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/usecase/mock"
 )
 
-func ptr[T any](v T) *T { return &v }
+//go:fix inline
+func ptr[T any](v T) *T { return new(v) }
 
 func newTestUser(id uuid.UUID) *user.User {
 	now := time.Now()
@@ -42,7 +43,7 @@ func fakeRunInTx(ctrl *gomock.Controller, store *mock.MockStore) *mock.MockUnitO
 // setupUoWWithStore creates a mock UoW that executes the fn with the given store.
 func setupUoWWithStore(uow *mock.MockUnitOfWork, store *mock.MockStore) {
 	uow.EXPECT().RunInTx(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(_ interface{}, fn func(unitofwork.Store) error) error {
+		func(_ any, fn func(unitofwork.Store) error) error {
 			return fn(store)
 		},
 	)

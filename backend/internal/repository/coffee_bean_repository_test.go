@@ -461,7 +461,7 @@ func TestCoffeeBeanRepository_CountByUserID_excludes_deleted(t *testing.T) {
 
 	// Create 3 beans, soft-delete 1
 	var deleteID uuid.UUID
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		stock, _ := coffeebean.NewStock(100)
 		bean, err := coffeebean.New(userID, "Bean "+string(rune('A'+i)), coffeebean.RoastMedium, nil, nil, nil, stock)
 		if err != nil {

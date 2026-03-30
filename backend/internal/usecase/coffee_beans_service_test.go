@@ -166,7 +166,7 @@ func TestCoffeeBeansService_Create(t *testing.T) {
 			in: usecase.CreateBeanInput{
 				Name:         "Test",
 				RoastLevel:   "shallow",
-				RoastDetail:  ptr("french"),
+				RoastDetail:  new("french"),
 				CurrentStock: 100,
 			},
 			wantValidation: true,
@@ -219,7 +219,7 @@ func TestCoffeeBeansService_Create(t *testing.T) {
 			in: usecase.CreateBeanInput{
 				Name:         "Ethiopia",
 				RoastLevel:   "shallow",
-				RoastDetail:  ptr("light"),
+				RoastDetail:  new("light"),
 				CurrentStock: 150,
 			},
 		},
@@ -350,7 +350,7 @@ func TestCoffeeBeansService_Update(t *testing.T) {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
 				return usecase.NewCoffeeBeansService(r, nil)
 			},
-			in:             usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, RoastLevel: ptr("invalid")},
+			in:             usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, RoastLevel: new("invalid")},
 			wantValidation: true,
 		},
 		"ErrNotFoundが伝播する": {
@@ -397,7 +397,7 @@ func TestCoffeeBeansService_Update(t *testing.T) {
 				uow := fakeRunInTx(ctrl, store)
 				return usecase.NewCoffeeBeansService(r, uow)
 			},
-			in: usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, Name: ptr("Updated")},
+			in: usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, Name: new("Updated")},
 		},
 		"正常に更新できる（部分更新）": {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
@@ -414,7 +414,7 @@ func TestCoffeeBeansService_Update(t *testing.T) {
 				uow := fakeRunInTx(ctrl, store)
 				return usecase.NewCoffeeBeansService(r, uow)
 			},
-			in: usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, Name: ptr("New Name")},
+			in: usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, Name: new("New Name")},
 		},
 	}
 
