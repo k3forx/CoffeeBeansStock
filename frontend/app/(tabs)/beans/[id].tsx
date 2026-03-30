@@ -15,6 +15,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
 import { usagesApi } from "../../../src/api/usages";
 import { ApiError } from "../../../src/api/client";
+import { useAuthStore } from "../../../src/stores/auth";
 import type { CoffeeBean, RoastLevel, RoastDetail, UsageHistory } from "../../../src/types/api";
 import { colors, typography, spacing, radius, shadows, getStockColor } from "@/theme";
 import { ROAST_LEVELS, ROAST_DETAILS, ROAST_LEVEL_LABELS, ROAST_DETAIL_LABELS } from "../../../src/constants/roastLevels";
@@ -42,8 +43,9 @@ export default function BeanDetailScreen() {
   const [manualGrams, setManualGrams] = useState("");
   const [manualLoading, setManualLoading] = useState(false);
   const [deletingUsageId, setDeletingUsageId] = useState<string | null>(null);
+  const { user } = useAuthStore();
 
-  const QUICK_USAGE_GRAMS = 15;
+  const QUICK_USAGE_GRAMS = user?.grams_per_cup ?? 15;
 
   const loadBean = useCallback(async () => {
     try {
@@ -375,7 +377,7 @@ export default function BeanDetailScreen() {
                 disabled={quickButtonLoading}
               >
                 <Text style={styles.quickButtonText}>
-                  {quickButtonLoading ? "記録中..." : "1杯使った (15g)"}
+                  {quickButtonLoading ? "記録中..." : `1杯使った (${QUICK_USAGE_GRAMS}g)`}
                 </Text>
               </TouchableOpacity>
 

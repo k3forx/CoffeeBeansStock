@@ -1,9 +1,15 @@
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useAuthStore } from "../../src/stores/auth";
+import { usersApi } from "../../src/api/users";
+import { ApiError } from "../../src/api/client";
 import { colors, typography, spacing, radius, shadows } from "@/theme";
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, setUser } = useAuthStore();
+  const [editingGrams, setEditingGrams] = useState(false);
+  const [gramsInput, setGramsInput] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const handleLogout = () => {
     Alert.alert("ログアウト", "ログアウトしますか？", [
@@ -14,6 +20,30 @@ export default function ProfileScreen() {
         onPress: () => logout(),
       },
     ]);
+  };
+
+  const handleStartEditGrams = () => {
+    setGramsInput(String(user?.grams_per_cup ?? 15));
+    setEditingGrams(true);
+  };
+
+  const handleSaveGrams = async () => {
+    const value = parseInt(gramsInput, 10);
+    if (isNaN(value) || value < 1 || value > 100) {
+      Alert.alert("エラー", "1〜100の範囲で入力してください");
+      return;
+    }
+    setSaving(true);
+    try {
+      const updated = await usersApi.updateMe({ grams_per_cup: value });
+      setUser(updated);
+      setEditingGrams(false);
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : "更新に失敗しました";
+      Alert.alert("エラー", msg);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -34,11 +64,47 @@ export default function ProfileScreen() {
             {user?.low_stock_threshold ?? 100}g以下
           </Text>
         </View>
-        <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
+        <View style={styles.settingRow}>
           <Text style={styles.settingLabel}>通知</Text>
           <Text style={styles.settingValue}>
             {user?.notification_enabled ? "ON" : "OFF"}
           </Text>
+        </View>
+        <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
+          <Text style={styles.settingLabel}>1杯あたりのグラム数</Text>
+          {editingGrams ? (
+            <View style={styles.editGramsRow}>
+              <TextInput
+                style={styles.gramsInput}
+                value={gramsInput}
+                onChangeText={setGramsInput}
+                keyboardType="number-pad"
+                autoFocus
+                selectTextOnFocus
+              />
+              <Text style={styles.gramsUnit}>g</Text>
+              <TouchableOpacity
+                style={[styles.gramsButton, saving && styles.buttonDisabled]}
+                onPress={handleSaveGrams}
+                disabled={saving}
+              >
+                <Text style={styles.gramsButtonText}>{saving ? "..." : "保存"}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.gramsCancelButton}
+                onPress={() => setEditingGrams(false)}
+                disabled={saving}
+              >
+                <Text style={styles.gramsCancelText}>取消</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity onPress={handleStartEditGrams}>
+              <Text style={styles.settingValueTappable}>
+                {user?.grams_per_cup ?? 15}g
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -103,6 +169,7 @@ const styles = StyleSheet.create({
   settingRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.xl,
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -116,6 +183,49 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: colors.textSecondary,
   },
+  settingValueTappable: {
+    ...typography.bodyMedium,
+    color: colors.accentDark,
+    textDecorationLine: "underline",
+  },
+  editGramsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  gramsInput: {
+    width: 48,
+    height: 32,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.primary,
+    textAlign: "center",
+    ...typography.bodyMedium,
+    color: colors.textPrimary,
+    padding: 0,
+  },
+  gramsUnit: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+  },
+  gramsButton: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+  },
+  gramsButtonText: {
+    ...typography.labelSmall,
+    color: colors.textInverse,
+  },
+  gramsCancelButton: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
+  gramsCancelText: {
+    ...typography.labelSmall,
+    color: colors.textSecondary,
+  },
+  buttonDisabled: { opacity: 0.6 },
   logoutText: {
     ...typography.bodyMedium,
     color: colors.danger,
