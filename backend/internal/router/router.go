@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -32,8 +33,8 @@ func New(deps Deps) chi.Router {
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Route("/auth", func(r chi.Router) {
-			r.Post("/register", deps.AuthHandler.RegisterAnonymous)
-			r.Post("/refresh", deps.AuthHandler.Refresh)
+			r.With(middleware.RateLimit(5, time.Hour)).Post("/register", deps.AuthHandler.RegisterAnonymous)
+			r.With(middleware.RateLimit(10, time.Minute)).Post("/refresh", deps.AuthHandler.Refresh)
 
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.Auth(deps.TokenManager))
@@ -43,6 +44,7 @@ func New(deps Deps) chi.Router {
 		})
 
 		r.Group(func(r chi.Router) {
+			r.Use(middleware.RateLimit(100, time.Minute))
 			r.Use(middleware.Auth(deps.TokenManager))
 			r.Route("/coffee-beans", func(r chi.Router) {
 				r.Get("/", deps.CoffeeBeansHandler.List)
