@@ -69,6 +69,30 @@ paths:
         "401":
           description: 認証エラー
 
+    put:
+      operationId: updateMe
+      summary: ユーザー設定更新
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: バリデーションエラー
+        "401":
+          description: 認証エラー
+
   /api/v1/coffee-beans:
     get:
       operationId: listBeans
@@ -334,6 +358,9 @@ components:
           format: int32
         notification_enabled:
           type: boolean
+        grams_per_cup:
+          type: integer
+          format: int32
         created_at:
           type: string
           format: date-time
@@ -373,6 +400,20 @@ components:
           type: string
         refresh_token:
           type: string
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        low_stock_threshold:
+          type: integer
+          format: int32
+        notification_enabled:
+          type: boolean
+        grams_per_cup:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
 
     # ── Coffee Beans ─────────────────────────────────────
     RoastLevel:

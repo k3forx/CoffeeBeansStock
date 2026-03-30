@@ -1,9 +1,12 @@
 package user
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
+
+	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 )
 
 type User struct {
@@ -14,6 +17,7 @@ type User struct {
 	name                string
 	lowStockThreshold   int32
 	id                  uuid.UUID
+	gramsPerCup         GramsPerCup
 	notificationEnabled bool
 }
 
@@ -27,6 +31,7 @@ func NewAnonymousUser() *User {
 		name:                "",
 		lowStockThreshold:   100,
 		notificationEnabled: true,
+		gramsPerCup:         DefaultGramsPerCup(),
 		createdAt:           now,
 		updatedAt:           now,
 	}
@@ -36,6 +41,7 @@ func NewAnonymousUser() *User {
 func Reconstruct(
 	id uuid.UUID, email, passwordHash, name string,
 	lowStockThreshold int32, notificationEnabled bool,
+	gramsPerCup GramsPerCup,
 	createdAt, updatedAt time.Time,
 ) *User {
 	return &User{
@@ -45,9 +51,37 @@ func Reconstruct(
 		name:                name,
 		lowStockThreshold:   lowStockThreshold,
 		notificationEnabled: notificationEnabled,
+		gramsPerCup:         gramsPerCup,
 		createdAt:           createdAt,
 		updatedAt:           updatedAt,
 	}
+}
+
+// Update modifies the user's settings with validation.
+func (u *User) Update(gramsPerCup, lowStockThreshold *int32, notificationEnabled *bool) error {
+	var errs domain.ValidationErrors
+
+	if gramsPerCup != nil {
+		gpc, err := NewGramsPerCup(*gramsPerCup)
+		if err == nil {
+			u.gramsPerCup = gpc
+		} else if ve, ok := errors.AsType[*domain.ValidationError](err); ok {
+			errs = append(errs, ve)
+		} else {
+			return err
+		}
+	}
+	if lowStockThreshold != nil {
+		u.lowStockThreshold = *lowStockThreshold
+	}
+	if notificationEnabled != nil {
+		u.notificationEnabled = *notificationEnabled
+	}
+	if len(errs) > 0 {
+		return errs
+	}
+	u.updatedAt = time.Now().UTC()
+	return nil
 }
 
 func (u *User) ID() uuid.UUID             { return u.id }
@@ -56,5 +90,6 @@ func (u *User) PasswordHash() string      { return u.passwordHash }
 func (u *User) Name() string              { return u.name }
 func (u *User) LowStockThreshold() int32  { return u.lowStockThreshold }
 func (u *User) NotificationEnabled() bool { return u.notificationEnabled }
+func (u *User) GramsPerCup() GramsPerCup  { return u.gramsPerCup }
 func (u *User) CreatedAt() time.Time      { return u.createdAt }
 func (u *User) UpdatedAt() time.Time      { return u.updatedAt }

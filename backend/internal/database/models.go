@@ -51,6 +51,7 @@ type User struct {
 	Name                pgtype.Text        `json:"name"`
 	LowStockThreshold   int32              `json:"low_stock_threshold"`
 	NotificationEnabled bool               `json:"notification_enabled"`
+	GramsPerCup         int32              `json:"grams_per_cup"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
 	DeletedAt           pgtype.Timestamptz `json:"deleted_at"`

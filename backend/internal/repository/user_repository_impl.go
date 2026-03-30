@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/user"
@@ -30,6 +31,21 @@ func (r *userRepository) Save(ctx context.Context, u *user.User) error {
 		ID:                  toUUID(u.ID()),
 		LowStockThreshold:   u.LowStockThreshold(),
 		NotificationEnabled: u.NotificationEnabled(),
+		GramsPerCup:         u.GramsPerCup().Value(),
+	})
+	return err
+}
+
+func (r *userRepository) Update(ctx context.Context, u *user.User) error {
+	threshold := u.LowStockThreshold()
+	gpc := u.GramsPerCup().Value()
+	enabled := u.NotificationEnabled()
+
+	_, err := r.queries.UpdateUser(ctx, database.UpdateUserParams{
+		ID:                  toUUID(u.ID()),
+		LowStockThreshold:   pgtype.Int4{Int32: threshold, Valid: true},
+		NotificationEnabled: pgtype.Bool{Bool: enabled, Valid: true},
+		GramsPerCup:         pgtype.Int4{Int32: gpc, Valid: true},
 	})
 	return err
 }
@@ -54,6 +70,7 @@ func toDomainUser(u database.User) *user.User {
 	return user.Reconstruct(
 		id, email, passwordHash, name,
 		u.LowStockThreshold, u.NotificationEnabled,
+		user.ReconstructGramsPerCup(u.GramsPerCup),
 		u.CreatedAt.Time, u.UpdatedAt.Time,
 	)
 }
