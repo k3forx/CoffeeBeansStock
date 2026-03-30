@@ -5,7 +5,7 @@ import { useFocusEffect } from "expo-router";
 import { useAuthStore } from "../../src/stores/auth";
 import { usersApi } from "../../src/api/users";
 import { beansApi } from "../../src/api/beans";
-import { ApiError } from "../../src/api/client";
+import { showApiError } from "../../src/utils/errorHandler";
 import { colors, typography, spacing, radius, shadows } from "@/theme";
 
 export default function ProfileScreen() {
@@ -49,8 +49,7 @@ export default function ProfileScreen() {
       setUser(updated);
       setEditingGrams(false);
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : "更新に失敗しました";
-      Alert.alert("エラー", msg);
+      showApiError(e, "更新に失敗しました");
     } finally {
       setSaving(false);
     }

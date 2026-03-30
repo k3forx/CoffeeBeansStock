@@ -15,7 +15,7 @@ import { Feather } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
 import { usagesApi } from "../../../src/api/usages";
-import { ApiError } from "../../../src/api/client";
+import { showApiError } from "../../../src/utils/errorHandler";
 import type { CoffeeBean, RoastLevel, RoastDetail, UsageHistory } from "../../../src/types/api";
 import { colors, typography, spacing, radius, shadows, getStockColor } from "@/theme";
 import { ROAST_LEVELS, ROAST_DETAILS, ROAST_LEVEL_LABELS, ROAST_DETAIL_LABELS } from "../../../src/constants/roastLevels";
@@ -115,12 +115,9 @@ export default function BeanDetailScreen() {
       });
       await refreshAfterUsage();
     } catch (e) {
-      if (e instanceof ApiError && e.code === "INSUFFICIENT_STOCK") {
-        Alert.alert("エラー", "在庫が不足しています");
-      } else {
-        const msg = e instanceof ApiError ? e.message : "記録に失敗しました";
-        Alert.alert("エラー", msg);
-      }
+      showApiError(e, "記録に失敗しました", {
+        INSUFFICIENT_STOCK: "在庫が不足しています",
+      });
     } finally {
       setQuickButtonLoading(null);
     }
@@ -141,12 +138,9 @@ export default function BeanDetailScreen() {
       await refreshAfterUsage();
       setManualGrams("");
     } catch (e) {
-      if (e instanceof ApiError && e.code === "INSUFFICIENT_STOCK") {
-        Alert.alert("エラー", "在庫が不足しています");
-      } else {
-        const msg = e instanceof ApiError ? e.message : "記録に失敗しました";
-        Alert.alert("エラー", msg);
-      }
+      showApiError(e, "記録に失敗しました", {
+        INSUFFICIENT_STOCK: "在庫が不足しています",
+      });
     } finally {
       setManualLoading(false);
     }
@@ -199,8 +193,7 @@ export default function BeanDetailScreen() {
       setBean(updated);
       setEditing(false);
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : "更新に失敗しました";
-      Alert.alert("エラー", msg);
+      showApiError(e, "更新に失敗しました");
     } finally {
       setSaving(false);
     }
