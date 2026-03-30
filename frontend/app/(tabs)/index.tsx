@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -6,21 +6,18 @@ import {
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
-  Alert,
   Animated,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
-import { beansApi } from "../../src/api/beans";
 import type { CoffeeBean } from "../../src/types/api";
 import { colors, typography, spacing, radius, shadows, getStockColor } from "@/theme";
 import { ROAST_LEVEL_LABELS } from "../../src/constants/roastLevels";
 import { BeanListSkeleton } from "../../src/components/SkeletonLoader";
+import { useBeansList } from "@/hooks/useBeansList";
 
 export default function BeansListScreen() {
-  const [beans, setBeans] = useState<CoffeeBean[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const beansList = useBeansList();
   const router = useRouter();
 
   const animatedValues = useRef<Animated.Value[]>([]).current;
@@ -38,29 +35,12 @@ export default function BeansListScreen() {
     return animatedValues[index];
   };
 
-  const fetchBeans = async () => {
-    try {
-      const result = await beansApi.list(100, 0);
-      setBeans(result.beans);
-      animatedValues.length = 0;
-    } catch {
-      Alert.alert("エラー", "データの取得に失敗しました");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
   useFocusEffect(
     useCallback(() => {
-      fetchBeans();
+      animatedValues.length = 0;
+      beansList.fetchBeans();
     }, [])
   );
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchBeans();
-  };
 
   const renderBean = ({ item, index }: { item: CoffeeBean; index: number }) => {
     const stockColor = getStockColor(item.current_stock);
@@ -93,7 +73,7 @@ export default function BeansListScreen() {
     );
   };
 
-  if (loading) {
+  if (beansList.loading) {
     return (
       <View style={styles.container}>
         <BeanListSkeleton />
@@ -104,14 +84,14 @@ export default function BeansListScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={beans}
+        data={beansList.beans}
         keyExtractor={(item) => item.id}
         renderItem={renderBean}
-        contentContainerStyle={beans.length === 0 ? styles.center : styles.list}
+        contentContainerStyle={beansList.beans.length === 0 ? styles.center : styles.list}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
+            refreshing={beansList.refreshing}
+            onRefresh={beansList.onRefresh}
             tintColor={colors.primary}
           />
         }
