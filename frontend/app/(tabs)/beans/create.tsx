@@ -11,7 +11,7 @@ import { useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
 import { showApiError } from "../../../src/utils/errorHandler";
 import type { RoastLevel, RoastDetail } from "../../../src/types/api";
-import { colors, typography, spacing, radius, shadows } from "@/theme";
+import { colors, spacing, shadows, formStyles } from "@/theme";
 import { ROAST_LEVELS, ROAST_DETAILS } from "../../../src/constants/roastLevels";
 import { ChipSelector } from "../../../src/components/ChipSelector";
 import { validateBeanForm } from "../../../src/utils/validation";
@@ -81,7 +81,7 @@ export default function CreateBeanScreen() {
           placeholder="例: エチオピア"
         />
 
-        <Text style={styles.label}>焙煎度 <Text style={styles.required}>*</Text></Text>
+        <Text style={formStyles.label}>焙煎度 <Text style={formStyles.required}>*</Text></Text>
         <ChipSelector
           items={ROAST_LEVELS}
           selected={roastLevel}
@@ -90,7 +90,7 @@ export default function CreateBeanScreen() {
 
         {roastLevel !== "" && (
           <>
-            <Text style={styles.label}>焙煎度（詳細）</Text>
+            <Text style={formStyles.label}>焙煎度（詳細）</Text>
             <ChipSelector
               items={ROAST_DETAILS[roastLevel]}
               selected={roastDetail}
@@ -119,7 +119,7 @@ export default function CreateBeanScreen() {
         />
 
         <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
+          style={[styles.button, loading && formStyles.buttonDisabled]}
           onPress={handleCreate}
           disabled={loading}
         >
@@ -133,27 +133,14 @@ export default function CreateBeanScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scroll: { padding: spacing["2xl"] },
-  label: {
-    ...typography.labelMedium,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-    marginTop: spacing.xl,
-  },
-  required: {
-    color: colors.danger,
-  },
   button: {
+    ...formStyles.buttonBase,
     backgroundColor: colors.primary,
-    borderRadius: radius.sm,
-    padding: spacing.lg,
-    alignItems: "center",
     marginTop: spacing["4xl"],
     ...shadows.md,
   },
-  buttonDisabled: { opacity: 0.6 },
   buttonText: {
-    ...typography.labelLarge,
-    color: colors.textInverse,
+    ...formStyles.buttonTextBase,
     letterSpacing: 1,
   },
 });
