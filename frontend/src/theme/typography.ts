@@ -23,7 +23,7 @@ export const typography = {
     letterSpacing: 3,
   },
   displaySub: {
-    fontFamily: "Fraunces" as string,
+    fontFamily: serifFont,
     fontSize: 14,
     fontWeight: "300" as TextStyle["fontWeight"],
     fontStyle: "italic" as TextStyle["fontStyle"],

@@ -1,19 +1,21 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   View,
   Text,
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
   Alert,
+  Animated,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
+import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { beansApi } from "../../src/api/beans";
 import type { CoffeeBean } from "../../src/types/api";
 import { colors, typography, spacing, radius, shadows, getStockColor } from "@/theme";
 import { ROAST_LEVEL_LABELS } from "../../src/constants/roastLevels";
+import { BeanListSkeleton } from "../../src/components/SkeletonLoader";
 
 export default function BeansListScreen() {
   const [beans, setBeans] = useState<CoffeeBean[]>([]);
@@ -21,10 +23,26 @@ export default function BeansListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
 
+  const animatedValues = useRef<Animated.Value[]>([]).current;
+
+  const getAnimatedValue = (index: number) => {
+    if (!animatedValues[index]) {
+      animatedValues[index] = new Animated.Value(0);
+      Animated.timing(animatedValues[index], {
+        toValue: 1,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }).start();
+    }
+    return animatedValues[index];
+  };
+
   const fetchBeans = async () => {
     try {
       const result = await beansApi.list(100, 0);
       setBeans(result.beans);
+      animatedValues.length = 0;
     } catch {
       Alert.alert("エラー", "データの取得に失敗しました");
     } finally {
@@ -44,38 +62,41 @@ export default function BeansListScreen() {
     fetchBeans();
   };
 
-  const renderBean = ({ item }: { item: CoffeeBean }) => {
+  const renderBean = ({ item, index }: { item: CoffeeBean; index: number }) => {
     const stockColor = getStockColor(item.current_stock);
+    const anim = getAnimatedValue(index);
     return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => router.push(`/beans/${item.id}`)}
-        activeOpacity={0.7}
-      >
-        <View style={[styles.accentBar, { backgroundColor: stockColor }]} />
-        <View style={styles.cardContent}>
-          <View style={styles.cardLeft}>
-            <Text style={styles.beanName}>{item.name}</Text>
-            <View style={styles.metaRow}>
-              {item.origin && <Text style={styles.beanMeta}>{item.origin}</Text>}
-              {item.roast_level && <Text style={styles.beanMeta}>{ROAST_LEVEL_LABELS[item.roast_level]}</Text>}
+      <Animated.View style={{ opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => router.push(`/beans/${item.id}`)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.accentBar, { backgroundColor: stockColor }]} />
+          <View style={styles.cardContent}>
+            <View style={styles.cardLeft}>
+              <Text style={styles.beanName}>{item.name}</Text>
+              <View style={styles.metaRow}>
+                {item.origin && <Text style={styles.beanMeta}>{item.origin}</Text>}
+                {item.roast_level && <Text style={styles.beanMeta}>{ROAST_LEVEL_LABELS[item.roast_level]}</Text>}
+              </View>
+            </View>
+            <View style={[styles.stockCircle, { borderColor: stockColor }]}>
+              <Text style={[styles.stockNum, { color: stockColor }]}>
+                {item.current_stock}
+              </Text>
+              <Text style={[styles.stockUnit, { color: stockColor }]}>gram</Text>
             </View>
           </View>
-          <View style={[styles.stockCircle, { borderColor: stockColor }]}>
-            <Text style={[styles.stockNum, { color: stockColor }]}>
-              {item.current_stock}
-            </Text>
-            <Text style={[styles.stockUnit, { color: stockColor }]}>gram</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </Animated.View>
     );
   };
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={styles.container}>
+        <BeanListSkeleton />
       </View>
     );
   }
@@ -96,7 +117,7 @@ export default function BeansListScreen() {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>☕</Text>
+            <MaterialCommunityIcons name="coffee-outline" size={48} color={colors.textTertiary} style={{ opacity: 0.4, marginBottom: spacing.lg }} />
             <Text style={styles.emptyText}>珈琲豆がまだ登録されていません</Text>
             <Text style={styles.emptySubtext}>右下の＋ボタンから追加しましょう</Text>
           </View>
@@ -107,7 +128,7 @@ export default function BeansListScreen() {
         onPress={() => router.push("/beans/create")}
         activeOpacity={0.8}
       >
-        <Text style={styles.fabText}>＋</Text>
+        <Ionicons name="add" size={26} color={colors.textInverse} />
       </TouchableOpacity>
     </View>
   );
@@ -155,16 +176,17 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   stockCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    borderWidth: 1,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    borderWidth: 1.5,
     justifyContent: "center",
     alignItems: "center",
     flexShrink: 0,
   },
   stockNum: {
     ...typography.stockNumber,
+    fontSize: 17,
     lineHeight: 18,
   },
   stockUnit: {
@@ -173,7 +195,6 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   empty: { alignItems: "center" },
-  emptyIcon: { fontSize: 48, marginBottom: spacing.lg, opacity: 0.4 },
   emptyText: {
     ...typography.bodyLarge,
     color: colors.textSecondary,
@@ -187,18 +208,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: spacing.xl,
     bottom: spacing.xl,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
     ...shadows.lg,
-  },
-  fabText: {
-    color: colors.textInverse,
-    fontSize: 24,
-    fontWeight: "300",
-    lineHeight: 26,
   },
 });

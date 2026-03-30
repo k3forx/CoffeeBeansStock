@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
@@ -17,6 +16,7 @@ import { colors, typography, spacing, radius, shadows } from "@/theme";
 import { ROAST_LEVELS, ROAST_DETAILS } from "../../../src/constants/roastLevels";
 import { ChipSelector } from "../../../src/components/ChipSelector";
 import { validateBeanForm } from "../../../src/utils/validation";
+import { FormInput } from "../../../src/components/FormInput";
 
 export default function CreateBeanScreen() {
   const [name, setName] = useState("");
@@ -26,6 +26,7 @@ export default function CreateBeanScreen() {
   const [currentStock, setCurrentStock] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const router = useRouter();
 
   const handleRoastLevelSelect = (level: RoastLevel) => {
@@ -35,7 +36,11 @@ export default function CreateBeanScreen() {
 
   const handleCreate = async () => {
     const result = validateBeanForm({ name, roastLevel, currentStock });
-    if (!result.valid) return;
+    if (!result.valid) {
+      setErrors(result.errors);
+      return;
+    }
+    setErrors({});
 
     setLoading(true);
     try {
@@ -62,27 +67,23 @@ export default function CreateBeanScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>名前 *</Text>
-        <TextInput
-          style={styles.input}
+        <FormInput
+          label="名前"
+          required
           value={name}
-          onChangeText={setName}
+          onChangeText={(v) => { setName(v); setErrors(prev => { const { name: _, ...rest } = prev; return rest; }); }}
+          error={errors.name}
           placeholder="例: エチオピア イルガチェフェ"
-          placeholderTextColor={colors.textTertiary}
-          underlineColorAndroid="transparent"
         />
 
-        <Text style={styles.label}>産地</Text>
-        <TextInput
-          style={styles.input}
+        <FormInput
+          label="産地"
           value={origin}
           onChangeText={setOrigin}
           placeholder="例: エチオピア"
-          placeholderTextColor={colors.textTertiary}
-          underlineColorAndroid="transparent"
         />
 
-        <Text style={styles.label}>焙煎度 *</Text>
+        <Text style={styles.label}>焙煎度 <Text style={styles.required}>*</Text></Text>
         <ChipSelector
           items={ROAST_LEVELS}
           selected={roastLevel}
@@ -100,27 +101,23 @@ export default function CreateBeanScreen() {
           </>
         )}
 
-        <Text style={styles.label}>在庫数 (g) *</Text>
-        <TextInput
-          style={styles.input}
+        <FormInput
+          label="在庫数 (g)"
+          required
           value={currentStock}
-          onChangeText={setCurrentStock}
+          onChangeText={(v) => { setCurrentStock(v); setErrors(prev => { const { currentStock: _, ...rest } = prev; return rest; }); }}
+          error={errors.currentStock}
           placeholder="例: 200"
           keyboardType="numeric"
-          placeholderTextColor={colors.textTertiary}
-          underlineColorAndroid="transparent"
         />
 
-        <Text style={styles.label}>メモ</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
+        <FormInput
+          label="メモ"
           value={notes}
           onChangeText={setNotes}
           placeholder="メモを入力"
           multiline
           numberOfLines={4}
-          placeholderTextColor={colors.textTertiary}
-          underlineColorAndroid="transparent"
         />
 
         <TouchableOpacity
@@ -144,20 +141,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     marginTop: spacing.xl,
   },
-  input: {
-    borderWidth: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xl,
-    paddingHorizontal: 0,
-    ...typography.bodyLarge,
-    lineHeight: undefined,
-    color: colors.textPrimary,
-    backgroundColor: "transparent",
-    letterSpacing: 0,
+  required: {
+    color: colors.danger,
   },
-  textArea: { height: 100, textAlignVertical: "top" },
   button: {
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
