@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,16 +13,14 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { beansApi } from "../../../src/api/beans";
-import { usagesApi } from "../../../src/api/usages";
-import { useAuthStore } from "../../../src/stores/auth";
-import { showApiError } from "../../../src/utils/errorHandler";
-import type { CoffeeBean, RoastLevel, RoastDetail, UsageHistory } from "../../../src/types/api";
+import { useAuthStore } from "@/stores/auth";
+import { useBeanDetail } from "@/hooks/useBeanDetail";
+import { useBeanForm } from "@/hooks/useBeanForm";
+import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { colors, typography, spacing, radius, shadows, getStockColor, formStyles } from "@/theme";
-import { ROAST_LEVELS, ROAST_DETAILS, ROAST_LEVEL_LABELS, ROAST_DETAIL_LABELS } from "../../../src/constants/roastLevels";
-import { ChipSelector } from "../../../src/components/ChipSelector";
-import { FormInput } from "../../../src/components/FormInput";
-import { validateBeanForm } from "../../../src/utils/validation";
+import { ROAST_LEVELS, ROAST_DETAILS, ROAST_LEVEL_LABELS, ROAST_DETAIL_LABELS } from "@/constants/roastLevels";
+import { ChipSelector } from "@/components/ChipSelector";
+import { FormInput } from "@/components/FormInput";
 
 export default function BeanDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,118 +31,43 @@ export default function BeanDetailScreen() {
     { grams: gramsPerCup, label: "1杯分" },
     { grams: gramsPerCup * 2, label: "2杯分" },
   ];
-  const [bean, setBean] = useState<CoffeeBean | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
 
-  const [name, setName] = useState("");
-  const [origin, setOrigin] = useState("");
-  const [roastLevel, setRoastLevel] = useState<RoastLevel | "">("");
-  const [roastDetail, setRoastDetail] = useState<RoastDetail | "">("");
-  const [currentStock, setCurrentStock] = useState("");
-  const [notes, setNotes] = useState("");
-
-  const [usages, setUsages] = useState<UsageHistory[]>([]);
-  const [usageLoading, setUsageLoading] = useState(false);
-  const [quickButtonLoading, setQuickButtonLoading] = useState<number | null>(null);
-  const [manualGrams, setManualGrams] = useState("");
-  const [manualLoading, setManualLoading] = useState(false);
-  const [deletingUsageId, setDeletingUsageId] = useState<string | null>(null);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const loadBean = useCallback(async () => {
-    try {
-      const data = await beansApi.get(id);
-      setBean(data);
-      setName(data.name);
-      setOrigin(data.origin ?? "");
-      setRoastLevel(data.roast_level);
-      setRoastDetail(data.roast_detail ?? "");
-      setCurrentStock(String(data.current_stock));
-      setNotes(data.notes ?? "");
-    } catch {
-      Alert.alert("エラー", "データの取得に失敗しました", [{ text: "OK", onPress: () => router.back() }]);
-    } finally {
-      setLoading(false);
-    }
-  }, [id, router]);
-
-  const loadUsages = useCallback(async () => {
-    setUsageLoading(true);
-    try {
-      const data = await usagesApi.list(id, 10, 0);
-      setUsages(data.usages);
-    } catch {
-      // Silent fail — usage list is supplementary
-    } finally {
-      setUsageLoading(false);
-    }
-  }, [id]);
+  const detail = useBeanDetail();
+  const form = useBeanForm();
+  const usage = useUsageTracking({ beanId: id!, onBeanUpdated: detail.setBean });
 
   useFocusEffect(
     useCallback(() => {
-      loadBean();
-      loadUsages();
-    }, [loadBean, loadUsages])
+      detail.loadBean(id!);
+      usage.loadUsages();
+    }, [id])
   );
 
-  const getTodayDate = () => {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
+  useEffect(() => {
+    if (detail.bean) {
+      form.resetToBean(detail.bean);
+    }
+  }, [detail.bean, detail.editing]);
+
+  const handleSave = async () => {
+    const result = form.validate();
+    if (!result.valid) return;
+
+    await detail.updateBean(id!, form.toUpdateInput(result.stock));
   };
 
-  const refreshAfterUsage = async () => {
-    const [updatedBean, updatedUsages] = await Promise.all([
-      beansApi.get(id),
-      usagesApi.list(id, 10, 0),
+  const handleDelete = () => {
+    Alert.alert("削除確認", `「${detail.bean?.name}」を削除しますか？`, [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "削除",
+        style: "destructive",
+        onPress: async () => {
+          const success = await detail.deleteBean(id!);
+          if (success) router.back();
+        },
+      },
     ]);
-    setBean(updatedBean);
-    setCurrentStock(String(updatedBean.current_stock));
-    setUsages(updatedUsages.usages);
-  };
-
-  const handleQuickUsage = async (grams: number) => {
-    setQuickButtonLoading(grams);
-    try {
-      await usagesApi.create(id, {
-        usage_date: getTodayDate(),
-        quantity: grams,
-      });
-      await refreshAfterUsage();
-    } catch (e) {
-      showApiError(e, "記録に失敗しました", {
-        INSUFFICIENT_STOCK: "在庫が不足しています",
-      });
-    } finally {
-      setQuickButtonLoading(null);
-    }
-  };
-
-  const handleManualUsage = async () => {
-    const grams = parseInt(manualGrams, 10);
-    if (isNaN(grams) || grams <= 0) {
-      Alert.alert("エラー", "1g以上の数値を入力してください");
-      return;
-    }
-    setManualLoading(true);
-    try {
-      await usagesApi.create(id, {
-        usage_date: getTodayDate(),
-        quantity: grams,
-      });
-      await refreshAfterUsage();
-      setManualGrams("");
-    } catch (e) {
-      showApiError(e, "記録に失敗しました", {
-        INSUFFICIENT_STOCK: "在庫が不足しています",
-      });
-    } finally {
-      setManualLoading(false);
-    }
   };
 
   const handleDeleteUsage = (usageId: string) => {
@@ -153,72 +76,12 @@ export default function BeanDetailScreen() {
       {
         text: "削除",
         style: "destructive",
-        onPress: async () => {
-          setDeletingUsageId(usageId);
-          try {
-            await usagesApi.delete(id, usageId);
-            await refreshAfterUsage();
-          } catch {
-            Alert.alert("エラー", "削除に失敗しました");
-          } finally {
-            setDeletingUsageId(null);
-          }
-        },
+        onPress: () => usage.handleDeleteUsage(usageId),
       },
     ]);
   };
 
-  const handleRoastLevelSelect = (level: RoastLevel) => {
-    setRoastLevel(level);
-    setRoastDetail("");
-  };
-
-  const handleSave = async () => {
-    const result = validateBeanForm({ name, roastLevel, currentStock });
-    if (!result.valid) {
-      setErrors(result.errors);
-      return;
-    }
-    setErrors({});
-
-    setSaving(true);
-    try {
-      const updated = await beansApi.update(id, {
-        name,
-        origin: origin || undefined,
-        roast_level: roastLevel as RoastLevel,
-        roast_detail: roastDetail || undefined,
-        current_stock: result.stock,
-        notes: notes || undefined,
-      });
-      setBean(updated);
-      setEditing(false);
-    } catch (e) {
-      showApiError(e, "更新に失敗しました");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = () => {
-    Alert.alert("削除確認", `「${bean?.name}」を削除しますか？`, [
-      { text: "キャンセル", style: "cancel" },
-      {
-        text: "削除",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await beansApi.delete(id);
-            router.back();
-          } catch {
-            Alert.alert("エラー", "削除に失敗しました");
-          }
-        },
-      },
-    ]);
-  };
-
-  if (loading) {
+  if (detail.loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -226,8 +89,9 @@ export default function BeanDetailScreen() {
     );
   }
 
-  if (!bean) return null;
+  if (!detail.bean) return null;
 
+  const bean = detail.bean;
   const stockColor = getStockColor(bean.current_stock);
 
   const roastDisplayText = (() => {
@@ -243,50 +107,50 @@ export default function BeanDetailScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      {editing ? (
+      {detail.editing ? (
         <View style={styles.editBanner}>
           <Feather name="edit-2" size={14} color={colors.warning} />
           <Text style={styles.editBannerText}>編集中</Text>
         </View>
       ) : (
         <View style={styles.editBar}>
-          <TouchableOpacity style={styles.editPill} onPress={() => setEditing(true)}>
+          <TouchableOpacity style={styles.editPill} onPress={detail.startEditing}>
             <Feather name="edit-2" size={14} color={colors.accentDark} />
             <Text style={styles.editPillText}>編集</Text>
           </TouchableOpacity>
         </View>
       )}
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        {editing ? (
+        {detail.editing ? (
           <>
             <FormInput
               label="名前"
               required
-              value={name}
-              onChangeText={(v) => { setName(v); setErrors(prev => { const { name: _, ...rest } = prev; return rest; }); }}
-              error={errors.name}
+              value={form.fields.name}
+              onChangeText={(v) => form.setField("name", v)}
+              error={form.errors.name}
             />
 
             <FormInput
               label="産地"
-              value={origin}
-              onChangeText={setOrigin}
+              value={form.fields.origin}
+              onChangeText={(v) => form.setField("origin", v)}
             />
 
             <Text style={formStyles.label}>焙煎度 <Text style={formStyles.required}>*</Text></Text>
             <ChipSelector
               items={ROAST_LEVELS}
-              selected={roastLevel}
-              onSelect={handleRoastLevelSelect}
+              selected={form.fields.roastLevel}
+              onSelect={form.handleRoastLevelSelect}
             />
 
-            {roastLevel !== "" && (
+            {form.fields.roastLevel !== "" && (
               <>
                 <Text style={formStyles.label}>焙煎度（詳細）</Text>
                 <ChipSelector
-                  items={ROAST_DETAILS[roastLevel]}
-                  selected={roastDetail}
-                  onSelect={(v) => setRoastDetail(roastDetail === v ? "" : v)}
+                  items={ROAST_DETAILS[form.fields.roastLevel]}
+                  selected={form.fields.roastDetail}
+                  onSelect={(v) => form.setField("roastDetail", form.fields.roastDetail === v ? "" : v)}
                 />
               </>
             )}
@@ -294,17 +158,17 @@ export default function BeanDetailScreen() {
             <FormInput
               label="在庫数 (g)"
               required
-              value={currentStock}
-              onChangeText={(v) => { setCurrentStock(v); setErrors(prev => { const { currentStock: _, ...rest } = prev; return rest; }); }}
-              error={errors.currentStock}
+              value={form.fields.currentStock}
+              onChangeText={(v) => form.setField("currentStock", v)}
+              error={form.errors.currentStock}
               keyboardType="numeric"
             />
 
             <Text style={formStyles.label}>メモ</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
-              value={notes}
-              onChangeText={setNotes}
+              value={form.fields.notes}
+              onChangeText={(v) => form.setField("notes", v)}
               multiline
               numberOfLines={4}
               placeholderTextColor={colors.textTertiary}
@@ -315,23 +179,18 @@ export default function BeanDetailScreen() {
               <TouchableOpacity
                 style={[styles.button, styles.cancelButton]}
                 onPress={() => {
-                  setEditing(false);
-                  setName(bean.name);
-                  setOrigin(bean.origin ?? "");
-                  setRoastLevel(bean.roast_level);
-                  setRoastDetail(bean.roast_detail ?? "");
-                  setCurrentStock(String(bean.current_stock));
-                  setNotes(bean.notes ?? "");
+                  detail.cancelEditing();
+                  form.resetToBean(bean);
                 }}
               >
                 <Text style={styles.cancelButtonText}>キャンセル</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.button, styles.saveButton, saving && formStyles.buttonDisabled]}
+                style={[styles.button, styles.saveButton, detail.saving && formStyles.buttonDisabled]}
                 onPress={handleSave}
-                disabled={saving}
+                disabled={detail.saving}
               >
-                <Text style={styles.saveButtonText}>{saving ? "保存中..." : "保存"}</Text>
+                <Text style={styles.saveButtonText}>{detail.saving ? "保存中..." : "保存"}</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -382,13 +241,13 @@ export default function BeanDetailScreen() {
                     style={[
                       styles.presetBtn,
                       index > 0 && styles.presetBtnOutline,
-                      quickButtonLoading !== null && formStyles.buttonDisabled,
+                      usage.quickButtonLoading !== null && formStyles.buttonDisabled,
                     ]}
-                    onPress={() => handleQuickUsage(preset.grams)}
-                    disabled={quickButtonLoading !== null}
+                    onPress={() => usage.handleQuickUsage(preset.grams)}
+                    disabled={usage.quickButtonLoading !== null}
                   >
                     <Text style={[styles.presetBtnText, index > 0 && styles.presetBtnTextOutline]}>
-                      {quickButtonLoading === preset.grams ? "..." : `${preset.grams}g`}
+                      {usage.quickButtonLoading === preset.grams ? "..." : `${preset.grams}g`}
                     </Text>
                     <Text style={[styles.presetBtnSub, index > 0 && styles.presetBtnSubOutline]}>
                       {preset.label}
@@ -400,8 +259,8 @@ export default function BeanDetailScreen() {
               <View style={styles.manualInputRow}>
                 <TextInput
                   style={styles.manualInput}
-                  value={manualGrams}
-                  onChangeText={setManualGrams}
+                  value={usage.manualGrams}
+                  onChangeText={usage.setManualGrams}
                   keyboardType="numeric"
                   placeholder="グラム数"
                   placeholderTextColor={colors.textTertiary}
@@ -409,36 +268,36 @@ export default function BeanDetailScreen() {
                 />
                 <Text style={styles.manualInputUnit}>g</Text>
                 <TouchableOpacity
-                  style={[styles.manualButton, (manualLoading || !manualGrams) && formStyles.buttonDisabled]}
-                  onPress={handleManualUsage}
-                  disabled={manualLoading || !manualGrams}
+                  style={[styles.manualButton, (usage.manualLoading || !usage.manualGrams) && formStyles.buttonDisabled]}
+                  onPress={usage.handleManualUsage}
+                  disabled={usage.manualLoading || !usage.manualGrams}
                 >
                   <Text style={styles.manualButtonText}>
-                    {manualLoading ? "記録中..." : "記録"}
+                    {usage.manualLoading ? "記録中..." : "記録"}
                   </Text>
                 </TouchableOpacity>
               </View>
 
               <Text style={styles.historyTitle}>最近の使用履歴</Text>
-              {usageLoading ? (
+              {usage.usageLoading ? (
                 <ActivityIndicator size="small" color={colors.primary} />
-              ) : usages.length === 0 ? (
+              ) : usage.usages.length === 0 ? (
                 <Text style={styles.emptyText}>まだ使用記録がありません</Text>
               ) : (
-                usages.map((usage) => (
-                  <View key={usage.id} style={styles.historyItem}>
+                usage.usages.map((u) => (
+                  <View key={u.id} style={styles.historyItem}>
                     <View style={styles.historyInfo}>
                       <Text style={styles.historyDate}>
-                        {new Date(usage.usage_date).toLocaleDateString("ja-JP")}
+                        {new Date(u.usage_date).toLocaleDateString("ja-JP")}
                       </Text>
-                      <Text style={styles.historyGrams}>{usage.quantity}g</Text>
+                      <Text style={styles.historyGrams}>{u.quantity}g</Text>
                     </View>
                     <TouchableOpacity
-                      onPress={() => handleDeleteUsage(usage.id)}
-                      disabled={deletingUsageId === usage.id}
+                      onPress={() => handleDeleteUsage(u.id)}
+                      disabled={usage.deletingUsageId === u.id}
                     >
                       <Text style={styles.historyDeleteText}>
-                        {deletingUsageId === usage.id ? "..." : "削除"}
+                        {usage.deletingUsageId === u.id ? "..." : "削除"}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -448,7 +307,7 @@ export default function BeanDetailScreen() {
           </>
         )}
       </ScrollView>
-      {!editing && (
+      {!detail.editing && (
         <View style={styles.bottomBar}>
           <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
             <Feather name="trash-2" size={16} color={colors.danger} />
@@ -497,8 +356,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   scroll: { padding: spacing["2xl"] },
-
-  // View mode - Hero
   hero: {
     alignItems: "center",
     marginBottom: spacing["3xl"],
@@ -529,8 +386,6 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginTop: spacing.xs,
   },
-
-  // View mode - Info card
   infoCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
@@ -561,8 +416,6 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "right",
   },
-
-  // Edit mode
   input: {
     borderWidth: 0,
     borderBottomWidth: 1,
@@ -589,8 +442,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     ...formStyles.buttonTextBase,
   },
-
-  // Usage section
   usageSection: {
     marginTop: spacing["3xl"],
   },
@@ -699,8 +550,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.danger,
   },
-
-  // Bottom
   bottomBar: {
     padding: spacing.lg,
     alignItems: "center",

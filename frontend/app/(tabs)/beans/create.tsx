@@ -10,47 +10,26 @@ import {
 import { useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
 import { showApiError } from "../../../src/utils/errorHandler";
-import type { RoastLevel, RoastDetail } from "../../../src/types/api";
 import { colors, spacing, shadows, formStyles } from "@/theme";
 import { ROAST_LEVELS, ROAST_DETAILS } from "../../../src/constants/roastLevels";
 import { ChipSelector } from "../../../src/components/ChipSelector";
-import { validateBeanForm } from "../../../src/utils/validation";
 import { FormInput } from "../../../src/components/FormInput";
+import { useBeanForm } from "../../../src/hooks/useBeanForm";
 
 export default function CreateBeanScreen() {
-  const [name, setName] = useState("");
-  const [origin, setOrigin] = useState("");
-  const [roastLevel, setRoastLevel] = useState<RoastLevel | "">("");
-  const [roastDetail, setRoastDetail] = useState<RoastDetail | "">("");
-  const [currentStock, setCurrentStock] = useState("");
-  const [notes, setNotes] = useState("");
+  const form = useBeanForm();
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const router = useRouter();
 
-  const handleRoastLevelSelect = (level: RoastLevel) => {
-    setRoastLevel(level);
-    setRoastDetail("");
-  };
-
   const handleCreate = async () => {
-    const result = validateBeanForm({ name, roastLevel, currentStock });
+    const result = form.validate();
     if (!result.valid) {
-      setErrors(result.errors);
       return;
     }
-    setErrors({});
 
     setLoading(true);
     try {
-      await beansApi.create({
-        name,
-        origin: origin || undefined,
-        roast_level: roastLevel as RoastLevel,
-        roast_detail: roastDetail || undefined,
-        current_stock: result.stock,
-        notes: notes || undefined,
-      });
+      await beansApi.create(form.toCreateInput(result.stock));
       router.back();
     } catch (e) {
       showApiError(e, "作成に失敗しました");
@@ -68,33 +47,33 @@ export default function CreateBeanScreen() {
         <FormInput
           label="名前"
           required
-          value={name}
-          onChangeText={(v) => { setName(v); setErrors(prev => { const { name: _, ...rest } = prev; return rest; }); }}
-          error={errors.name}
+          value={form.fields.name}
+          onChangeText={(v) => form.setField("name", v)}
+          error={form.errors.name}
           placeholder="例: エチオピア イルガチェフェ"
         />
 
         <FormInput
           label="産地"
-          value={origin}
-          onChangeText={setOrigin}
+          value={form.fields.origin}
+          onChangeText={(v) => form.setField("origin", v)}
           placeholder="例: エチオピア"
         />
 
         <Text style={formStyles.label}>焙煎度 <Text style={formStyles.required}>*</Text></Text>
         <ChipSelector
           items={ROAST_LEVELS}
-          selected={roastLevel}
-          onSelect={handleRoastLevelSelect}
+          selected={form.fields.roastLevel}
+          onSelect={form.handleRoastLevelSelect}
         />
 
-        {roastLevel !== "" && (
+        {form.fields.roastLevel !== "" && (
           <>
             <Text style={formStyles.label}>焙煎度（詳細）</Text>
             <ChipSelector
-              items={ROAST_DETAILS[roastLevel]}
-              selected={roastDetail}
-              onSelect={(v) => setRoastDetail(roastDetail === v ? "" : v)}
+              items={ROAST_DETAILS[form.fields.roastLevel]}
+              selected={form.fields.roastDetail}
+              onSelect={(v) => form.setField("roastDetail", form.fields.roastDetail === v ? "" : v)}
             />
           </>
         )}
@@ -102,17 +81,17 @@ export default function CreateBeanScreen() {
         <FormInput
           label="在庫数 (g)"
           required
-          value={currentStock}
-          onChangeText={(v) => { setCurrentStock(v); setErrors(prev => { const { currentStock: _, ...rest } = prev; return rest; }); }}
-          error={errors.currentStock}
+          value={form.fields.currentStock}
+          onChangeText={(v) => form.setField("currentStock", v)}
+          error={form.errors.currentStock}
           placeholder="例: 200"
           keyboardType="numeric"
         />
 
         <FormInput
           label="メモ"
-          value={notes}
-          onChangeText={setNotes}
+          value={form.fields.notes}
+          onChangeText={(v) => form.setField("notes", v)}
           placeholder="メモを入力"
           multiline
           numberOfLines={4}
