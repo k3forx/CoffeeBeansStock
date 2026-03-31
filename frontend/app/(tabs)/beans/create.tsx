@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Text,
-  TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -10,7 +9,8 @@ import {
 import { useRouter } from "expo-router";
 import { beansApi } from "../../../src/api/beans";
 import { showApiError } from "../../../src/utils/errorHandler";
-import { colors, spacing, shadows, formStyles } from "@/theme";
+import { colors, spacing, formStyles } from "@/theme";
+import { Button } from "@/components/Button";
 import { ROAST_LEVELS, ROAST_DETAILS } from "../../../src/constants/roastLevels";
 import { ChipSelector } from "../../../src/components/ChipSelector";
 import { FormInput } from "../../../src/components/FormInput";
@@ -97,13 +97,15 @@ export default function CreateBeanScreen() {
           numberOfLines={4}
         />
 
-        <TouchableOpacity
-          style={[styles.button, loading && formStyles.buttonDisabled]}
+        <Button
+          title="追加する"
           onPress={handleCreate}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>{loading ? "追加中..." : "追加する"}</Text>
-        </TouchableOpacity>
+          loading={loading}
+          loadingText="追加中..."
+          shadow
+          style={styles.createButton}
+          textStyle={styles.createButtonText}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -112,14 +114,6 @@ export default function CreateBeanScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scroll: { padding: spacing["2xl"] },
-  button: {
-    ...formStyles.buttonBase,
-    backgroundColor: colors.primary,
-    marginTop: spacing["4xl"],
-    ...shadows.md,
-  },
-  buttonText: {
-    ...formStyles.buttonTextBase,
-    letterSpacing: 1,
-  },
+  createButton: { marginTop: spacing["4xl"] },
+  createButtonText: { letterSpacing: 1 },
 });

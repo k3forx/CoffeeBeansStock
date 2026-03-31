@@ -7,6 +7,7 @@ import { usersApi } from "../../src/api/users";
 import { beansApi } from "../../src/api/beans";
 import { showApiError } from "../../src/utils/errorHandler";
 import { colors, typography, spacing, radius, shadows } from "@/theme";
+import { Button } from "@/components/Button";
 
 export default function ProfileScreen() {
   const { user, setUser } = useAuthStore();
@@ -94,20 +95,21 @@ export default function ProfileScreen() {
                 selectTextOnFocus
               />
               <Text style={styles.gramsUnit}>g</Text>
-              <TouchableOpacity
-                style={[styles.gramsButton, saving && styles.buttonDisabled]}
+              <Button
+                size="small"
+                title="保存"
                 onPress={handleSaveGrams}
-                disabled={saving}
-              >
-                <Text style={styles.gramsButtonText}>{saving ? "..." : "保存"}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.gramsCancelButton}
+                loading={saving}
+                loadingText="..."
+              />
+              <Button
+                size="small"
+                variant="secondary"
+                title="取消"
                 onPress={() => setEditingGrams(false)}
                 disabled={saving}
-              >
-                <Text style={styles.gramsCancelText}>取消</Text>
-              </TouchableOpacity>
+                style={styles.gramsCancelButton}
+              />
             </View>
           ) : (
             <TouchableOpacity onPress={handleStartEditGrams}>
@@ -236,23 +238,7 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: colors.textSecondary,
   },
-  gramsButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.sm,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-  },
-  gramsButtonText: {
-    ...typography.labelSmall,
-    color: colors.textInverse,
-  },
   gramsCancelButton: {
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
+    borderWidth: 0,
   },
-  gramsCancelText: {
-    ...typography.labelSmall,
-    color: colors.textSecondary,
-  },
-  buttonDisabled: { opacity: 0.6 },
 });
