@@ -112,7 +112,7 @@ describe("token refresh on 401", () => {
     expect(retryCall[1].headers.Authorization).toBe("Bearer new-access");
   });
 
-  it("logs out and throws on refresh failure", async () => {
+  it("リフレッシュ失敗時にエラーをスローしトークンを保持する", async () => {
     useAuthStore.setState({
       accessToken: "expired-token",
       refreshToken: "invalid-refresh",
@@ -130,8 +130,8 @@ describe("token refresh on 401", () => {
 
     await expect(api.get("/beans")).rejects.toThrow("セッションが切れました");
 
-    // Store should be logged out
-    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    // logout()は削除済みのため、トークンは保持される
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
   });
 });
 
