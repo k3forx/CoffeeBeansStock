@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Slot, useRouter, useSegments } from "expo-router";
-import { View, ActivityIndicator } from "react-native";
 import { useAuthStore } from "../src/stores/auth";
 import { authApi } from "../src/api/auth";
+import { LoadingSpinner } from "../src/components/LoadingSpinner";
 
 export default function RootLayout() {
   const isLoading = useAuthStore((s) => s.isLoading);
@@ -41,11 +41,7 @@ export default function RootLayout() {
   }, [isMounted, isLoading, isAuthenticated, segments]);
 
   if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F5F0E8" }}>
-        <ActivityIndicator size="large" color="#4A3F35" />
-      </View>
-    );
+    return <LoadingSpinner />;
   }
 
   return <Slot />;
