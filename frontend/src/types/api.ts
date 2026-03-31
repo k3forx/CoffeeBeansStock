@@ -5,6 +5,8 @@ import type { components } from "./generated";
 export type UserResponse = components["schemas"]["UserResponse"];
 export type AuthResult = components["schemas"]["AuthResponse"];
 export type RefreshResult = components["schemas"]["RefreshResult"];
+
+export type ConsumptionRate = components["schemas"]["ConsumptionRate"];
 export type CoffeeBean = components["schemas"]["CoffeeBeanResponse"];
 export type CreateBeanInput = components["schemas"]["CreateBeanRequest"];
 export type UpdateBeanInput = components["schemas"]["UpdateBeanRequest"];

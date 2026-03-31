@@ -74,7 +74,7 @@ func run() error {
 
 	authService := usecase.NewAuthService(userRepo, jwtManager, refreshTokenRepo)
 	authHandler := handlers.NewAuthHandler(authService)
-	coffeeBeansService := usecase.NewCoffeeBeansService(coffeeBeanRepo, uow)
+	coffeeBeansService := usecase.NewCoffeeBeansService(coffeeBeanRepo, usageHistoryRepo, userRepo, uow)
 	coffeeBeansHandler := handlers.NewCoffeeBeansHandler(coffeeBeansService)
 	usageHistoryService := usecase.NewUsageHistoryService(usageHistoryRepo, coffeeBeanRepo, uow)
 	usageHistoryHandler := handlers.NewUsageHistoryHandler(usageHistoryService)

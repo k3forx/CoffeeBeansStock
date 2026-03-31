@@ -22,6 +22,12 @@ const fakeBean: CoffeeBean = {
   notes: "Fruity",
   created_at: "2025-01-01T00:00:00Z",
   updated_at: "2025-01-02T00:00:00Z",
+  consumption_rate: {
+    remaining_cups: 13,
+    remaining_days: 10,
+    daily_consumption_grams: 15.0,
+    weekly_total_grams: 105,
+  },
 };
 
 beforeEach(() => {

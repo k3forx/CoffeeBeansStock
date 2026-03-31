@@ -500,6 +500,43 @@ func (q *Queries) GetRecentUsageHistoryForConsumptionRate(ctx context.Context, a
 	return items, nil
 }
 
+const getRecentUsageSummaryByUserID = `-- name: GetRecentUsageSummaryByUserID :many
+SELECT coffee_bean_id, COALESCE(SUM(quantity), 0)::int AS total_quantity
+FROM usage_history
+WHERE user_id = $1 AND usage_date >= $2
+GROUP BY coffee_bean_id
+`
+
+type GetRecentUsageSummaryByUserIDParams struct {
+	UserID    pgtype.UUID `json:"user_id"`
+	UsageDate pgtype.Date `json:"usage_date"`
+}
+
+type GetRecentUsageSummaryByUserIDRow struct {
+	CoffeeBeanID  pgtype.UUID `json:"coffee_bean_id"`
+	TotalQuantity int32       `json:"total_quantity"`
+}
+
+func (q *Queries) GetRecentUsageSummaryByUserID(ctx context.Context, arg GetRecentUsageSummaryByUserIDParams) ([]GetRecentUsageSummaryByUserIDRow, error) {
+	rows, err := q.db.Query(ctx, getRecentUsageSummaryByUserID, arg.UserID, arg.UsageDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetRecentUsageSummaryByUserIDRow{}
+	for rows.Next() {
+		var i GetRecentUsageSummaryByUserIDRow
+		if err := rows.Scan(&i.CoffeeBeanID, &i.TotalQuantity); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getRefreshTokenByHash = `-- name: GetRefreshTokenByHash :one
 SELECT id, user_id, token_hash, expires_at, created_at FROM refresh_tokens
 WHERE token_hash = $1 AND expires_at > CURRENT_TIMESTAMP

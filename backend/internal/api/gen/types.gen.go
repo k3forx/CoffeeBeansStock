@@ -82,15 +82,31 @@ type AuthResponse struct {
 
 // CoffeeBeanResponse defines model for CoffeeBeanResponse.
 type CoffeeBeanResponse struct {
-	CreatedAt    time.Time          `json:"created_at"`
-	CurrentStock int32              `json:"current_stock"`
-	Id           openapi_types.UUID `json:"id"`
-	Name         string             `json:"name"`
-	Notes        *string            `json:"notes,omitempty"`
-	Origin       *string            `json:"origin,omitempty"`
-	RoastDetail  *RoastDetail       `json:"roast_detail,omitempty"`
-	RoastLevel   RoastLevel         `json:"roast_level"`
-	UpdatedAt    time.Time          `json:"updated_at"`
+	ConsumptionRate ConsumptionRate    `json:"consumption_rate"`
+	CreatedAt       time.Time          `json:"created_at"`
+	CurrentStock    int32              `json:"current_stock"`
+	Id              openapi_types.UUID `json:"id"`
+	Name            string             `json:"name"`
+	Notes           *string            `json:"notes,omitempty"`
+	Origin          *string            `json:"origin,omitempty"`
+	RoastDetail     *RoastDetail       `json:"roast_detail,omitempty"`
+	RoastLevel      RoastLevel         `json:"roast_level"`
+	UpdatedAt       time.Time          `json:"updated_at"`
+}
+
+// ConsumptionRate defines model for ConsumptionRate.
+type ConsumptionRate struct {
+	// DailyConsumptionGrams 1日あたりの消費量 (g)
+	DailyConsumptionGrams *float32 `json:"daily_consumption_grams,omitempty"`
+
+	// RemainingCups 残杯数（設定ベース）
+	RemainingCups int32 `json:"remaining_cups"`
+
+	// RemainingDays 残日数（履歴ベース、データ不足時はnull）
+	RemainingDays *int32 `json:"remaining_days,omitempty"`
+
+	// WeeklyTotalGrams 直近7日間の合計消費量 (g)
+	WeeklyTotalGrams *int32 `json:"weekly_total_grams,omitempty"`
 }
 
 // CreateBeanRequest defines model for CreateBeanRequest.

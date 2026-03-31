@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -56,6 +57,38 @@ func (r *usageHistoryRepository) Save(ctx context.Context, usage *usagehistory.U
 		Notes:        toPgText(usage.Notes()),
 	})
 	return err
+}
+
+func (r *usageHistoryRepository) GetRecentUsageSummary(ctx context.Context, coffeeBeanID uuid.UUID, since time.Time) (int32, error) {
+	rows, err := r.queries.GetRecentUsageHistoryForConsumptionRate(ctx, database.GetRecentUsageHistoryForConsumptionRateParams{
+		CoffeeBeanID: toUUID(coffeeBeanID),
+		UsageDate:    toPgDate(since),
+	})
+	if err != nil {
+		return 0, err
+	}
+	var total int32
+	for _, row := range rows {
+		total += row.Quantity
+	}
+	return total, nil
+}
+
+func (r *usageHistoryRepository) GetRecentUsageSummaryByUserID(ctx context.Context, userID uuid.UUID, since time.Time) (map[uuid.UUID]int32, error) {
+	rows, err := r.queries.GetRecentUsageSummaryByUserID(ctx, database.GetRecentUsageSummaryByUserIDParams{
+		UserID:    toUUID(userID),
+		UsageDate: toPgDate(since),
+	})
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[uuid.UUID]int32, len(rows))
+	for _, row := range rows {
+		if row.CoffeeBeanID.Valid {
+			result[uuid.UUID(row.CoffeeBeanID.Bytes)] = row.TotalQuantity
+		}
+	}
+	return result, nil
 }
 
 func (r *usageHistoryRepository) Delete(ctx context.Context, id, userID uuid.UUID) error {

@@ -210,6 +210,12 @@ WHERE user_id = $1;
 SELECT COUNT(*) FROM usage_history
 WHERE coffee_bean_id = $1;
 
+-- name: GetRecentUsageSummaryByUserID :many
+SELECT coffee_bean_id, COALESCE(SUM(quantity), 0)::int AS total_quantity
+FROM usage_history
+WHERE user_id = $1 AND usage_date >= $2
+GROUP BY coffee_bean_id;
+
 -- ============================================================================
 -- Refresh Tokens Queries
 -- ============================================================================

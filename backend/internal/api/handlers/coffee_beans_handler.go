@@ -20,7 +20,7 @@ func NewCoffeeBeansHandler(service *usecase.CoffeeBeansService) *CoffeeBeansHand
 	return &CoffeeBeansHandler{service: service}
 }
 
-func toCoffeeBeanResponse(b *coffeebean.CoffeeBean) gen.CoffeeBeanResponse {
+func toCoffeeBeanResponse(b *coffeebean.CoffeeBean, cr coffeebean.ConsumptionRate) gen.CoffeeBeanResponse {
 	resp := gen.CoffeeBeanResponse{
 		Id:           b.ID(),
 		Name:         b.Name(),
@@ -30,6 +30,19 @@ func toCoffeeBeanResponse(b *coffeebean.CoffeeBean) gen.CoffeeBeanResponse {
 		Notes:        b.Notes(),
 		CreatedAt:    b.CreatedAt(),
 		UpdatedAt:    b.UpdatedAt(),
+		ConsumptionRate: gen.ConsumptionRate{
+			RemainingCups: cr.RemainingCups(),
+		},
+	}
+	if cr.RemainingDays() != nil {
+		resp.ConsumptionRate.RemainingDays = cr.RemainingDays()
+	}
+	if cr.DailyConsumption() != nil {
+		v := float32(*cr.DailyConsumption())
+		resp.ConsumptionRate.DailyConsumptionGrams = &v
+	}
+	if cr.WeeklyTotal() != nil {
+		resp.ConsumptionRate.WeeklyTotalGrams = cr.WeeklyTotal()
 	}
 	if b.RoastDetail() != nil {
 		rd := gen.RoastDetail(b.RoastDetail().String())
@@ -60,7 +73,8 @@ func (h *CoffeeBeansHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	beans := make([]gen.CoffeeBeanResponse, len(result.Beans))
 	for i, b := range result.Beans {
-		beans[i] = toCoffeeBeanResponse(b)
+		cr := result.ConsumptionRates[b.ID()]
+		beans[i] = toCoffeeBeanResponse(b, cr)
 	}
 
 	api.WriteSuccess(w, http.StatusOK, gen.ListBeansResponse{
@@ -100,7 +114,7 @@ func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteSuccess(w, http.StatusCreated, toCoffeeBeanResponse(output.Bean))
+	api.WriteSuccess(w, http.StatusCreated, toCoffeeBeanResponse(output.Bean, output.ConsumptionRate))
 }
 
 // Get returns a single coffee bean by ID.
@@ -124,7 +138,7 @@ func (h *CoffeeBeansHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteSuccess(w, http.StatusOK, toCoffeeBeanResponse(output.Bean))
+	api.WriteSuccess(w, http.StatusOK, toCoffeeBeanResponse(output.Bean, output.ConsumptionRate))
 }
 
 // Update handles coffee bean updates.
@@ -159,7 +173,7 @@ func (h *CoffeeBeansHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteSuccess(w, http.StatusOK, toCoffeeBeanResponse(output.Bean))
+	api.WriteSuccess(w, http.StatusOK, toCoffeeBeanResponse(output.Bean, output.ConsumptionRate))
 }
 
 // Delete handles coffee bean deletion.

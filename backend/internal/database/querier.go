@@ -46,6 +46,7 @@ type Querier interface {
 	GetPurchaseHistoriesByCoffeeBeanID(ctx context.Context, arg GetPurchaseHistoriesByCoffeeBeanIDParams) ([]PurchaseHistory, error)
 	GetPurchaseHistoryByID(ctx context.Context, id pgtype.UUID) (PurchaseHistory, error)
 	GetRecentUsageHistoryForConsumptionRate(ctx context.Context, arg GetRecentUsageHistoryForConsumptionRateParams) ([]GetRecentUsageHistoryForConsumptionRateRow, error)
+	GetRecentUsageSummaryByUserID(ctx context.Context, arg GetRecentUsageSummaryByUserIDParams) ([]GetRecentUsageSummaryByUserIDRow, error)
 	GetRefreshTokenByHash(ctx context.Context, tokenHash string) (RefreshToken, error)
 	GetUsageHistoryByID(ctx context.Context, id pgtype.UUID) (UsageHistory, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
