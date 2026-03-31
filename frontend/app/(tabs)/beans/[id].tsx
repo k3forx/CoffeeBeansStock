@@ -18,6 +18,7 @@ import { useBeanDetail } from "@/hooks/useBeanDetail";
 import { useBeanForm } from "@/hooks/useBeanForm";
 import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { colors, typography, spacing, radius, shadows, getStockColor, formStyles } from "@/theme";
+import { Button } from "@/components/Button";
 import { ROAST_LEVELS, ROAST_DETAILS, ROAST_LEVEL_LABELS, ROAST_DETAIL_LABELS } from "@/constants/roastLevels";
 import { ChipSelector } from "@/components/ChipSelector";
 import { FormInput } from "@/components/FormInput";
@@ -176,22 +177,22 @@ export default function BeanDetailScreen() {
             />
 
             <View style={styles.editActions}>
-              <TouchableOpacity
-                style={[styles.button, styles.cancelButton]}
+              <Button
+                variant="secondary"
+                title="キャンセル"
                 onPress={() => {
                   detail.cancelEditing();
                   form.resetToBean(bean);
                 }}
-              >
-                <Text style={styles.cancelButtonText}>キャンセル</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.saveButton, detail.saving && formStyles.buttonDisabled]}
+                style={{ flex: 1 }}
+              />
+              <Button
+                title="保存"
                 onPress={handleSave}
-                disabled={detail.saving}
-              >
-                <Text style={styles.saveButtonText}>{detail.saving ? "保存中..." : "保存"}</Text>
-              </TouchableOpacity>
+                loading={detail.saving}
+                loadingText="保存中..."
+                style={{ flex: 1 }}
+              />
             </View>
           </>
         ) : (
@@ -428,20 +429,6 @@ const styles = StyleSheet.create({
   },
   textArea: { height: 100, textAlignVertical: "top" },
   editActions: { flexDirection: "row", gap: spacing.md, marginTop: spacing["3xl"] },
-  button: { ...formStyles.buttonBase, flex: 1 },
-  cancelButton: {
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cancelButtonText: {
-    ...typography.labelLarge,
-    color: colors.textSecondary,
-  },
-  saveButton: { backgroundColor: colors.primary },
-  saveButtonText: {
-    ...formStyles.buttonTextBase,
-  },
   usageSection: {
     marginTop: spacing["3xl"],
   },

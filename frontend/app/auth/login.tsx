@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   Animated,
 } from "react-native";
@@ -10,7 +9,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { authApi } from "../../src/api/auth";
 import { useAuthStore } from "../../src/stores/auth";
 import { showApiError } from "../../src/utils/errorHandler";
-import { colors, typography, spacing, radius, shadows } from "@/theme";
+import { colors, typography, spacing, shadows } from "@/theme";
+import { Button } from "@/components/Button";
 
 export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
@@ -60,15 +60,15 @@ export default function LoginScreen() {
         </Animated.View>
 
         <Animated.View style={{ opacity: fadeAnims[3], transform: [{ translateY: slideAnims[3] }] }}>
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+          <Button
+            title="はじめる"
             onPress={handleStart}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>
-              {loading ? "準備中..." : "はじめる"}
-            </Text>
-          </TouchableOpacity>
+            loading={loading}
+            loadingText="準備中..."
+            shadow
+            style={{ width: "80%", paddingHorizontal: spacing["3xl"] }}
+            textStyle={{ letterSpacing: 2 }}
+          />
         </Animated.View>
       </View>
 
@@ -110,21 +110,6 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: colors.textSecondary,
     marginBottom: spacing["5xl"],
-  },
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.sm,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing["3xl"],
-    width: "80%",
-    alignItems: "center",
-    ...shadows.md,
-  },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: {
-    ...typography.labelLarge,
-    color: colors.textInverse,
-    letterSpacing: 2,
   },
   footer: {
     ...typography.bodySmall,
