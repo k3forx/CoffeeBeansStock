@@ -25,7 +25,7 @@ export default function RootLayout() {
           useAuthStore.setState({ user });
         })
         .catch(() => {
-          useAuthStore.getState().logout();
+          console.warn("getMe failed; keeping stored tokens for retry");
         });
     }
   }, [isLoading, isAuthenticated, accessToken]);
