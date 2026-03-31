@@ -8,7 +8,7 @@ async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const { accessToken, refreshToken, setTokens, logout } = useAuthStore.getState();
+  const { accessToken, refreshToken, setTokens } = useAuthStore.getState();
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -38,7 +38,6 @@ async function request<T>(
         res = await fetch(`${API_BASE}${path}`, { ...options, headers });
       }
     } else {
-      await logout();
       throw new ApiError("UNAUTHORIZED", "セッションが切れました。再ログインしてください。");
     }
   }

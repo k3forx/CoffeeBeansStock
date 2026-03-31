@@ -9,7 +9,7 @@ import { showApiError } from "../../src/utils/errorHandler";
 import { colors, typography, spacing, radius, shadows } from "@/theme";
 
 export default function ProfileScreen() {
-  const { user, logout, setUser } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const [editingGrams, setEditingGrams] = useState(false);
   const [gramsInput, setGramsInput] = useState("");
   const [saving, setSaving] = useState(false);
@@ -20,17 +20,6 @@ export default function ProfileScreen() {
       beansApi.list(1000, 0).then(r => setBeanCount(r.beans.length)).catch(() => {});
     }, [])
   );
-
-  const handleLogout = () => {
-    Alert.alert("ログアウト", "ログアウトしますか？", [
-      { text: "キャンセル", style: "cancel" },
-      {
-        text: "ログアウト",
-        style: "destructive",
-        onPress: () => logout(),
-      },
-    ]);
-  };
 
   const handleStartEditGrams = () => {
     setGramsInput(String(user?.grams_per_cup ?? 15));
@@ -130,9 +119,6 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity onPress={handleLogout}>
-        <Text style={styles.logoutText}>ログアウト</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -269,10 +255,4 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   buttonDisabled: { opacity: 0.6 },
-  logoutText: {
-    ...typography.bodyMedium,
-    color: colors.danger,
-    textAlign: "center",
-    marginTop: spacing["4xl"],
-  },
 });
