@@ -12,6 +12,7 @@ export default function RootLayout() {
   const segments = useSegments();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+  const [isVerifyingToken, setIsVerifyingToken] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -20,6 +21,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && accessToken && !useAuthStore.getState().user) {
+      setIsVerifyingToken(true);
       authApi
         .getMe()
         .then((user) => {
@@ -29,21 +31,24 @@ export default function RootLayout() {
           if (e instanceof ApiError && e.code === "UNAUTHORIZED") {
             useAuthStore.getState().logout();
           }
+        })
+        .finally(() => {
+          setIsVerifyingToken(false);
         });
     }
   }, [isLoading, isAuthenticated, accessToken]);
 
   useEffect(() => {
-    if (!isMounted || isLoading) return;
+    if (!isMounted || isLoading || isVerifyingToken) return;
     const inAuthGroup = segments[0] === "auth";
     if (!isAuthenticated && !inAuthGroup) {
       router.replace("/auth/login");
     } else if (isAuthenticated && inAuthGroup) {
       router.replace("/(tabs)");
     }
-  }, [isMounted, isLoading, isAuthenticated, segments]);
+  }, [isMounted, isLoading, isVerifyingToken, isAuthenticated, segments]);
 
-  if (isLoading) {
+  if (isLoading || isVerifyingToken) {
     return <LoadingSpinner />;
   }
 
