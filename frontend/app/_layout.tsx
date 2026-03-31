@@ -12,7 +12,7 @@ export default function RootLayout() {
   const segments = useSegments();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
-  const [isVerifyingToken, setIsVerifyingToken] = useState(false);
+  const [isVerifyingToken, setIsVerifyingToken] = useState(true);
 
   useEffect(() => {
     setIsMounted(true);
@@ -20,8 +20,9 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated && accessToken && !useAuthStore.getState().user) {
-      setIsVerifyingToken(true);
+    if (isLoading) return;
+
+    if (isAuthenticated && accessToken && !useAuthStore.getState().user) {
       authApi
         .getMe()
         .then((user) => {
@@ -35,6 +36,8 @@ export default function RootLayout() {
         .finally(() => {
           setIsVerifyingToken(false);
         });
+    } else {
+      setIsVerifyingToken(false);
     }
   }, [isLoading, isAuthenticated, accessToken]);
 
