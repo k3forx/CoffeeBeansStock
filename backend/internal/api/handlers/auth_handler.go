@@ -86,32 +86,6 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Logout handles user logout by invalidating the refresh token.
-func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	var req gen.LogoutRequest
-	if !decodeJSON(w, r, &req) {
-		return
-	}
-
-	if req.RefreshToken == "" {
-		api.WriteValidationError(w, []api.FieldError{
-			{Field: "refresh_token", Message: "リフレッシュトークンは必須です"},
-		})
-		return
-	}
-
-	if err := h.authService.Logout(r.Context(), usecase.LogoutInput{
-		RefreshToken: req.RefreshToken,
-	}); err != nil {
-		api.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "サーバーエラーが発生しました")
-		return
-	}
-
-	api.WriteSuccess(w, http.StatusOK, gen.DeleteResponse{
-		Message: "ログアウトしました",
-	})
-}
-
 // GetMe returns the authenticated user's profile.
 func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireUserID(w, r)
