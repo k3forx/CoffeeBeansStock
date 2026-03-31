@@ -21,6 +21,7 @@ import { colors, typography, spacing, radius, shadows, getStockColor, formStyles
 import { ROAST_LEVELS, ROAST_DETAILS, ROAST_LEVEL_LABELS, ROAST_DETAIL_LABELS } from "@/constants/roastLevels";
 import { ChipSelector } from "@/components/ChipSelector";
 import { FormInput } from "@/components/FormInput";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 export default function BeanDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -82,11 +83,7 @@ export default function BeanDetailScreen() {
   };
 
   if (detail.loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
+    return <LoadingSpinner />;
   }
 
   if (!detail.bean) return null;
@@ -321,7 +318,6 @@ export default function BeanDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background },
   editBar: {
     alignItems: "flex-end",
     paddingHorizontal: spacing.xl,
