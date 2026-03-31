@@ -97,7 +97,7 @@ func (s *AuthService) Refresh(ctx context.Context, in RefreshInput) (*RefreshRes
 	if !exists {
 		return nil, domain.ErrInvalidToken
 	}
-	if err := s.refreshTokens.DeleteByHash(ctx, oldHash); err != nil {
+	if err = s.refreshTokens.DeleteByHash(ctx, oldHash); err != nil {
 		return nil, err
 	}
 
