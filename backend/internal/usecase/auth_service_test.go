@@ -3,6 +3,7 @@ package usecase_test
 import (
 	"errors"
 	"testing"
+
 	"github.com/google/uuid"
 	"go.uber.org/mock/gomock"
 
@@ -23,20 +24,23 @@ func TestAuthService_RegisterAnonymous(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
 				ur := mock.NewMockUserRepository(ctrl)
 				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
 				ur.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil)
 				tm.EXPECT().GenerateTokenPair(gomock.Any()).Return(&domainauth.TokenPair{
 					AccessToken:  "access-token",
 					RefreshToken: "refresh-token",
 				}, nil)
-				return usecase.NewAuthService(ur, tm)
+				rt.EXPECT().Store(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				return usecase.NewAuthService(ur, tm, rt)
 			},
 		},
 		"GenerateTokenPairのエラーが伝播する": {
 			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
 				ur := mock.NewMockUserRepository(ctrl)
 				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
 				tm.EXPECT().GenerateTokenPair(gomock.Any()).Return(nil, errors.New("token error"))
-				return usecase.NewAuthService(ur, tm)
+				return usecase.NewAuthService(ur, tm, rt)
 			},
 			wantErr: true,
 		},
@@ -44,12 +48,28 @@ func TestAuthService_RegisterAnonymous(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
 				ur := mock.NewMockUserRepository(ctrl)
 				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
 				tm.EXPECT().GenerateTokenPair(gomock.Any()).Return(&domainauth.TokenPair{
 					AccessToken:  "access-token",
 					RefreshToken: "refresh-token",
 				}, nil)
 				ur.EXPECT().Save(gomock.Any(), gomock.Any()).Return(errors.New("db error"))
-				return usecase.NewAuthService(ur, tm)
+				return usecase.NewAuthService(ur, tm, rt)
+			},
+			wantErr: true,
+		},
+		"refreshTokens.Storeのエラーが伝播する": {
+			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
+				ur := mock.NewMockUserRepository(ctrl)
+				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
+				tm.EXPECT().GenerateTokenPair(gomock.Any()).Return(&domainauth.TokenPair{
+					AccessToken:  "access-token",
+					RefreshToken: "refresh-token",
+				}, nil)
+				ur.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil)
+				rt.EXPECT().Store(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("store error"))
+				return usecase.NewAuthService(ur, tm, rt)
 			},
 			wantErr: true,
 		},
@@ -111,11 +131,15 @@ func TestAuthService_Refresh(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
 				ur := mock.NewMockUserRepository(ctrl)
 				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
 				claims := &domainauth.TokenClaims{UserID: validUserID.String()}
 				tm.EXPECT().ValidateToken("valid-token").Return(claims, nil)
 				ur.EXPECT().GetByID(gomock.Any(), validUserID).Return(testUser, nil)
+				rt.EXPECT().ExistsByHash(gomock.Any(), gomock.Any()).Return(true, nil)
+				rt.EXPECT().DeleteByHash(gomock.Any(), gomock.Any()).Return(nil)
 				tm.EXPECT().GenerateTokenPair(validUserID).Return(newTokenPair, nil)
-				return usecase.NewAuthService(ur, tm)
+				rt.EXPECT().Store(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				return usecase.NewAuthService(ur, tm, rt)
 			},
 			in: usecase.RefreshInput{RefreshToken: "valid-token"},
 			out: &usecase.RefreshResult{
@@ -127,8 +151,9 @@ func TestAuthService_Refresh(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
 				ur := mock.NewMockUserRepository(ctrl)
 				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
 				tm.EXPECT().ValidateToken("bad-token").Return(nil, domain.ErrInvalidToken)
-				return usecase.NewAuthService(ur, tm)
+				return usecase.NewAuthService(ur, tm, rt)
 			},
 			in:      usecase.RefreshInput{RefreshToken: "bad-token"},
 			wantErr: domain.ErrInvalidToken,
@@ -137,9 +162,10 @@ func TestAuthService_Refresh(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
 				ur := mock.NewMockUserRepository(ctrl)
 				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
 				claims := &domainauth.TokenClaims{UserID: "not-a-uuid"}
 				tm.EXPECT().ValidateToken("token").Return(claims, nil)
-				return usecase.NewAuthService(ur, tm)
+				return usecase.NewAuthService(ur, tm, rt)
 			},
 			in:      usecase.RefreshInput{RefreshToken: "token"},
 			wantErr: domain.ErrInvalidToken,
@@ -148,10 +174,11 @@ func TestAuthService_Refresh(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
 				ur := mock.NewMockUserRepository(ctrl)
 				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
 				claims := &domainauth.TokenClaims{UserID: validUserID.String()}
 				tm.EXPECT().ValidateToken("token").Return(claims, nil)
 				ur.EXPECT().GetByID(gomock.Any(), validUserID).Return(nil, domain.ErrNotFound)
-				return usecase.NewAuthService(ur, tm)
+				return usecase.NewAuthService(ur, tm, rt)
 			},
 			in:      usecase.RefreshInput{RefreshToken: "token"},
 			wantErr: domain.ErrInvalidToken,
@@ -160,10 +187,11 @@ func TestAuthService_Refresh(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
 				ur := mock.NewMockUserRepository(ctrl)
 				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
 				claims := &domainauth.TokenClaims{UserID: validUserID.String()}
 				tm.EXPECT().ValidateToken("token").Return(claims, nil)
 				ur.EXPECT().GetByID(gomock.Any(), validUserID).Return(nil, errors.New("db error"))
-				return usecase.NewAuthService(ur, tm)
+				return usecase.NewAuthService(ur, tm, rt)
 			},
 			in:      usecase.RefreshInput{RefreshToken: "token"},
 			wantErr: domain.ErrInvalidToken, // placeholder: checked via wantErrFn below
@@ -172,13 +200,30 @@ func TestAuthService_Refresh(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
 				ur := mock.NewMockUserRepository(ctrl)
 				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
 				claims := &domainauth.TokenClaims{UserID: validUserID.String()}
 				tm.EXPECT().ValidateToken("token").Return(claims, nil)
 				ur.EXPECT().GetByID(gomock.Any(), validUserID).Return(testUser, nil)
+				rt.EXPECT().ExistsByHash(gomock.Any(), gomock.Any()).Return(true, nil)
+				rt.EXPECT().DeleteByHash(gomock.Any(), gomock.Any()).Return(nil)
 				tm.EXPECT().GenerateTokenPair(validUserID).Return(nil, errors.New("token error"))
-				return usecase.NewAuthService(ur, tm)
+				return usecase.NewAuthService(ur, tm, rt)
 			},
 			in: usecase.RefreshInput{RefreshToken: "token"},
+		},
+		"リフレッシュトークンがDBに存在しない場合はErrInvalidTokenを返す": {
+			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
+				ur := mock.NewMockUserRepository(ctrl)
+				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
+				claims := &domainauth.TokenClaims{UserID: validUserID.String()}
+				tm.EXPECT().ValidateToken("revoked-token").Return(claims, nil)
+				ur.EXPECT().GetByID(gomock.Any(), validUserID).Return(testUser, nil)
+				rt.EXPECT().ExistsByHash(gomock.Any(), gomock.Any()).Return(false, nil)
+				return usecase.NewAuthService(ur, tm, rt)
+			},
+			in:      usecase.RefreshInput{RefreshToken: "revoked-token"},
+			wantErr: domain.ErrInvalidToken,
 		},
 	}
 
@@ -245,8 +290,9 @@ func TestAuthService_GetMe(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
 				ur := mock.NewMockUserRepository(ctrl)
 				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
 				ur.EXPECT().GetByID(gomock.Any(), userID).Return(testUser, nil)
-				return usecase.NewAuthService(ur, tm)
+				return usecase.NewAuthService(ur, tm, rt)
 			},
 			in:  usecase.GetMeInput{UserID: userID},
 			out: &usecase.GetMeOutput{User: testUser},
@@ -255,8 +301,9 @@ func TestAuthService_GetMe(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
 				ur := mock.NewMockUserRepository(ctrl)
 				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
 				ur.EXPECT().GetByID(gomock.Any(), userID).Return(nil, domain.ErrNotFound)
-				return usecase.NewAuthService(ur, tm)
+				return usecase.NewAuthService(ur, tm, rt)
 			},
 			in:      usecase.GetMeInput{UserID: userID},
 			wantErr: domain.ErrNotFound,
@@ -284,6 +331,59 @@ func TestAuthService_GetMe(t *testing.T) {
 			}
 			if out.User != c.out.User {
 				t.Errorf("returned user does not match expected")
+			}
+		})
+	}
+}
+
+func TestAuthService_Logout(t *testing.T) {
+	t.Parallel()
+
+	cases := map[string]struct {
+		setup   func(ctrl *gomock.Controller) *usecase.AuthService
+		in      usecase.LogoutInput
+		wantErr bool
+	}{
+		"リフレッシュトークンが無効化される": {
+			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
+				ur := mock.NewMockUserRepository(ctrl)
+				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
+				rt.EXPECT().DeleteByHash(gomock.Any(), gomock.Any()).Return(nil)
+				return usecase.NewAuthService(ur, tm, rt)
+			},
+			in: usecase.LogoutInput{RefreshToken: "some-refresh-token"},
+		},
+		"DeleteByHashのエラーが伝播する": {
+			setup: func(ctrl *gomock.Controller) *usecase.AuthService {
+				ur := mock.NewMockUserRepository(ctrl)
+				tm := mock.NewMockTokenManager(ctrl)
+				rt := mock.NewMockRefreshTokenRepository(ctrl)
+				rt.EXPECT().DeleteByHash(gomock.Any(), gomock.Any()).Return(errors.New("db error"))
+				return usecase.NewAuthService(ur, tm, rt)
+			},
+			in:      usecase.LogoutInput{RefreshToken: "some-refresh-token"},
+			wantErr: true,
+		},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := gomock.NewController(t)
+			svc := c.setup(ctrl)
+
+			err := svc.Logout(t.Context(), c.in)
+
+			if c.wantErr {
+				if err == nil {
+					t.Errorf("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
 			}
 		})
 	}

@@ -28,10 +28,17 @@ type Querier interface {
 	// ============================================================================
 	CreatePurchaseHistory(ctx context.Context, arg CreatePurchaseHistoryParams) (PurchaseHistory, error)
 	// ============================================================================
+	// Refresh Tokens Queries
+	// ============================================================================
+	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
+	// ============================================================================
 	// Usage History Queries
 	// ============================================================================
 	CreateUsageHistory(ctx context.Context, arg CreateUsageHistoryParams) (UsageHistory, error)
+	DeleteExpiredRefreshTokens(ctx context.Context) error
 	DeletePurchaseHistory(ctx context.Context, arg DeletePurchaseHistoryParams) error
+	DeleteRefreshTokenByHash(ctx context.Context, tokenHash string) error
+	DeleteRefreshTokensByUserID(ctx context.Context, userID pgtype.UUID) error
 	DeleteUsageHistory(ctx context.Context, arg DeleteUsageHistoryParams) error
 	GetCoffeeBeanByID(ctx context.Context, id pgtype.UUID) (CoffeeBean, error)
 	GetCoffeeBeanByIDForUpdate(ctx context.Context, id pgtype.UUID) (CoffeeBean, error)
@@ -39,6 +46,7 @@ type Querier interface {
 	GetPurchaseHistoriesByCoffeeBeanID(ctx context.Context, arg GetPurchaseHistoriesByCoffeeBeanIDParams) ([]PurchaseHistory, error)
 	GetPurchaseHistoryByID(ctx context.Context, id pgtype.UUID) (PurchaseHistory, error)
 	GetRecentUsageHistoryForConsumptionRate(ctx context.Context, arg GetRecentUsageHistoryForConsumptionRateParams) ([]GetRecentUsageHistoryForConsumptionRateRow, error)
+	GetRefreshTokenByHash(ctx context.Context, tokenHash string) (RefreshToken, error)
 	GetUsageHistoryByID(ctx context.Context, id pgtype.UUID) (UsageHistory, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	ListCoffeeBeansByUserID(ctx context.Context, arg ListCoffeeBeansByUserIDParams) ([]CoffeeBean, error)

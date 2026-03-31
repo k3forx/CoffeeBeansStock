@@ -3,9 +3,11 @@ package usecase
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/auth"
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	domainauth "github.com/k3forx/CoffeeBeansStock/backend/internal/domain/auth"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/user"
@@ -13,13 +15,14 @@ import (
 
 // AuthService handles authentication business logic.
 type AuthService struct {
-	userRepo user.Repository
-	tokens   domainauth.TokenManager
+	userRepo      user.Repository
+	tokens        domainauth.TokenManager
+	refreshTokens domainauth.RefreshTokenRepository
 }
 
 // NewAuthService creates a new AuthService.
-func NewAuthService(userRepo user.Repository, tokens domainauth.TokenManager) *AuthService {
-	return &AuthService{userRepo: userRepo, tokens: tokens}
+func NewAuthService(userRepo user.Repository, tokens domainauth.TokenManager, refreshTokens domainauth.RefreshTokenRepository) *AuthService {
+	return &AuthService{userRepo: userRepo, tokens: tokens, refreshTokens: refreshTokens}
 }
 
 // AuthResult holds the result of an authentication operation.
@@ -39,6 +42,12 @@ func (s *AuthService) RegisterAnonymous(ctx context.Context) (*AuthResult, error
 	}
 
 	if err := s.userRepo.Save(ctx, u); err != nil {
+		return nil, err
+	}
+
+	tokenHash := auth.HashToken(tokens.RefreshToken)
+	expiresAt := time.Now().UTC().Add(auth.RefreshTokenDuration)
+	if err := s.refreshTokens.Store(ctx, u.ID(), tokenHash, expiresAt); err != nil {
 		return nil, err
 	}
 
@@ -80,8 +89,26 @@ func (s *AuthService) Refresh(ctx context.Context, in RefreshInput) (*RefreshRes
 		return nil, err
 	}
 
+	oldHash := auth.HashToken(in.RefreshToken)
+	exists, err := s.refreshTokens.ExistsByHash(ctx, oldHash)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, domain.ErrInvalidToken
+	}
+	if err = s.refreshTokens.DeleteByHash(ctx, oldHash); err != nil {
+		return nil, err
+	}
+
 	tokens, err := s.tokens.GenerateTokenPair(u.ID())
 	if err != nil {
+		return nil, err
+	}
+
+	newHash := auth.HashToken(tokens.RefreshToken)
+	expiresAt := time.Now().UTC().Add(auth.RefreshTokenDuration)
+	if err := s.refreshTokens.Store(ctx, u.ID(), newHash, expiresAt); err != nil {
 		return nil, err
 	}
 
@@ -89,6 +116,17 @@ func (s *AuthService) Refresh(ctx context.Context, in RefreshInput) (*RefreshRes
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
 	}, nil
+}
+
+// LogoutInput holds input for logout operation.
+type LogoutInput struct {
+	RefreshToken string
+}
+
+// Logout invalidates a refresh token.
+func (s *AuthService) Logout(ctx context.Context, in LogoutInput) error {
+	tokenHash := auth.HashToken(in.RefreshToken)
+	return s.refreshTokens.DeleteByHash(ctx, tokenHash)
 }
 
 // GetMeInput holds input for getting the current user.
