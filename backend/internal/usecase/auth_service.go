@@ -118,17 +118,6 @@ func (s *AuthService) Refresh(ctx context.Context, in RefreshInput) (*RefreshRes
 	}, nil
 }
 
-// LogoutInput holds input for logout operation.
-type LogoutInput struct {
-	RefreshToken string
-}
-
-// Logout invalidates a refresh token.
-func (s *AuthService) Logout(ctx context.Context, in LogoutInput) error {
-	tokenHash := auth.HashToken(in.RefreshToken)
-	return s.refreshTokens.DeleteByHash(ctx, tokenHash)
-}
-
 // GetMeInput holds input for getting the current user.
 type GetMeInput struct {
 	UserID uuid.UUID

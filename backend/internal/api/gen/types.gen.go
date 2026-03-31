@@ -140,11 +140,6 @@ type ListUsageHistoryResponse struct {
 	Usages     []UsageHistoryResponse `json:"usages"`
 }
 
-// LogoutRequest defines model for LogoutRequest.
-type LogoutRequest struct {
-	RefreshToken string `json:"refresh_token"`
-}
-
 // PaginationResponse defines model for PaginationResponse.
 type PaginationResponse struct {
 	HasMore bool  `json:"has_more"`
@@ -219,9 +214,6 @@ type ListUsageHistoriesParams struct {
 	Limit  *int32 `form:"limit,omitempty" json:"limit,omitempty"`
 	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
 }
-
-// LogoutJSONRequestBody defines body for Logout for application/json ContentType.
-type LogoutJSONRequestBody = LogoutRequest
 
 // UpdateMeJSONRequestBody defines body for UpdateMe for application/json ContentType.
 type UpdateMeJSONRequestBody = UpdateUserRequest
