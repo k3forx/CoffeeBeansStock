@@ -9,7 +9,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { authApi } from "../../src/api/auth";
 import { useAuthStore } from "../../src/stores/auth";
 import { showApiError } from "../../src/utils/errorHandler";
-import { colors, typography, spacing, shadows } from "@/theme";
+import { colors, typography, spacing } from "@/theme";
 import { Button } from "@/components/Button";
 
 export default function LoginScreen() {
@@ -66,8 +66,8 @@ export default function LoginScreen() {
             loading={loading}
             loadingText="準備中..."
             shadow
-            style={{ width: "80%", paddingHorizontal: spacing["3xl"] }}
-            textStyle={{ letterSpacing: 2 }}
+            style={styles.startButton}
+            textStyle={styles.startButtonText}
           />
         </Animated.View>
       </View>
@@ -110,6 +110,13 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: colors.textSecondary,
     marginBottom: spacing["5xl"],
+  },
+  startButton: {
+    width: "80%" as const,
+    paddingHorizontal: spacing["3xl"],
+  },
+  startButtonText: {
+    letterSpacing: 2,
   },
   footer: {
     ...typography.bodySmall,

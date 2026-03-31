@@ -103,8 +103,8 @@ export default function CreateBeanScreen() {
           loading={loading}
           loadingText="追加中..."
           shadow
-          style={{ marginTop: spacing["4xl"] }}
-          textStyle={{ letterSpacing: 1 }}
+          style={styles.createButton}
+          textStyle={styles.createButtonText}
         />
       </ScrollView>
     </KeyboardAvoidingView>
@@ -114,4 +114,6 @@ export default function CreateBeanScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scroll: { padding: spacing["2xl"] },
+  createButton: { marginTop: spacing["4xl"] },
+  createButtonText: { letterSpacing: 1 },
 });

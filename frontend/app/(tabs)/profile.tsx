@@ -108,7 +108,7 @@ export default function ProfileScreen() {
                 title="取消"
                 onPress={() => setEditingGrams(false)}
                 disabled={saving}
-                style={{ borderWidth: 0 }}
+                style={styles.gramsCancelButton}
               />
             </View>
           ) : (
@@ -237,5 +237,8 @@ const styles = StyleSheet.create({
   gramsUnit: {
     ...typography.bodyMedium,
     color: colors.textSecondary,
+  },
+  gramsCancelButton: {
+    borderWidth: 0,
   },
 });

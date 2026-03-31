@@ -184,14 +184,14 @@ export default function BeanDetailScreen() {
                   detail.cancelEditing();
                   form.resetToBean(bean);
                 }}
-                style={{ flex: 1 }}
+                style={styles.editActionButton}
               />
               <Button
                 title="保存"
                 onPress={handleSave}
                 loading={detail.saving}
                 loadingText="保存中..."
-                style={{ flex: 1 }}
+                style={styles.editActionButton}
               />
             </View>
           </>
@@ -429,6 +429,7 @@ const styles = StyleSheet.create({
   },
   textArea: { height: 100, textAlignVertical: "top" },
   editActions: { flexDirection: "row", gap: spacing.md, marginTop: spacing["3xl"] },
+  editActionButton: { flex: 1 },
   usageSection: {
     marginTop: spacing["3xl"],
   },
