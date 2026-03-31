@@ -18,6 +18,8 @@ import (
 func TestCoffeeBeansService_List(t *testing.T) {
 	t.Parallel()
 
+	userID := uuid.New()
+
 	cases := map[string]struct {
 		setup   func(ctrl *gomock.Controller) *usecase.CoffeeBeansService
 		in      usecase.ListBeansInput
@@ -29,12 +31,17 @@ func TestCoffeeBeansService_List(t *testing.T) {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
 				r.EXPECT().CountByUserID(gomock.Any(), gomock.Any()).Return(int64(5), nil)
 				r.EXPECT().ListByUserID(gomock.Any(), gomock.Any(), int32(20), int32(0)).Return([]*coffeebean.CoffeeBean{}, nil)
-				return usecase.NewCoffeeBeansService(r, nil)
+				ur := mock.NewMockUserRepository(ctrl)
+				ur.EXPECT().GetByID(gomock.Any(), gomock.Any()).Return(newTestUser(userID), nil)
+				usr := mock.NewMockUsageHistoryRepository(ctrl)
+				usr.EXPECT().GetRecentUsageSummaryByUserID(gomock.Any(), gomock.Any(), gomock.Any()).Return(map[uuid.UUID]int32{}, nil)
+				return usecase.NewCoffeeBeansService(r, usr, ur, nil)
 			},
-			in: usecase.ListBeansInput{Limit: 0, Offset: 0},
+			in: usecase.ListBeansInput{UserID: userID, Limit: 0, Offset: 0},
 			out: &usecase.ListBeansResult{
-				Beans:      []*coffeebean.CoffeeBean{},
-				Pagination: usecase.PaginationResponse{Total: 5, Limit: 20, Offset: 0, HasMore: false},
+				Beans:            []*coffeebean.CoffeeBean{},
+				ConsumptionRates: map[uuid.UUID]coffeebean.ConsumptionRate{},
+				Pagination:       usecase.PaginationResponse{Total: 5, Limit: 20, Offset: 0, HasMore: false},
 			},
 		},
 		"limit>100はデフォルト20に正規化される": {
@@ -42,12 +49,17 @@ func TestCoffeeBeansService_List(t *testing.T) {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
 				r.EXPECT().CountByUserID(gomock.Any(), gomock.Any()).Return(int64(5), nil)
 				r.EXPECT().ListByUserID(gomock.Any(), gomock.Any(), int32(20), int32(0)).Return([]*coffeebean.CoffeeBean{}, nil)
-				return usecase.NewCoffeeBeansService(r, nil)
+				ur := mock.NewMockUserRepository(ctrl)
+				ur.EXPECT().GetByID(gomock.Any(), gomock.Any()).Return(newTestUser(userID), nil)
+				usr := mock.NewMockUsageHistoryRepository(ctrl)
+				usr.EXPECT().GetRecentUsageSummaryByUserID(gomock.Any(), gomock.Any(), gomock.Any()).Return(map[uuid.UUID]int32{}, nil)
+				return usecase.NewCoffeeBeansService(r, usr, ur, nil)
 			},
-			in: usecase.ListBeansInput{Limit: 101, Offset: 0},
+			in: usecase.ListBeansInput{UserID: userID, Limit: 101, Offset: 0},
 			out: &usecase.ListBeansResult{
-				Beans:      []*coffeebean.CoffeeBean{},
-				Pagination: usecase.PaginationResponse{Total: 5, Limit: 20, Offset: 0, HasMore: false},
+				Beans:            []*coffeebean.CoffeeBean{},
+				ConsumptionRates: map[uuid.UUID]coffeebean.ConsumptionRate{},
+				Pagination:       usecase.PaginationResponse{Total: 5, Limit: 20, Offset: 0, HasMore: false},
 			},
 		},
 		"offset<0は0に正規化される": {
@@ -55,12 +67,17 @@ func TestCoffeeBeansService_List(t *testing.T) {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
 				r.EXPECT().CountByUserID(gomock.Any(), gomock.Any()).Return(int64(3), nil)
 				r.EXPECT().ListByUserID(gomock.Any(), gomock.Any(), int32(10), int32(0)).Return([]*coffeebean.CoffeeBean{}, nil)
-				return usecase.NewCoffeeBeansService(r, nil)
+				ur := mock.NewMockUserRepository(ctrl)
+				ur.EXPECT().GetByID(gomock.Any(), gomock.Any()).Return(newTestUser(userID), nil)
+				usr := mock.NewMockUsageHistoryRepository(ctrl)
+				usr.EXPECT().GetRecentUsageSummaryByUserID(gomock.Any(), gomock.Any(), gomock.Any()).Return(map[uuid.UUID]int32{}, nil)
+				return usecase.NewCoffeeBeansService(r, usr, ur, nil)
 			},
-			in: usecase.ListBeansInput{Limit: 10, Offset: -1},
+			in: usecase.ListBeansInput{UserID: userID, Limit: 10, Offset: -1},
 			out: &usecase.ListBeansResult{
-				Beans:      []*coffeebean.CoffeeBean{},
-				Pagination: usecase.PaginationResponse{Total: 3, Limit: 10, Offset: 0, HasMore: false},
+				Beans:            []*coffeebean.CoffeeBean{},
+				ConsumptionRates: map[uuid.UUID]coffeebean.ConsumptionRate{},
+				Pagination:       usecase.PaginationResponse{Total: 3, Limit: 10, Offset: 0, HasMore: false},
 			},
 		},
 		"hasMoreがtrueになる": {
@@ -68,12 +85,17 @@ func TestCoffeeBeansService_List(t *testing.T) {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
 				r.EXPECT().CountByUserID(gomock.Any(), gomock.Any()).Return(int64(15), nil)
 				r.EXPECT().ListByUserID(gomock.Any(), gomock.Any(), int32(10), int32(0)).Return([]*coffeebean.CoffeeBean{}, nil)
-				return usecase.NewCoffeeBeansService(r, nil)
+				ur := mock.NewMockUserRepository(ctrl)
+				ur.EXPECT().GetByID(gomock.Any(), gomock.Any()).Return(newTestUser(userID), nil)
+				usr := mock.NewMockUsageHistoryRepository(ctrl)
+				usr.EXPECT().GetRecentUsageSummaryByUserID(gomock.Any(), gomock.Any(), gomock.Any()).Return(map[uuid.UUID]int32{}, nil)
+				return usecase.NewCoffeeBeansService(r, usr, ur, nil)
 			},
-			in: usecase.ListBeansInput{Limit: 10, Offset: 0},
+			in: usecase.ListBeansInput{UserID: userID, Limit: 10, Offset: 0},
 			out: &usecase.ListBeansResult{
-				Beans:      []*coffeebean.CoffeeBean{},
-				Pagination: usecase.PaginationResponse{Total: 15, Limit: 10, Offset: 0, HasMore: true},
+				Beans:            []*coffeebean.CoffeeBean{},
+				ConsumptionRates: map[uuid.UUID]coffeebean.ConsumptionRate{},
+				Pagination:       usecase.PaginationResponse{Total: 15, Limit: 10, Offset: 0, HasMore: true},
 			},
 		},
 		"hasMoreがfalseになる（ちょうど）": {
@@ -81,19 +103,24 @@ func TestCoffeeBeansService_List(t *testing.T) {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
 				r.EXPECT().CountByUserID(gomock.Any(), gomock.Any()).Return(int64(15), nil)
 				r.EXPECT().ListByUserID(gomock.Any(), gomock.Any(), int32(10), int32(5)).Return([]*coffeebean.CoffeeBean{}, nil)
-				return usecase.NewCoffeeBeansService(r, nil)
+				ur := mock.NewMockUserRepository(ctrl)
+				ur.EXPECT().GetByID(gomock.Any(), gomock.Any()).Return(newTestUser(userID), nil)
+				usr := mock.NewMockUsageHistoryRepository(ctrl)
+				usr.EXPECT().GetRecentUsageSummaryByUserID(gomock.Any(), gomock.Any(), gomock.Any()).Return(map[uuid.UUID]int32{}, nil)
+				return usecase.NewCoffeeBeansService(r, usr, ur, nil)
 			},
-			in: usecase.ListBeansInput{Limit: 10, Offset: 5},
+			in: usecase.ListBeansInput{UserID: userID, Limit: 10, Offset: 5},
 			out: &usecase.ListBeansResult{
-				Beans:      []*coffeebean.CoffeeBean{},
-				Pagination: usecase.PaginationResponse{Total: 15, Limit: 10, Offset: 5, HasMore: false},
+				Beans:            []*coffeebean.CoffeeBean{},
+				ConsumptionRates: map[uuid.UUID]coffeebean.ConsumptionRate{},
+				Pagination:       usecase.PaginationResponse{Total: 15, Limit: 10, Offset: 5, HasMore: false},
 			},
 		},
 		"CountByUserIDがエラーを返す": {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
 				r.EXPECT().CountByUserID(gomock.Any(), gomock.Any()).Return(int64(0), errors.New("db error"))
-				return usecase.NewCoffeeBeansService(r, nil)
+				return usecase.NewCoffeeBeansService(r, nil, nil, nil)
 			},
 			in:      usecase.ListBeansInput{Limit: 10, Offset: 0},
 			wantErr: true,
@@ -103,7 +130,7 @@ func TestCoffeeBeansService_List(t *testing.T) {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
 				r.EXPECT().CountByUserID(gomock.Any(), gomock.Any()).Return(int64(5), nil)
 				r.EXPECT().ListByUserID(gomock.Any(), gomock.Any(), int32(10), int32(0)).Return(nil, errors.New("db error"))
-				return usecase.NewCoffeeBeansService(r, nil)
+				return usecase.NewCoffeeBeansService(r, nil, nil, nil)
 			},
 			in:      usecase.ListBeansInput{Limit: 10, Offset: 0},
 			wantErr: true,
@@ -139,6 +166,8 @@ func TestCoffeeBeansService_List(t *testing.T) {
 func TestCoffeeBeansService_Create(t *testing.T) {
 	t.Parallel()
 
+	userID := uuid.New()
+
 	cases := map[string]struct {
 		setup          func(ctrl *gomock.Controller) *usecase.CoffeeBeansService
 		in             usecase.CreateBeanInput
@@ -148,7 +177,7 @@ func TestCoffeeBeansService_Create(t *testing.T) {
 		"無効なRoastLevelはValidationErrorを返す": {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
-				return usecase.NewCoffeeBeansService(r, nil)
+				return usecase.NewCoffeeBeansService(r, nil, nil, nil)
 			},
 			in: usecase.CreateBeanInput{
 				Name:         "Test",
@@ -161,12 +190,12 @@ func TestCoffeeBeansService_Create(t *testing.T) {
 		"無効なRoastDetailはValidationErrorを返す": {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
-				return usecase.NewCoffeeBeansService(r, nil)
+				return usecase.NewCoffeeBeansService(r, nil, nil, nil)
 			},
 			in: usecase.CreateBeanInput{
 				Name:         "Test",
 				RoastLevel:   "shallow",
-				RoastDetail:  new("french"),
+				RoastDetail:  ptr("french"),
 				CurrentStock: 100,
 			},
 			wantValidation: true,
@@ -175,7 +204,7 @@ func TestCoffeeBeansService_Create(t *testing.T) {
 		"範囲外のStockはValidationErrorを返す": {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
-				return usecase.NewCoffeeBeansService(r, nil)
+				return usecase.NewCoffeeBeansService(r, nil, nil, nil)
 			},
 			in: usecase.CreateBeanInput{
 				Name:         "Test",
@@ -189,7 +218,7 @@ func TestCoffeeBeansService_Create(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
 				r.EXPECT().Save(gomock.Any(), gomock.Any()).Return(errors.New("db error"))
-				return usecase.NewCoffeeBeansService(r, nil)
+				return usecase.NewCoffeeBeansService(r, nil, nil, nil)
 			},
 			in: usecase.CreateBeanInput{
 				Name:         "Test",
@@ -202,9 +231,12 @@ func TestCoffeeBeansService_Create(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
 				r.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil)
-				return usecase.NewCoffeeBeansService(r, nil)
+				ur := mock.NewMockUserRepository(ctrl)
+				ur.EXPECT().GetByID(gomock.Any(), gomock.Any()).Return(newTestUser(userID), nil)
+				return usecase.NewCoffeeBeansService(r, nil, ur, nil)
 			},
 			in: usecase.CreateBeanInput{
+				UserID:       userID,
 				Name:         "Sidama",
 				RoastLevel:   "shallow",
 				CurrentStock: 200,
@@ -214,12 +246,15 @@ func TestCoffeeBeansService_Create(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
 				r.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil)
-				return usecase.NewCoffeeBeansService(r, nil)
+				ur := mock.NewMockUserRepository(ctrl)
+				ur.EXPECT().GetByID(gomock.Any(), gomock.Any()).Return(newTestUser(userID), nil)
+				return usecase.NewCoffeeBeansService(r, nil, ur, nil)
 			},
 			in: usecase.CreateBeanInput{
+				UserID:       userID,
 				Name:         "Ethiopia",
 				RoastLevel:   "shallow",
-				RoastDetail:  new("light"),
+				RoastDetail:  ptr("light"),
 				CurrentStock: 150,
 			},
 		},
@@ -281,16 +316,23 @@ func TestCoffeeBeansService_GetByID(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
 				r.EXPECT().GetByID(gomock.Any(), beanID).Return(testBean, nil)
-				return usecase.NewCoffeeBeansService(r, nil)
+				ur := mock.NewMockUserRepository(ctrl)
+				ur.EXPECT().GetByID(gomock.Any(), userID).Return(newTestUser(userID), nil)
+				usr := mock.NewMockUsageHistoryRepository(ctrl)
+				usr.EXPECT().GetRecentUsageSummary(gomock.Any(), beanID, gomock.Any()).Return(int32(0), nil)
+				return usecase.NewCoffeeBeansService(r, usr, ur, nil)
 			},
-			in:  usecase.GetBeanByIDInput{UserID: userID, BeanID: beanID},
-			out: &usecase.GetBeanByIDOutput{Bean: testBean},
+			in: usecase.GetBeanByIDInput{UserID: userID, BeanID: beanID},
+			out: &usecase.GetBeanByIDOutput{
+				Bean:            testBean,
+				ConsumptionRate: coffeebean.NewConsumptionRate(100, 15, nil),
+			},
 		},
 		"ErrNotFoundが伝播する": {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
 				r.EXPECT().GetByID(gomock.Any(), beanID).Return(nil, domain.ErrNotFound)
-				return usecase.NewCoffeeBeansService(r, nil)
+				return usecase.NewCoffeeBeansService(r, nil, nil, nil)
 			},
 			in:      usecase.GetBeanByIDInput{UserID: userID, BeanID: beanID},
 			wantErr: domain.ErrNotFound,
@@ -299,7 +341,7 @@ func TestCoffeeBeansService_GetByID(t *testing.T) {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
 				r.EXPECT().GetByID(gomock.Any(), beanID).Return(testBean, nil)
-				return usecase.NewCoffeeBeansService(r, nil)
+				return usecase.NewCoffeeBeansService(r, nil, nil, nil)
 			},
 			in:      usecase.GetBeanByIDInput{UserID: otherUserID, BeanID: beanID},
 			wantErr: domain.ErrForbidden,
@@ -325,7 +367,10 @@ func TestCoffeeBeansService_GetByID(t *testing.T) {
 				t.Errorf("unexpected error: %v", err)
 				return
 			}
-			if diff := cmp.Diff(c.out, out, cmp.AllowUnexported(coffeebean.CoffeeBean{}, coffeebean.RoastLevel{}, coffeebean.Stock{})); diff != "" {
+			if diff := cmp.Diff(c.out, out, cmp.AllowUnexported(
+				coffeebean.CoffeeBean{}, coffeebean.RoastLevel{}, coffeebean.Stock{},
+				coffeebean.ConsumptionRate{},
+			)); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -348,9 +393,9 @@ func TestCoffeeBeansService_Update(t *testing.T) {
 		"無効なRoastLevelはValidationErrorを返す（トランザクション前に失敗）": {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
 				r := mock.NewMockCoffeeBeanRepository(ctrl)
-				return usecase.NewCoffeeBeansService(r, nil)
+				return usecase.NewCoffeeBeansService(r, nil, nil, nil)
 			},
-			in:             usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, RoastLevel: new("invalid")},
+			in:             usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, RoastLevel: ptr("invalid")},
 			wantValidation: true,
 		},
 		"ErrNotFoundが伝播する": {
@@ -360,7 +405,7 @@ func TestCoffeeBeansService_Update(t *testing.T) {
 				store.EXPECT().CoffeeBeanRepo().Return(r).AnyTimes()
 				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(nil, domain.ErrNotFound)
 				uow := fakeRunInTx(ctrl, store)
-				return usecase.NewCoffeeBeansService(r, uow)
+				return usecase.NewCoffeeBeansService(r, nil, nil, uow)
 			},
 			in:      usecase.UpdateBeanInput{UserID: userID, BeanID: beanID},
 			wantErr: domain.ErrNotFound,
@@ -377,7 +422,7 @@ func TestCoffeeBeansService_Update(t *testing.T) {
 				store.EXPECT().CoffeeBeanRepo().Return(r).AnyTimes()
 				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(testBean, nil)
 				uow := fakeRunInTx(ctrl, store)
-				return usecase.NewCoffeeBeansService(r, uow)
+				return usecase.NewCoffeeBeansService(r, nil, nil, uow)
 			},
 			in:      usecase.UpdateBeanInput{UserID: otherUserID, BeanID: beanID},
 			wantErr: domain.ErrForbidden,
@@ -395,9 +440,9 @@ func TestCoffeeBeansService_Update(t *testing.T) {
 				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(testBean, nil)
 				r.EXPECT().Update(gomock.Any(), gomock.Any()).Return(errors.New("db error"))
 				uow := fakeRunInTx(ctrl, store)
-				return usecase.NewCoffeeBeansService(r, uow)
+				return usecase.NewCoffeeBeansService(r, nil, nil, uow)
 			},
-			in: usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, Name: new("Updated")},
+			in: usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, Name: ptr("Updated")},
 		},
 		"正常に更新できる（部分更新）": {
 			setup: func(ctrl *gomock.Controller) *usecase.CoffeeBeansService {
@@ -412,9 +457,13 @@ func TestCoffeeBeansService_Update(t *testing.T) {
 				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(testBean, nil)
 				r.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil)
 				uow := fakeRunInTx(ctrl, store)
-				return usecase.NewCoffeeBeansService(r, uow)
+				ur := mock.NewMockUserRepository(ctrl)
+				ur.EXPECT().GetByID(gomock.Any(), userID).Return(newTestUser(userID), nil)
+				usr := mock.NewMockUsageHistoryRepository(ctrl)
+				usr.EXPECT().GetRecentUsageSummary(gomock.Any(), beanID, gomock.Any()).Return(int32(0), nil)
+				return usecase.NewCoffeeBeansService(r, usr, ur, uow)
 			},
-			in: usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, Name: new("New Name")},
+			in: usecase.UpdateBeanInput{UserID: userID, BeanID: beanID, Name: ptr("New Name")},
 		},
 	}
 
@@ -444,7 +493,7 @@ func TestCoffeeBeansService_Update(t *testing.T) {
 				}
 				return
 			}
-			// "Repo.Updateのエラーが伝播する" — expects non-nil error
+			// "Repo.Updateのエラーが伝播する" -- expects non-nil error
 			if name == "Repo.Updateのエラーが伝播する" {
 				if err == nil {
 					t.Errorf("expected error, got nil")
@@ -483,7 +532,7 @@ func TestCoffeeBeansService_Delete(t *testing.T) {
 				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(testBean, nil)
 				r.EXPECT().SoftDelete(gomock.Any(), beanID, userID).Return(nil)
 				uow := fakeRunInTx(ctrl, store)
-				return usecase.NewCoffeeBeansService(r, uow)
+				return usecase.NewCoffeeBeansService(r, nil, nil, uow)
 			},
 			in: usecase.DeleteBeanInput{UserID: userID, BeanID: beanID},
 		},
@@ -494,7 +543,7 @@ func TestCoffeeBeansService_Delete(t *testing.T) {
 				store.EXPECT().CoffeeBeanRepo().Return(r).AnyTimes()
 				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(nil, domain.ErrNotFound)
 				uow := fakeRunInTx(ctrl, store)
-				return usecase.NewCoffeeBeansService(r, uow)
+				return usecase.NewCoffeeBeansService(r, nil, nil, uow)
 			},
 			in:      usecase.DeleteBeanInput{UserID: userID, BeanID: beanID},
 			wantErr: domain.ErrNotFound,
@@ -506,7 +555,7 @@ func TestCoffeeBeansService_Delete(t *testing.T) {
 				store.EXPECT().CoffeeBeanRepo().Return(r).AnyTimes()
 				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(testBean, nil)
 				uow := fakeRunInTx(ctrl, store)
-				return usecase.NewCoffeeBeansService(r, uow)
+				return usecase.NewCoffeeBeansService(r, nil, nil, uow)
 			},
 			in:      usecase.DeleteBeanInput{UserID: otherUserID, BeanID: beanID},
 			wantErr: domain.ErrForbidden,
@@ -519,7 +568,7 @@ func TestCoffeeBeansService_Delete(t *testing.T) {
 				r.EXPECT().GetByIDForUpdate(gomock.Any(), beanID).Return(testBean, nil)
 				r.EXPECT().SoftDelete(gomock.Any(), beanID, userID).Return(errors.New("db error"))
 				uow := fakeRunInTx(ctrl, store)
-				return usecase.NewCoffeeBeansService(r, uow)
+				return usecase.NewCoffeeBeansService(r, nil, nil, uow)
 			},
 			in: usecase.DeleteBeanInput{UserID: userID, BeanID: beanID},
 		},

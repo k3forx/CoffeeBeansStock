@@ -436,6 +436,28 @@ components:
         - french
         - italian
 
+    ConsumptionRate:
+      type: object
+      required:
+        - remaining_cups
+      properties:
+        remaining_cups:
+          type: integer
+          format: int32
+          description: "残杯数（設定ベース）"
+        remaining_days:
+          type: integer
+          format: int32
+          description: "残日数（履歴ベース、データ不足時はnull）"
+        daily_consumption_grams:
+          type: number
+          format: float
+          description: "1日あたりの消費量 (g)"
+        weekly_total_grams:
+          type: integer
+          format: int32
+          description: "直近7日間の合計消費量 (g)"
+
     CoffeeBeanResponse:
       type: object
       required:
@@ -443,6 +465,7 @@ components:
         - name
         - roast_level
         - current_stock
+        - consumption_rate
         - created_at
         - updated_at
       properties:
@@ -460,6 +483,8 @@ components:
         current_stock:
           type: integer
           format: int32
+        consumption_rate:
+          $ref: "#/components/schemas/ConsumptionRate"
         notes:
           type: string
         created_at:

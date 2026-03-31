@@ -111,6 +111,12 @@ describe("useBeanForm", () => {
       notes: "Chocolate notes",
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-02T00:00:00Z",
+      consumption_rate: {
+        remaining_cups: 20,
+        remaining_days: 14,
+        daily_consumption_grams: 15.0,
+        weekly_total_grams: 105,
+      },
     };
 
     act(() => {

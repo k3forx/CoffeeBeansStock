@@ -193,6 +193,28 @@ export interface components {
         RoastLevel: "shallow" | "medium" | "medium_deep" | "deep";
         /** @enum {string} */
         RoastDetail: "light" | "cinnamon" | "medium" | "high" | "city" | "full_city" | "french" | "italian";
+        ConsumptionRate: {
+            /**
+             * Format: int32
+             * @description 残杯数（設定ベース）
+             */
+            remaining_cups: number;
+            /**
+             * Format: int32
+             * @description 残日数（履歴ベース、データ不足時はnull）
+             */
+            remaining_days?: number;
+            /**
+             * Format: float
+             * @description 1日あたりの消費量 (g)
+             */
+            daily_consumption_grams?: number;
+            /**
+             * Format: int32
+             * @description 直近7日間の合計消費量 (g)
+             */
+            weekly_total_grams?: number;
+        };
         CoffeeBeanResponse: {
             /** Format: uuid */
             id: string;
@@ -202,6 +224,7 @@ export interface components {
             roast_detail?: components["schemas"]["RoastDetail"];
             /** Format: int32 */
             current_stock: number;
+            consumption_rate: components["schemas"]["ConsumptionRate"];
             notes?: string;
             /** Format: date-time */
             created_at: string;

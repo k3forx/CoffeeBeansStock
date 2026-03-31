@@ -25,6 +25,9 @@ const fakeBean: CoffeeBean = {
   current_stock: 200,
   created_at: "2025-01-01T00:00:00Z",
   updated_at: "2025-01-02T00:00:00Z",
+  consumption_rate: {
+    remaining_cups: 13,
+  },
 };
 
 const fakeUsage: UsageHistory = {

@@ -60,6 +60,29 @@ export default function BeansListScreen() {
                 {item.origin && <Text style={styles.beanMeta}>{item.origin}</Text>}
                 {item.roast_level && <Text style={styles.beanMeta}>{ROAST_LEVEL_LABELS[item.roast_level]}</Text>}
               </View>
+              <View style={styles.predictionRow}>
+                <Text style={styles.predictionCups}>あと{item.consumption_rate.remaining_cups}杯</Text>
+                <Text style={styles.predictionSeparator}> · </Text>
+                {item.consumption_rate.remaining_days != null ? (
+                  <Text
+                    style={[
+                      styles.predictionDays,
+                      {
+                        color:
+                          item.consumption_rate.remaining_days <= 3
+                            ? colors.danger
+                            : item.consumption_rate.remaining_days <= 7
+                              ? colors.warning
+                              : colors.textSecondary,
+                      },
+                    ]}
+                  >
+                    あと{item.consumption_rate.remaining_days}日
+                  </Text>
+                ) : (
+                  <Text style={styles.predictionNoData}>データ不足</Text>
+                )}
+              </View>
             </View>
             <View style={[styles.stockCircle, { borderColor: stockColor }]}>
               <Text style={[styles.stockNum, { color: stockColor }]}>
@@ -154,6 +177,26 @@ const styles = StyleSheet.create({
   beanMeta: {
     ...typography.bodySmall,
     color: colors.textSecondary,
+  },
+  predictionRow: {
+    flexDirection: "row" as const,
+    marginTop: spacing.xs,
+  },
+  predictionCups: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+  },
+  predictionSeparator: {
+    ...typography.bodySmall,
+    color: colors.textTertiary,
+  },
+  predictionDays: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+  },
+  predictionNoData: {
+    ...typography.bodySmall,
+    color: colors.textTertiary,
   },
   stockCircle: {
     width: 58,

@@ -12,6 +12,7 @@ package mock
 import (
 	context "context"
 	reflect "reflect"
+	time "time"
 
 	uuid "github.com/google/uuid"
 	usagehistory "github.com/k3forx/CoffeeBeansStock/backend/internal/domain/usagehistory"
@@ -84,6 +85,36 @@ func (m *MockUsageHistoryRepository) GetByID(ctx context.Context, id uuid.UUID) 
 func (mr *MockUsageHistoryRepositoryMockRecorder) GetByID(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockUsageHistoryRepository)(nil).GetByID), ctx, id)
+}
+
+// GetRecentUsageSummary mocks base method.
+func (m *MockUsageHistoryRepository) GetRecentUsageSummary(ctx context.Context, coffeeBeanID uuid.UUID, since time.Time) (int32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRecentUsageSummary", ctx, coffeeBeanID, since)
+	ret0, _ := ret[0].(int32)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRecentUsageSummary indicates an expected call of GetRecentUsageSummary.
+func (mr *MockUsageHistoryRepositoryMockRecorder) GetRecentUsageSummary(ctx, coffeeBeanID, since any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecentUsageSummary", reflect.TypeOf((*MockUsageHistoryRepository)(nil).GetRecentUsageSummary), ctx, coffeeBeanID, since)
+}
+
+// GetRecentUsageSummaryByUserID mocks base method.
+func (m *MockUsageHistoryRepository) GetRecentUsageSummaryByUserID(ctx context.Context, userID uuid.UUID, since time.Time) (map[uuid.UUID]int32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRecentUsageSummaryByUserID", ctx, userID, since)
+	ret0, _ := ret[0].(map[uuid.UUID]int32)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRecentUsageSummaryByUserID indicates an expected call of GetRecentUsageSummaryByUserID.
+func (mr *MockUsageHistoryRepositoryMockRecorder) GetRecentUsageSummaryByUserID(ctx, userID, since any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecentUsageSummaryByUserID", reflect.TypeOf((*MockUsageHistoryRepository)(nil).GetRecentUsageSummaryByUserID), ctx, userID, since)
 }
 
 // ListByCoffeeBeanID mocks base method.

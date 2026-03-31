@@ -204,6 +204,39 @@ export default function BeanDetailScreen() {
               </View>
             </View>
 
+            <View style={styles.consumptionCard}>
+              <Text style={styles.consumptionCups}>
+                あと {bean.consumption_rate.remaining_cups}杯
+              </Text>
+              {bean.consumption_rate.remaining_days != null ? (
+                <View style={styles.consumptionDetails}>
+                  <Text
+                    style={[
+                      styles.consumptionDetail,
+                      {
+                        color:
+                          bean.consumption_rate.remaining_days <= 3
+                            ? colors.danger
+                            : bean.consumption_rate.remaining_days <= 7
+                              ? colors.warning
+                              : colors.textSecondary,
+                      },
+                    ]}
+                  >
+                    あと {bean.consumption_rate.remaining_days}日
+                  </Text>
+                  <Text style={styles.consumptionDetail}>
+                    {bean.consumption_rate.daily_consumption_grams}g/日
+                  </Text>
+                  <Text style={styles.consumptionDetail}>
+                    {bean.consumption_rate.weekly_total_grams}g/7日
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.consumptionNoData}>消費ペース: データ不足</Text>
+              )}
+            </View>
+
             <View style={styles.infoCard}>
               {bean.origin && (
                 <View style={styles.infoRow}>
@@ -382,6 +415,32 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     letterSpacing: 2,
     marginTop: spacing.xs,
+  },
+  consumptionCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: spacing.xl,
+    marginBottom: spacing.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    ...shadows.sm,
+  },
+  consumptionCups: {
+    ...typography.titleMedium,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  consumptionDetails: {
+    flexDirection: "row" as const,
+    gap: spacing.md,
+  },
+  consumptionDetail: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+  },
+  consumptionNoData: {
+    ...typography.bodySmall,
+    color: colors.textTertiary,
   },
   infoCard: {
     backgroundColor: colors.surface,
