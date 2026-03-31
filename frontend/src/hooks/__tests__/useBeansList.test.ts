@@ -2,6 +2,7 @@ import { renderHook, act } from "@testing-library/react-native";
 import { useBeansList } from "@/hooks/useBeansList";
 import { beansApi } from "@/api/beans";
 import { showApiError } from "@/utils/errorHandler";
+import type { ListBeansResult } from "@/types/api";
 
 jest.mock("@/api/beans");
 jest.mock("@/utils/errorHandler");
@@ -73,7 +74,7 @@ describe("useBeansList", () => {
   });
 
   it("onRefresh sets refreshing=true then back to false", async () => {
-    let resolveList: (value: any) => void;
+    let resolveList: (value: ListBeansResult) => void;
     mockList.mockImplementationOnce(
       () => new Promise((resolve) => { resolveList = resolve; })
     );
