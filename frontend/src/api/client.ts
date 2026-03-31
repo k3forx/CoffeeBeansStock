@@ -38,6 +38,7 @@ async function request<T>(
         res = await fetch(`${API_BASE}${path}`, { ...options, headers });
       }
     } else {
+      await useAuthStore.getState().logout();
       throw new ApiError("UNAUTHORIZED", "セッションが切れました。再ログインしてください。");
     }
   }
@@ -48,6 +49,10 @@ async function request<T>(
     json = JSON.parse(text);
   } catch {
     throw new ApiError("PARSE_ERROR", `サーバーエラー (${res.status}): ${text.slice(0, 200)}`);
+  }
+
+  if (!json.success && json.error?.code === "UNAUTHORIZED") {
+    await useAuthStore.getState().logout();
   }
 
   if (!json.success) {

@@ -48,4 +48,12 @@ describe("showApiError", () => {
       "カスタムエラーメッセージ",
     );
   });
+
+  it("UNAUTHORIZEDエラーの場合Alertを表示しない", () => {
+    const error = new ApiError("UNAUTHORIZED", "認証トークンが必要です");
+
+    showApiError(error);
+
+    expect(Alert.alert).not.toHaveBeenCalled();
+  });
 });

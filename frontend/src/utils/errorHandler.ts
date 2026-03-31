@@ -7,6 +7,9 @@ export function showApiError(
   codeMessages?: Record<string, string>,
 ): void {
   if (e instanceof ApiError) {
+    if (e.code === "UNAUTHORIZED") {
+      return;
+    }
     const overridden = codeMessages?.[e.code];
     Alert.alert("エラー", overridden ?? e.message);
   } else {
