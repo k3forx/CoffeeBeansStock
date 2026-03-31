@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { useAuthStore } from "../src/stores/auth";
 import { authApi } from "../src/api/auth";
+import { ApiError } from "../src/api/client";
 import { LoadingSpinner } from "../src/components/LoadingSpinner";
 
 export default function RootLayout() {
@@ -24,8 +25,10 @@ export default function RootLayout() {
         .then((user) => {
           useAuthStore.setState({ user });
         })
-        .catch(() => {
-          console.warn("getMe failed; keeping stored tokens for retry");
+        .catch((e) => {
+          if (e instanceof ApiError && e.code === "UNAUTHORIZED") {
+            useAuthStore.getState().logout();
+          }
         });
     }
   }, [isLoading, isAuthenticated, accessToken]);
