@@ -170,7 +170,7 @@ func (s *CoffeeBeansService) Create(ctx context.Context, in CreateBeanInput) (*C
 		return nil, err
 	}
 
-	if err := s.beanRepo.Save(ctx, bean); err != nil {
+	if err = s.beanRepo.Save(ctx, bean); err != nil {
 		return nil, err
 	}
 
@@ -245,7 +245,7 @@ func (s *CoffeeBeansService) Update(ctx context.Context, in UpdateBeanInput) (*U
 		if err := store.CoffeeBeanRepo().Update(ctx, bean); err != nil {
 			return err
 		}
-		result = &UpdateBeanOutput{Bean: bean}
+		result = &UpdateBeanOutput{Bean: bean, ConsumptionRate: coffeebean.NewConsumptionRate(0, 1, nil)}
 		return nil
 	})
 	if err != nil {
