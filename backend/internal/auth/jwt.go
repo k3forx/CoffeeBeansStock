@@ -13,7 +13,7 @@ import (
 
 const (
 	AccessTokenDuration  = 1 * time.Hour
-	RefreshTokenDuration = 7 * 24 * time.Hour
+	RefreshTokenDuration = 60 * 24 * time.Hour
 )
 
 // jwtClaims is the internal JWT claims structure.
