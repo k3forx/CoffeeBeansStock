@@ -112,7 +112,7 @@ describe("token refresh on 401", () => {
     expect(retryCall[1].headers.Authorization).toBe("Bearer new-access");
   });
 
-  it("リフレッシュ失敗時にエラーをスローしトークンを保持する", async () => {
+  it("リフレッシュ失敗時にログアウトしてエラーをスローする", async () => {
     useAuthStore.setState({
       accessToken: "expired-token",
       refreshToken: "invalid-refresh",
@@ -130,8 +130,33 @@ describe("token refresh on 401", () => {
 
     await expect(api.get("/beans")).rejects.toThrow("セッションが切れました");
 
-    // logout()は削除済みのため、トークンは保持される
-    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    expect(useAuthStore.getState().accessToken).toBeNull();
+    expect(useAuthStore.getState().refreshToken).toBeNull();
+  });
+
+  it("リフレッシュトークンなしでサーバーがUNAUTHORIZEDを返した場合ログアウトする", async () => {
+    useAuthStore.setState({
+      accessToken: "some-token",
+      refreshToken: null,
+      isAuthenticated: true,
+    });
+
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse(
+        {
+          success: false,
+          error: { code: "UNAUTHORIZED", message: "認証トークンが必要です" },
+        },
+        401
+      )
+    );
+
+    await expect(api.get("/beans")).rejects.toThrow("認証トークンが必要です");
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    expect(useAuthStore.getState().accessToken).toBeNull();
+    expect(useAuthStore.getState().refreshToken).toBeNull();
   });
 });
 
