@@ -139,10 +139,9 @@ func (s *AuthService) GetMe(ctx context.Context, in GetMeInput) (*GetMeOutput, e
 
 // UpdateMeInput holds input for updating the current user's settings.
 type UpdateMeInput struct {
-	UserID              uuid.UUID
-	GramsPerCup         *int32
-	LowStockThreshold   *int32
-	NotificationEnabled *bool
+	UserID            uuid.UUID
+	GramsPerCup       *int32
+	LowStockThreshold *int32
 }
 
 // UpdateMeOutput holds the result of updating the current user.
@@ -157,7 +156,7 @@ func (s *AuthService) UpdateMe(ctx context.Context, in UpdateMeInput) (*UpdateMe
 		return nil, err
 	}
 
-	if err := u.Update(in.GramsPerCup, in.LowStockThreshold, in.NotificationEnabled); err != nil {
+	if err := u.Update(in.GramsPerCup, in.LowStockThreshold); err != nil {
 		return nil, err
 	}
 

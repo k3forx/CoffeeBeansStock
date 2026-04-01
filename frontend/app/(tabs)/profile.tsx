@@ -73,15 +73,6 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
-          <Text style={styles.settingLabel}>通知</Text>
-          <View style={styles.settingRight}>
-            <Text style={styles.settingValue}>
-              {user?.notification_enabled ? "ON" : "OFF"}
-            </Text>
-            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-          </View>
-        </TouchableOpacity>
         <TouchableOpacity style={[styles.settingRow, { borderBottomWidth: 0 }]} activeOpacity={0.7}>
           <Text style={styles.settingLabel}>1杯あたりのグラム数</Text>
           {editingGrams ? (

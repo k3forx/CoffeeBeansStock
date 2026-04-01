@@ -10,55 +10,52 @@ import (
 )
 
 type User struct {
-	createdAt           time.Time
-	updatedAt           time.Time
-	email               string
-	passwordHash        string
-	name                string
-	lowStockThreshold   int32
-	id                  uuid.UUID
-	gramsPerCup         GramsPerCup
-	notificationEnabled bool
+	createdAt         time.Time
+	updatedAt         time.Time
+	email             string
+	passwordHash      string
+	name              string
+	lowStockThreshold int32
+	id                uuid.UUID
+	gramsPerCup       GramsPerCup
 }
 
 // NewAnonymousUser creates a new anonymous user with default settings.
 func NewAnonymousUser() *User {
 	now := time.Now().UTC()
 	return &User{
-		id:                  uuid.New(),
-		email:               "",
-		passwordHash:        "",
-		name:                "",
-		lowStockThreshold:   100,
-		notificationEnabled: true,
-		gramsPerCup:         DefaultGramsPerCup(),
-		createdAt:           now,
-		updatedAt:           now,
+		id:                uuid.New(),
+		email:             "",
+		passwordHash:      "",
+		name:              "",
+		lowStockThreshold: 100,
+		gramsPerCup:       DefaultGramsPerCup(),
+		createdAt:         now,
+		updatedAt:         now,
 	}
 }
 
 // Reconstruct restores a User from persisted data without validation.
 func Reconstruct(
 	id uuid.UUID, email, passwordHash, name string,
-	lowStockThreshold int32, notificationEnabled bool,
+	lowStockThreshold int32,
 	gramsPerCup GramsPerCup,
 	createdAt, updatedAt time.Time,
 ) *User {
 	return &User{
-		id:                  id,
-		email:               email,
-		passwordHash:        passwordHash,
-		name:                name,
-		lowStockThreshold:   lowStockThreshold,
-		notificationEnabled: notificationEnabled,
-		gramsPerCup:         gramsPerCup,
-		createdAt:           createdAt,
-		updatedAt:           updatedAt,
+		id:                id,
+		email:             email,
+		passwordHash:      passwordHash,
+		name:              name,
+		lowStockThreshold: lowStockThreshold,
+		gramsPerCup:       gramsPerCup,
+		createdAt:         createdAt,
+		updatedAt:         updatedAt,
 	}
 }
 
 // Update modifies the user's settings with validation.
-func (u *User) Update(gramsPerCup, lowStockThreshold *int32, notificationEnabled *bool) error {
+func (u *User) Update(gramsPerCup, lowStockThreshold *int32) error {
 	var errs domain.ValidationErrors
 
 	if gramsPerCup != nil {
@@ -74,9 +71,6 @@ func (u *User) Update(gramsPerCup, lowStockThreshold *int32, notificationEnabled
 	if lowStockThreshold != nil {
 		u.lowStockThreshold = *lowStockThreshold
 	}
-	if notificationEnabled != nil {
-		u.notificationEnabled = *notificationEnabled
-	}
 	if len(errs) > 0 {
 		return errs
 	}
@@ -84,12 +78,11 @@ func (u *User) Update(gramsPerCup, lowStockThreshold *int32, notificationEnabled
 	return nil
 }
 
-func (u *User) ID() uuid.UUID             { return u.id }
-func (u *User) Email() string             { return u.email }
-func (u *User) PasswordHash() string      { return u.passwordHash }
-func (u *User) Name() string              { return u.name }
-func (u *User) LowStockThreshold() int32  { return u.lowStockThreshold }
-func (u *User) NotificationEnabled() bool { return u.notificationEnabled }
-func (u *User) GramsPerCup() GramsPerCup  { return u.gramsPerCup }
-func (u *User) CreatedAt() time.Time      { return u.createdAt }
-func (u *User) UpdatedAt() time.Time      { return u.updatedAt }
+func (u *User) ID() uuid.UUID            { return u.id }
+func (u *User) Email() string            { return u.email }
+func (u *User) PasswordHash() string     { return u.passwordHash }
+func (u *User) Name() string             { return u.name }
+func (u *User) LowStockThreshold() int32 { return u.lowStockThreshold }
+func (u *User) GramsPerCup() GramsPerCup { return u.gramsPerCup }
+func (u *User) CreatedAt() time.Time     { return u.createdAt }
+func (u *User) UpdatedAt() time.Time     { return u.updatedAt }

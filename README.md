@@ -394,7 +394,6 @@ DELETE /api/v1/usage-history/:id       # 削除
 - password_hash (VARCHAR)
 - name (VARCHAR)
 - low_stock_threshold (INTEGER, デフォルト: 100g)
-- notification_enabled (BOOLEAN, デフォルト: true)
 - created_at, updated_at, deleted_at
 
 #### coffee_beans

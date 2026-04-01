@@ -28,10 +28,9 @@ func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*user.User,
 
 func (r *userRepository) Save(ctx context.Context, u *user.User) error {
 	_, err := r.queries.CreateAnonymousUser(ctx, database.CreateAnonymousUserParams{
-		ID:                  toUUID(u.ID()),
-		LowStockThreshold:   u.LowStockThreshold(),
-		NotificationEnabled: u.NotificationEnabled(),
-		GramsPerCup:         u.GramsPerCup().Value(),
+		ID:                toUUID(u.ID()),
+		LowStockThreshold: u.LowStockThreshold(),
+		GramsPerCup:       u.GramsPerCup().Value(),
 	})
 	return err
 }
@@ -39,13 +38,11 @@ func (r *userRepository) Save(ctx context.Context, u *user.User) error {
 func (r *userRepository) Update(ctx context.Context, u *user.User) error {
 	threshold := u.LowStockThreshold()
 	gpc := u.GramsPerCup().Value()
-	enabled := u.NotificationEnabled()
 
 	_, err := r.queries.UpdateUser(ctx, database.UpdateUserParams{
-		ID:                  toUUID(u.ID()),
-		LowStockThreshold:   pgtype.Int4{Int32: threshold, Valid: true},
-		NotificationEnabled: pgtype.Bool{Bool: enabled, Valid: true},
-		GramsPerCup:         pgtype.Int4{Int32: gpc, Valid: true},
+		ID:                toUUID(u.ID()),
+		LowStockThreshold: pgtype.Int4{Int32: threshold, Valid: true},
+		GramsPerCup:       pgtype.Int4{Int32: gpc, Valid: true},
 	})
 	return err
 }
@@ -69,7 +66,7 @@ func toDomainUser(u database.User) *user.User {
 
 	return user.Reconstruct(
 		id, email, passwordHash, name,
-		u.LowStockThreshold, u.NotificationEnabled,
+		u.LowStockThreshold,
 		user.ReconstructGramsPerCup(u.GramsPerCup),
 		u.CreatedAt.Time, u.UpdatedAt.Time,
 	)
