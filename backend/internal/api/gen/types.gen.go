@@ -217,9 +217,8 @@ type UpdateBeanRequest struct {
 
 // UpdateUserRequest defines model for UpdateUserRequest.
 type UpdateUserRequest struct {
-	GramsPerCup         *int32 `json:"grams_per_cup,omitempty"`
-	LowStockThreshold   *int32 `json:"low_stock_threshold,omitempty"`
-	NotificationEnabled *bool  `json:"notification_enabled,omitempty"`
+	GramsPerCup       *int32 `json:"grams_per_cup,omitempty"`
+	LowStockThreshold *int32 `json:"low_stock_threshold,omitempty"`
 }
 
 // UsageHistoryResponse defines model for UsageHistoryResponse.
@@ -234,13 +233,12 @@ type UsageHistoryResponse struct {
 
 // UserResponse defines model for UserResponse.
 type UserResponse struct {
-	CreatedAt           time.Time          `json:"created_at"`
-	GramsPerCup         *int32             `json:"grams_per_cup,omitempty"`
-	Id                  openapi_types.UUID `json:"id"`
-	LowStockThreshold   *int32             `json:"low_stock_threshold,omitempty"`
-	Name                *string            `json:"name,omitempty"`
-	NotificationEnabled *bool              `json:"notification_enabled,omitempty"`
-	UpdatedAt           *time.Time         `json:"updated_at,omitempty"`
+	CreatedAt         time.Time          `json:"created_at"`
+	GramsPerCup       *int32             `json:"grams_per_cup,omitempty"`
+	Id                openapi_types.UUID `json:"id"`
+	LowStockThreshold *int32             `json:"low_stock_threshold,omitempty"`
+	Name              *string            `json:"name,omitempty"`
+	UpdatedAt         *time.Time         `json:"updated_at,omitempty"`
 }
 
 // ListBeansParams defines parameters for ListBeans.

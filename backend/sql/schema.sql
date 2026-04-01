@@ -9,7 +9,6 @@ CREATE TABLE users (
     password_hash VARCHAR(255),
     name VARCHAR(100),
     low_stock_threshold INTEGER NOT NULL DEFAULT 100,
-    notification_enabled BOOLEAN NOT NULL DEFAULT true,
     grams_per_cup INTEGER NOT NULL DEFAULT 15,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

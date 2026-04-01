@@ -30,9 +30,6 @@ func toUserResponse(u *user.User) gen.UserResponse {
 	if threshold := u.LowStockThreshold(); threshold != 0 {
 		resp.LowStockThreshold = &threshold
 	}
-	if enabled := u.NotificationEnabled(); enabled {
-		resp.NotificationEnabled = &enabled
-	}
 	if gpc := u.GramsPerCup().Value(); gpc != 0 {
 		resp.GramsPerCup = &gpc
 	}
@@ -115,10 +112,9 @@ func (h *AuthHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	output, err := h.authService.UpdateMe(r.Context(), usecase.UpdateMeInput{
-		UserID:              userID,
-		GramsPerCup:         req.GramsPerCup,
-		LowStockThreshold:   req.LowStockThreshold,
-		NotificationEnabled: req.NotificationEnabled,
+		UserID:            userID,
+		GramsPerCup:       req.GramsPerCup,
+		LowStockThreshold: req.LowStockThreshold,
 	})
 	if err != nil {
 		handleDomainError(w, err, "ユーザーが見つかりません")

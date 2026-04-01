@@ -18,7 +18,7 @@ func ptr[T any](v T) *T { return new(v) }
 
 func newTestUser(id uuid.UUID) *user.User {
 	now := time.Now()
-	return user.Reconstruct(id, "", "", "", 100, true, user.DefaultGramsPerCup(), now, now)
+	return user.Reconstruct(id, "", "", "", 100, user.DefaultGramsPerCup(), now, now)
 }
 
 func newTestBean(userID uuid.UUID) *coffeebean.CoffeeBean {

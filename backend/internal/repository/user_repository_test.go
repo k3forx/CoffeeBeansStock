@@ -13,12 +13,10 @@ func TestUserRepository_Save(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		wantLowStockThreshold   int32
-		wantNotificationEnabled bool
+		wantLowStockThreshold int32
 	}{
 		"creates anonymous user with default values": {
-			wantLowStockThreshold:   100,
-			wantNotificationEnabled: true,
+			wantLowStockThreshold: 100,
 		},
 	}
 
@@ -39,9 +37,6 @@ func TestUserRepository_Save(t *testing.T) {
 			}
 			if u.LowStockThreshold() != tt.wantLowStockThreshold {
 				t.Errorf("LowStockThreshold = %d, want %d", u.LowStockThreshold(), tt.wantLowStockThreshold)
-			}
-			if u.NotificationEnabled() != tt.wantNotificationEnabled {
-				t.Errorf("NotificationEnabled = %v, want %v", u.NotificationEnabled(), tt.wantNotificationEnabled)
 			}
 		})
 	}
@@ -98,9 +93,6 @@ func TestUserRepository_GetByID(t *testing.T) {
 			}
 			if got.LowStockThreshold() != 100 {
 				t.Errorf("LowStockThreshold = %d, want 100", got.LowStockThreshold())
-			}
-			if !got.NotificationEnabled() {
-				t.Error("NotificationEnabled = false, want true")
 			}
 		})
 	}

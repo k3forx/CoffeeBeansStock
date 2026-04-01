@@ -356,8 +356,6 @@ components:
         low_stock_threshold:
           type: integer
           format: int32
-        notification_enabled:
-          type: boolean
         grams_per_cup:
           type: integer
           format: int32
@@ -407,8 +405,6 @@ components:
         low_stock_threshold:
           type: integer
           format: int32
-        notification_enabled:
-          type: boolean
         grams_per_cup:
           type: integer
           format: int32

@@ -162,7 +162,6 @@ export interface components {
             name?: string;
             /** Format: int32 */
             low_stock_threshold?: number;
-            notification_enabled?: boolean;
             /** Format: int32 */
             grams_per_cup?: number;
             /** Format: date-time */
@@ -185,7 +184,6 @@ export interface components {
         UpdateUserRequest: {
             /** Format: int32 */
             low_stock_threshold?: number;
-            notification_enabled?: boolean;
             /** Format: int32 */
             grams_per_cup?: number;
         };
