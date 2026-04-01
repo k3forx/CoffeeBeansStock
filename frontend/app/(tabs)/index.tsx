@@ -11,7 +11,7 @@ import {
 import { useFocusEffect, useRouter } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import type { CoffeeBean } from "../../src/types/api";
-import { colors, typography, spacing, radius, shadows, getStockColor } from "@/theme";
+import { colors, typography, spacing, radius, shadows, getStockAlertLevel, getAlertAccentColor } from "@/theme";
 import { ROAST_LEVEL_LABELS } from "../../src/constants/roastLevels";
 import { BeanListSkeleton } from "../../src/components/SkeletonLoader";
 import { useBeansList } from "@/hooks/useBeansList";
@@ -43,16 +43,31 @@ export default function BeansListScreen() {
   );
 
   const renderBean = ({ item, index }: { item: CoffeeBean; index: number }) => {
-    const stockColor = getStockColor(item.current_stock);
+    const alertLevel = getStockAlertLevel(item.consumption_rate.remaining_days);
+    const accentColor = getAlertAccentColor(item.consumption_rate.remaining_days);
     const anim = getAnimatedValue(index);
     return (
       <Animated.View style={{ opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}>
         <TouchableOpacity
-          style={styles.card}
+          style={[
+            styles.card,
+            alertLevel === "danger" && styles.cardDanger,
+            alertLevel === "warning" && styles.cardWarning,
+          ]}
           onPress={() => router.push(`/beans/${item.id}`)}
           activeOpacity={0.7}
         >
-          <View style={[styles.accentBar, { backgroundColor: stockColor }]} />
+          <View style={[styles.accentBar, { backgroundColor: accentColor }]} />
+          {alertLevel === "danger" && (
+            <View style={[styles.badge, styles.badgeDanger]}>
+              <Text style={styles.badgeDangerText}>買い足し時</Text>
+            </View>
+          )}
+          {alertLevel === "warning" && (
+            <View style={[styles.badge, styles.badgeWarning]}>
+              <Text style={styles.badgeWarningText}>そろそろ</Text>
+            </View>
+          )}
           <View style={styles.cardContent}>
             <View style={styles.cardLeft}>
               <Text style={styles.beanName}>{item.name}</Text>
@@ -84,11 +99,11 @@ export default function BeansListScreen() {
                 )}
               </View>
             </View>
-            <View style={[styles.stockCircle, { borderColor: stockColor }]}>
-              <Text style={[styles.stockNum, { color: stockColor }]}>
+            <View style={[styles.stockCircle, { borderColor: accentColor }]}>
+              <Text style={[styles.stockNum, { color: accentColor }]}>
                 {item.current_stock}
               </Text>
-              <Text style={[styles.stockUnit, { color: stockColor }]}>gram</Text>
+              <Text style={[styles.stockUnit, { color: accentColor }]}>gram</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -152,6 +167,42 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "hidden",
     ...shadows.sm,
+  },
+  cardDanger: {
+    backgroundColor: colors.dangerLight,
+    borderColor: "#E8C8C0",
+    paddingTop: spacing["2xl"],
+  },
+  cardWarning: {
+    backgroundColor: colors.warningLight,
+    borderColor: "#E8DDB8",
+    paddingTop: spacing["2xl"],
+  },
+  badge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: radius.full,
+  },
+  badgeDanger: {
+    backgroundColor: colors.dangerLight,
+  },
+  badgeDangerText: {
+    fontSize: 10,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+    color: colors.danger,
+  },
+  badgeWarning: {
+    backgroundColor: colors.warningLight,
+  },
+  badgeWarningText: {
+    fontSize: 10,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+    color: colors.warning,
   },
   accentBar: {
     position: "absolute",

@@ -17,7 +17,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useBeanDetail } from "@/hooks/useBeanDetail";
 import { useBeanForm } from "@/hooks/useBeanForm";
 import { useUsageTracking } from "@/hooks/useUsageTracking";
-import { colors, typography, spacing, radius, shadows, getStockColor, formStyles } from "@/theme";
+import { colors, typography, spacing, radius, shadows, getStockAlertLevel, getAlertAccentColor, formStyles } from "@/theme";
 import { Button } from "@/components/Button";
 import { ROAST_LEVELS, ROAST_DETAILS, ROAST_LEVEL_LABELS, ROAST_DETAIL_LABELS } from "@/constants/roastLevels";
 import { ChipSelector } from "@/components/ChipSelector";
@@ -90,7 +90,8 @@ export default function BeanDetailScreen() {
   if (!detail.bean) return null;
 
   const bean = detail.bean;
-  const stockColor = getStockColor(bean.current_stock);
+  const alertLevel = getStockAlertLevel(bean.consumption_rate.remaining_days);
+  const accentColor = getAlertAccentColor(bean.consumption_rate.remaining_days);
 
   const roastDisplayText = (() => {
     const levelLabel = ROAST_LEVEL_LABELS[bean.roast_level];
@@ -196,15 +197,19 @@ export default function BeanDetailScreen() {
           <>
             <View style={styles.hero}>
               <Text style={styles.heroName}>{bean.name}</Text>
-              <View style={[styles.heroCircle, { borderColor: stockColor }]}>
-                <Text style={[styles.heroStockNum, { color: stockColor }]}>
+              <View style={[styles.heroCircle, { borderColor: accentColor }]}>
+                <Text style={[styles.heroStockNum, { color: accentColor }]}>
                   {bean.current_stock}
                 </Text>
                 <Text style={styles.heroStockUnit}>gram</Text>
               </View>
             </View>
 
-            <View style={styles.consumptionCard}>
+            <View style={[
+              styles.consumptionCard,
+              alertLevel === "danger" && styles.consumptionDanger,
+              alertLevel === "warning" && styles.consumptionWarning,
+            ]}>
               <Text style={styles.consumptionCups}>
                 あと {bean.consumption_rate.remaining_cups}杯
               </Text>
@@ -424,6 +429,16 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
     ...shadows.sm,
+  },
+  consumptionDanger: {
+    borderWidth: 1.5,
+    borderColor: colors.danger,
+    backgroundColor: colors.dangerLight,
+  },
+  consumptionWarning: {
+    borderWidth: 1.5,
+    borderColor: colors.warning,
+    backgroundColor: colors.warningLight,
   },
   consumptionCups: {
     ...typography.titleMedium,
