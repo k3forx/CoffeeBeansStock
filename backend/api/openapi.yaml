@@ -457,6 +457,12 @@ components:
           type: integer
           format: int32
           description: "直近7日間の合計消費量 (g)"
+        alert_level:
+          type: string
+          enum:
+            - danger
+            - warning
+          description: "在庫アラートレベル（残日数ベース、アラートなしの場合は省略）"
 
     CoffeeBeanResponse:
       type: object

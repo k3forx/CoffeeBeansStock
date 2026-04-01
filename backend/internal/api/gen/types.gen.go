@@ -13,6 +13,24 @@ const (
 	BearerAuthScopes = "bearerAuth.Scopes"
 )
 
+// Defines values for ConsumptionRateAlertLevel.
+const (
+	Danger  ConsumptionRateAlertLevel = "danger"
+	Warning ConsumptionRateAlertLevel = "warning"
+)
+
+// Valid indicates whether the value is a known member of the ConsumptionRateAlertLevel enum.
+func (e ConsumptionRateAlertLevel) Valid() bool {
+	switch e {
+	case Danger:
+		return true
+	case Warning:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RoastDetail.
 const (
 	RoastDetailCinnamon RoastDetail = "cinnamon"
@@ -96,6 +114,9 @@ type CoffeeBeanResponse struct {
 
 // ConsumptionRate defines model for ConsumptionRate.
 type ConsumptionRate struct {
+	// AlertLevel 在庫アラートレベル（残日数ベース、アラートなしの場合は省略）
+	AlertLevel *ConsumptionRateAlertLevel `json:"alert_level,omitempty"`
+
 	// DailyConsumptionGrams 1日あたりの消費量 (g)
 	DailyConsumptionGrams *float32 `json:"daily_consumption_grams,omitempty"`
 
@@ -108,6 +129,9 @@ type ConsumptionRate struct {
 	// WeeklyTotalGrams 直近7日間の合計消費量 (g)
 	WeeklyTotalGrams *int32 `json:"weekly_total_grams,omitempty"`
 }
+
+// ConsumptionRateAlertLevel 在庫アラートレベル（残日数ベース、アラートなしの場合は省略）
+type ConsumptionRateAlertLevel string
 
 // CreateBeanRequest defines model for CreateBeanRequest.
 type CreateBeanRequest struct {
