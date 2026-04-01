@@ -8,16 +8,20 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/apperrors"
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 )
 
-// notFoundOrErr converts pgx.ErrNoRows to domain.ErrNotFound.
-// All other errors (including nil) pass through unchanged.
+// notFoundOrErr converts pgx.ErrNoRows to domain.ErrNotFound (wrapped with stack trace).
+// All other non-nil errors are also wrapped with a stack trace.
 func notFoundOrErr(err error) error {
 	if errors.Is(err, pgx.ErrNoRows) {
-		return domain.ErrNotFound
+		return apperrors.Wrap(domain.ErrNotFound)
 	}
-	return err
+	if err != nil {
+		return apperrors.Wrap(err)
+	}
+	return nil
 }
 
 func toUUID(id uuid.UUID) pgtype.UUID {

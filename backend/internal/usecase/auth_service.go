@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/apperrors"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/auth"
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	domainauth "github.com/k3forx/CoffeeBeansStock/backend/internal/domain/auth"
@@ -78,13 +79,13 @@ func (s *AuthService) Refresh(ctx context.Context, in RefreshInput) (*RefreshRes
 
 	userID, err := uuid.Parse(claims.UserID)
 	if err != nil {
-		return nil, domain.ErrInvalidToken
+		return nil, apperrors.Wrap(domain.ErrInvalidToken)
 	}
 
 	u, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
-			return nil, domain.ErrInvalidToken
+			return nil, apperrors.Wrap(domain.ErrInvalidToken)
 		}
 		return nil, err
 	}
@@ -95,7 +96,7 @@ func (s *AuthService) Refresh(ctx context.Context, in RefreshInput) (*RefreshRes
 		return nil, err
 	}
 	if !exists {
-		return nil, domain.ErrInvalidToken
+		return nil, apperrors.Wrap(domain.ErrInvalidToken)
 	}
 	if err = s.refreshTokens.DeleteByHash(ctx, oldHash); err != nil {
 		return nil, err

@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/apperrors"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/user"
 )
@@ -32,7 +33,7 @@ func (r *userRepository) Save(ctx context.Context, u *user.User) error {
 		LowStockThreshold: u.LowStockThreshold(),
 		GramsPerCup:       u.GramsPerCup().Value(),
 	})
-	return err
+	return apperrors.Wrap(err)
 }
 
 func (r *userRepository) Update(ctx context.Context, u *user.User) error {
@@ -44,7 +45,7 @@ func (r *userRepository) Update(ctx context.Context, u *user.User) error {
 		LowStockThreshold: pgtype.Int4{Int32: threshold, Valid: true},
 		GramsPerCup:       pgtype.Int4{Int32: gpc, Valid: true},
 	})
-	return err
+	return apperrors.Wrap(err)
 }
 
 func toDomainUser(u database.User) *user.User {

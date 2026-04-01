@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/apperrors"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/usagehistory"
@@ -35,7 +36,7 @@ func (r *usageHistoryRepository) ListByCoffeeBeanID(ctx context.Context, coffeeB
 		Offset:       offset,
 	})
 	if err != nil {
-		return nil, err
+		return nil, apperrors.Wrap(err)
 	}
 	usages := make([]*usagehistory.UsageHistory, len(rows))
 	for i, row := range rows {
@@ -45,7 +46,8 @@ func (r *usageHistoryRepository) ListByCoffeeBeanID(ctx context.Context, coffeeB
 }
 
 func (r *usageHistoryRepository) CountByCoffeeBeanID(ctx context.Context, coffeeBeanID uuid.UUID) (int64, error) {
-	return r.queries.CountUsageHistoriesByCoffeeBeanID(ctx, toUUID(coffeeBeanID))
+	n, err := r.queries.CountUsageHistoriesByCoffeeBeanID(ctx, toUUID(coffeeBeanID))
+	return n, apperrors.Wrap(err)
 }
 
 func (r *usageHistoryRepository) Save(ctx context.Context, usage *usagehistory.UsageHistory) error {
@@ -56,7 +58,7 @@ func (r *usageHistoryRepository) Save(ctx context.Context, usage *usagehistory.U
 		Quantity:     usage.Quantity().Value(),
 		Notes:        toPgText(usage.Notes()),
 	})
-	return err
+	return apperrors.Wrap(err)
 }
 
 func (r *usageHistoryRepository) GetRecentUsageSummary(ctx context.Context, coffeeBeanID uuid.UUID, since time.Time) (int32, error) {
@@ -65,7 +67,7 @@ func (r *usageHistoryRepository) GetRecentUsageSummary(ctx context.Context, coff
 		UsageDate:    toPgDate(since),
 	})
 	if err != nil {
-		return 0, err
+		return 0, apperrors.Wrap(err)
 	}
 	var total int32
 	for _, row := range rows {
@@ -80,7 +82,7 @@ func (r *usageHistoryRepository) GetRecentUsageSummaryByUserID(ctx context.Conte
 		UsageDate: toPgDate(since),
 	})
 	if err != nil {
-		return nil, err
+		return nil, apperrors.Wrap(err)
 	}
 	result := make(map[uuid.UUID]int32, len(rows))
 	for _, row := range rows {
@@ -92,10 +94,11 @@ func (r *usageHistoryRepository) GetRecentUsageSummaryByUserID(ctx context.Conte
 }
 
 func (r *usageHistoryRepository) Delete(ctx context.Context, id, userID uuid.UUID) error {
-	return r.queries.DeleteUsageHistory(ctx, database.DeleteUsageHistoryParams{
+	err := r.queries.DeleteUsageHistory(ctx, database.DeleteUsageHistoryParams{
 		ID:     toUUID(id),
 		UserID: toUUID(userID),
 	})
+	return apperrors.Wrap(err)
 }
 
 func toDomainUsageHistory(row database.UsageHistory) *usagehistory.UsageHistory {
