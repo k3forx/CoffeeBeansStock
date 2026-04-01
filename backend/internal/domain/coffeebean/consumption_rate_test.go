@@ -15,6 +15,7 @@ type consumptionRateResult struct {
 	RemainingDays    *int32
 	DailyConsumption *float64
 	WeeklyTotal      *int32
+	AlertLevel       coffeebean.AlertLevel
 }
 
 func toResult(cr coffeebean.ConsumptionRate) consumptionRateResult {
@@ -23,6 +24,7 @@ func toResult(cr coffeebean.ConsumptionRate) consumptionRateResult {
 		RemainingDays:    cr.RemainingDays(),
 		DailyConsumption: cr.DailyConsumption(),
 		WeeklyTotal:      cr.WeeklyTotal(),
+		AlertLevel:       cr.AlertLevel(),
 	}
 }
 
@@ -44,6 +46,7 @@ func TestNewConsumptionRate(t *testing.T) {
 				RemainingDays:    ptr(int32(10)),
 				DailyConsumption: ptr(15.0),
 				WeeklyTotal:      ptr(int32(105)),
+				AlertLevel:       coffeebean.AlertLevelNone,
 			},
 		},
 		"在庫0gの場合": {
@@ -55,6 +58,7 @@ func TestNewConsumptionRate(t *testing.T) {
 				RemainingDays:    ptr(int32(0)),
 				DailyConsumption: ptr(15.0),
 				WeeklyTotal:      ptr(int32(105)),
+				AlertLevel:       coffeebean.AlertLevelDanger,
 			},
 		},
 		"週間使用量が0の場合_予測フィールドはnil": {
@@ -66,6 +70,7 @@ func TestNewConsumptionRate(t *testing.T) {
 				RemainingDays:    nil,
 				DailyConsumption: nil,
 				WeeklyTotal:      nil,
+				AlertLevel:       coffeebean.AlertLevelNone,
 			},
 		},
 		"週間使用データがnilの場合_予測フィールドはnil": {
@@ -77,6 +82,55 @@ func TestNewConsumptionRate(t *testing.T) {
 				RemainingDays:    nil,
 				DailyConsumption: nil,
 				WeeklyTotal:      nil,
+				AlertLevel:       coffeebean.AlertLevelNone,
+			},
+		},
+		"残日数3日以下の場合_アラートはdanger": {
+			currentStock: 45,
+			gramsPerCup:  15,
+			weeklyUsage:  ptr(int32(105)),
+			want: consumptionRateResult{
+				RemainingCups:    3,
+				RemainingDays:    ptr(int32(3)),
+				DailyConsumption: ptr(15.0),
+				WeeklyTotal:      ptr(int32(105)),
+				AlertLevel:       coffeebean.AlertLevelDanger,
+			},
+		},
+		"残日数4日の場合_アラートはwarning": {
+			currentStock: 60,
+			gramsPerCup:  15,
+			weeklyUsage:  ptr(int32(105)),
+			want: consumptionRateResult{
+				RemainingCups:    4,
+				RemainingDays:    ptr(int32(4)),
+				DailyConsumption: ptr(15.0),
+				WeeklyTotal:      ptr(int32(105)),
+				AlertLevel:       coffeebean.AlertLevelWarning,
+			},
+		},
+		"残日数7日の場合_アラートはwarning": {
+			currentStock: 105,
+			gramsPerCup:  15,
+			weeklyUsage:  ptr(int32(105)),
+			want: consumptionRateResult{
+				RemainingCups:    7,
+				RemainingDays:    ptr(int32(7)),
+				DailyConsumption: ptr(15.0),
+				WeeklyTotal:      ptr(int32(105)),
+				AlertLevel:       coffeebean.AlertLevelWarning,
+			},
+		},
+		"残日数8日の場合_アラートなし": {
+			currentStock: 120,
+			gramsPerCup:  15,
+			weeklyUsage:  ptr(int32(105)),
+			want: consumptionRateResult{
+				RemainingCups:    8,
+				RemainingDays:    ptr(int32(8)),
+				DailyConsumption: ptr(15.0),
+				WeeklyTotal:      ptr(int32(105)),
+				AlertLevel:       coffeebean.AlertLevelNone,
 			},
 		},
 	}

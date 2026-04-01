@@ -44,6 +44,10 @@ func toCoffeeBeanResponse(b *coffeebean.CoffeeBean, cr coffeebean.ConsumptionRat
 	if cr.WeeklyTotal() != nil {
 		resp.ConsumptionRate.WeeklyTotalGrams = cr.WeeklyTotal()
 	}
+	if al := cr.AlertLevel(); al != "" {
+		s := gen.ConsumptionRateAlertLevel(al)
+		resp.ConsumptionRate.AlertLevel = &s
+	}
 	if b.RoastDetail() != nil {
 		rd := gen.RoastDetail(b.RoastDetail().String())
 		resp.RoastDetail = &rd

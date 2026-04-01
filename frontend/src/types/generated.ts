@@ -214,6 +214,11 @@ export interface components {
              * @description 直近7日間の合計消費量 (g)
              */
             weekly_total_grams?: number;
+            /**
+             * @description 在庫アラートレベル（残日数ベース、アラートなしの場合は省略）
+             * @enum {string}
+             */
+            alert_level?: "danger" | "warning";
         };
         CoffeeBeanResponse: {
             /** Format: uuid */

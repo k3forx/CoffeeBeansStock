@@ -11,20 +11,12 @@ export const getStockColor = (stock: number) => {
   return colors.success;
 };
 
-export const getStockAlertLevel = (
-  remainingDays: number | null | undefined,
-): "danger" | "warning" | null => {
-  if (remainingDays == null) return null;
-  if (remainingDays <= 3) return "danger";
-  if (remainingDays <= 7) return "warning";
-  return null;
-};
-
 export const getAlertAccentColor = (
-  remainingDays: number | null | undefined,
+  alertLevel: "danger" | "warning" | undefined,
+  remainingDays: number | undefined,
 ): string => {
-  if (remainingDays == null) return colors.accent;
-  if (remainingDays <= 3) return colors.danger;
-  if (remainingDays <= 7) return colors.warning;
-  return colors.success;
+  if (alertLevel === "danger") return colors.danger;
+  if (alertLevel === "warning") return colors.warning;
+  if (remainingDays != null) return colors.success;
+  return colors.accent;
 };

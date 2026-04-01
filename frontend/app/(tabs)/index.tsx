@@ -11,7 +11,7 @@ import {
 import { useFocusEffect, useRouter } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import type { CoffeeBean } from "../../src/types/api";
-import { colors, typography, spacing, radius, shadows, getStockAlertLevel, getAlertAccentColor } from "@/theme";
+import { colors, typography, spacing, radius, shadows, getAlertAccentColor } from "@/theme";
 import { ROAST_LEVEL_LABELS } from "../../src/constants/roastLevels";
 import { BeanListSkeleton } from "../../src/components/SkeletonLoader";
 import { useBeansList } from "@/hooks/useBeansList";
@@ -43,8 +43,8 @@ export default function BeansListScreen() {
   );
 
   const renderBean = ({ item, index }: { item: CoffeeBean; index: number }) => {
-    const alertLevel = getStockAlertLevel(item.consumption_rate.remaining_days);
-    const accentColor = getAlertAccentColor(item.consumption_rate.remaining_days);
+    const alertLevel = item.consumption_rate.alert_level;
+    const accentColor = getAlertAccentColor(alertLevel, item.consumption_rate.remaining_days);
     const anim = getAnimatedValue(index);
     return (
       <Animated.View style={{ opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}>

@@ -2,12 +2,22 @@ package coffeebean
 
 import "math"
 
+// AlertLevel represents the stock alert severity based on remaining days.
+type AlertLevel string
+
+const (
+	AlertLevelDanger  AlertLevel = "danger"
+	AlertLevelWarning AlertLevel = "warning"
+	AlertLevelNone    AlertLevel = ""
+)
+
 // ConsumptionRate holds consumption metrics for a coffee bean.
 type ConsumptionRate struct {
 	remainingCups    int32
 	remainingDays    *int32
 	dailyConsumption *float64
 	weeklyTotal      *int32
+	alertLevel       AlertLevel
 }
 
 // NewConsumptionRate calculates consumption rate from stock, grams per cup, and weekly usage.
@@ -24,6 +34,7 @@ func NewConsumptionRate(currentStock, gramsPerCup int32, weeklyUsage *int32) Con
 			remainingDays:    nil,
 			dailyConsumption: nil,
 			weeklyTotal:      nil,
+			alertLevel:       AlertLevelNone,
 		}
 	}
 
@@ -36,10 +47,22 @@ func NewConsumptionRate(currentStock, gramsPerCup int32, weeklyUsage *int32) Con
 		remainingDays:    &days,
 		dailyConsumption: &daily,
 		weeklyTotal:      &wt,
+		alertLevel:       calcAlertLevel(days),
 	}
+}
+
+func calcAlertLevel(remainingDays int32) AlertLevel {
+	if remainingDays <= 3 {
+		return AlertLevelDanger
+	}
+	if remainingDays <= 7 {
+		return AlertLevelWarning
+	}
+	return AlertLevelNone
 }
 
 func (c ConsumptionRate) RemainingCups() int32       { return c.remainingCups }
 func (c ConsumptionRate) RemainingDays() *int32      { return c.remainingDays }
 func (c ConsumptionRate) DailyConsumption() *float64 { return c.dailyConsumption }
 func (c ConsumptionRate) WeeklyTotal() *int32        { return c.weeklyTotal }
+func (c ConsumptionRate) AlertLevel() AlertLevel     { return c.alertLevel }
