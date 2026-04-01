@@ -1,7 +1,7 @@
 DB_URL ?= postgres://coffee_user:coffee_pass@localhost:5432/coffee_stock?sslmode=disable
 MIGRATIONS_DIR = migrations
 
-.PHONY: help run sqlc-generate migrate-up migrate-down test build clean lint generate-api
+.PHONY: help run dev sqlc-generate migrate-up migrate-down test build clean lint generate-api
 
 help: ## Show this help message
 	@echo "Available targets:"
@@ -9,6 +9,9 @@ help: ## Show this help message
 
 run: ## Run the server
 	go run cmd/server/main.go
+
+dev: ## Run the server with hot reload (air)
+	$(GOBIN)/air
 
 sqlc-generate: ## Generate sqlc code
 	$(GOBIN)/sqlc generate
