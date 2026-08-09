@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/apperrors"
 	domain "github.com/k3forx/CoffeeBeansStock/backend/internal/domain"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/coffeebean"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/unitofwork"
@@ -192,7 +193,7 @@ func (s *CoffeeBeansService) GetByID(ctx context.Context, in GetBeanByIDInput) (
 		return nil, err
 	}
 	if !bean.IsOwnedBy(in.UserID) {
-		return nil, domain.ErrForbidden
+		return nil, apperrors.Wrap(domain.ErrForbidden)
 	}
 
 	cr, err := s.computeConsumptionRate(ctx, in.BeanID, in.UserID, bean.CurrentStock().Value())
@@ -237,7 +238,7 @@ func (s *CoffeeBeansService) Update(ctx context.Context, in UpdateBeanInput) (*U
 			return err
 		}
 		if !bean.IsOwnedBy(in.UserID) {
-			return domain.ErrForbidden
+			return apperrors.Wrap(domain.ErrForbidden)
 		}
 		if err := bean.Update(in.Name, in.Origin, rl, rd, in.Notes, st); err != nil {
 			return err
@@ -270,7 +271,7 @@ func (s *CoffeeBeansService) Delete(ctx context.Context, in DeleteBeanInput) err
 			return err
 		}
 		if !bean.IsOwnedBy(in.UserID) {
-			return domain.ErrForbidden
+			return apperrors.Wrap(domain.ErrForbidden)
 		}
 		return store.CoffeeBeanRepo().SoftDelete(ctx, in.BeanID, in.UserID)
 	})

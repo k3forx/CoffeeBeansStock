@@ -47,7 +47,7 @@ func (h *UsageHistoryHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Notes:        req.Notes,
 	})
 	if err != nil {
-		handleDomainError(w, err, "リソースが見つかりません")
+		handleDomainError(w, r, err, "リソースが見つかりません")
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *UsageHistoryHandler) List(w http.ResponseWriter, r *http.Request) {
 		Offset:       offset,
 	})
 	if err != nil {
-		handleDomainError(w, err, "コーヒー豆が見つかりません")
+		handleDomainError(w, r, err, "コーヒー豆が見つかりません")
 		return
 	}
 
@@ -118,7 +118,7 @@ func (h *UsageHistoryHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		CoffeeBeanID: beanID,
 		UsageID:      usageID,
 	}); err != nil {
-		handleDomainError(w, err, "使用記録が見つかりません")
+		handleDomainError(w, r, err, "使用記録が見つかりません")
 		return
 	}
 

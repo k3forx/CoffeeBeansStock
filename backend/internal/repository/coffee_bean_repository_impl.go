@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/apperrors"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/domain/coffeebean"
 )
@@ -40,7 +41,7 @@ func (r *coffeeBeanRepository) ListByUserID(ctx context.Context, userID uuid.UUI
 		Offset: offset,
 	})
 	if err != nil {
-		return nil, err
+		return nil, apperrors.Wrap(err)
 	}
 	beans := make([]*coffeebean.CoffeeBean, len(rows))
 	for i, row := range rows {
@@ -50,7 +51,8 @@ func (r *coffeeBeanRepository) ListByUserID(ctx context.Context, userID uuid.UUI
 }
 
 func (r *coffeeBeanRepository) CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error) {
-	return r.queries.CountCoffeeBeansByUserID(ctx, toUUID(userID))
+	n, err := r.queries.CountCoffeeBeansByUserID(ctx, toUUID(userID))
+	return n, apperrors.Wrap(err)
 }
 
 func (r *coffeeBeanRepository) Save(ctx context.Context, bean *coffeebean.CoffeeBean) error {
@@ -68,7 +70,7 @@ func (r *coffeeBeanRepository) Save(ctx context.Context, bean *coffeebean.Coffee
 		params.RoastDetail = toPgText(&s)
 	}
 	_, err := r.queries.CreateCoffeeBean(ctx, params)
-	return err
+	return apperrors.Wrap(err)
 }
 
 func (r *coffeeBeanRepository) Update(ctx context.Context, bean *coffeebean.CoffeeBean) error {
@@ -97,14 +99,15 @@ func (r *coffeeBeanRepository) UpdateStock(ctx context.Context, id uuid.UUID, st
 		ID:           toUUID(id),
 		CurrentStock: stock.Value(),
 	})
-	return err
+	return apperrors.Wrap(err)
 }
 
 func (r *coffeeBeanRepository) SoftDelete(ctx context.Context, id, userID uuid.UUID) error {
-	return r.queries.SoftDeleteCoffeeBean(ctx, database.SoftDeleteCoffeeBeanParams{
+	err := r.queries.SoftDeleteCoffeeBean(ctx, database.SoftDeleteCoffeeBeanParams{
 		ID:     toUUID(id),
 		UserID: toUUID(userID),
 	})
+	return apperrors.Wrap(err)
 }
 
 func toDomainCoffeeBean(b database.CoffeeBean) *coffeebean.CoffeeBean {

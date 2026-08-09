@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
+	"github.com/k3forx/CoffeeBeansStock/backend/internal/apperrors"
 	"github.com/k3forx/CoffeeBeansStock/backend/internal/database"
 	domainauth "github.com/k3forx/CoffeeBeansStock/backend/internal/domain/auth"
 )
@@ -27,7 +28,7 @@ func (r *refreshTokenRepository) Store(ctx context.Context, userID uuid.UUID, to
 		TokenHash: tokenHash,
 		ExpiresAt: pgtype.Timestamptz{Time: expiresAt, Valid: true},
 	})
-	return err
+	return apperrors.Wrap(err)
 }
 
 func (r *refreshTokenRepository) ExistsByHash(ctx context.Context, tokenHash string) (bool, error) {
@@ -42,9 +43,11 @@ func (r *refreshTokenRepository) ExistsByHash(ctx context.Context, tokenHash str
 }
 
 func (r *refreshTokenRepository) DeleteByHash(ctx context.Context, tokenHash string) error {
-	return r.queries.DeleteRefreshTokenByHash(ctx, tokenHash)
+	err := r.queries.DeleteRefreshTokenByHash(ctx, tokenHash)
+	return apperrors.Wrap(err)
 }
 
 func (r *refreshTokenRepository) DeleteByUserID(ctx context.Context, userID uuid.UUID) error {
-	return r.queries.DeleteRefreshTokensByUserID(ctx, toUUID(userID))
+	err := r.queries.DeleteRefreshTokensByUserID(ctx, toUUID(userID))
+	return apperrors.Wrap(err)
 }

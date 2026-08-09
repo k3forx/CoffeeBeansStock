@@ -44,7 +44,7 @@ func toUserResponse(u *user.User) gen.UserResponse {
 func (h *AuthHandler) RegisterAnonymous(w http.ResponseWriter, r *http.Request) {
 	result, err := h.authService.RegisterAnonymous(r.Context())
 	if err != nil {
-		api.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "サーバーエラーが発生しました")
+		handleDomainError(w, r, err, "")
 		return
 	}
 
@@ -73,7 +73,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		RefreshToken: req.RefreshToken,
 	})
 	if err != nil {
-		handleDomainError(w, err, "リフレッシュトークンが無効です")
+		handleDomainError(w, r, err, "リフレッシュトークンが無効です")
 		return
 	}
 
@@ -92,7 +92,7 @@ func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 
 	output, err := h.authService.GetMe(r.Context(), usecase.GetMeInput{UserID: userID})
 	if err != nil {
-		api.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "サーバーエラーが発生しました")
+		handleDomainError(w, r, err, "ユーザーが見つかりません")
 		return
 	}
 
@@ -117,7 +117,7 @@ func (h *AuthHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		LowStockThreshold: req.LowStockThreshold,
 	})
 	if err != nil {
-		handleDomainError(w, err, "ユーザーが見つかりません")
+		handleDomainError(w, r, err, "ユーザーが見つかりません")
 		return
 	}
 

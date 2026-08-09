@@ -47,3 +47,12 @@ func RequestLogger(next http.Handler) http.Handler {
 		slog.LogAttrs(r.Context(), level, "request completed", attrs...)
 	})
 }
+
+// LoggerFromContext returns the request-scoped logger stored by RequestLogger middleware.
+// Falls back to slog.Default() if not set.
+func LoggerFromContext(ctx context.Context) *slog.Logger {
+	if l, ok := ctx.Value(loggerKey{}).(*slog.Logger); ok {
+		return l
+	}
+	return slog.Default()
+}

@@ -71,7 +71,7 @@ func (h *CoffeeBeansHandler) List(w http.ResponseWriter, r *http.Request) {
 		Offset: offset,
 	})
 	if err != nil {
-		api.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "サーバーエラーが発生しました")
+		handleDomainError(w, r, err, "")
 		return
 	}
 
@@ -114,7 +114,7 @@ func (h *CoffeeBeansHandler) Create(w http.ResponseWriter, r *http.Request) {
 		CurrentStock: req.CurrentStock,
 	})
 	if err != nil {
-		handleDomainError(w, err, "コーヒー豆が見つかりません")
+		handleDomainError(w, r, err, "コーヒー豆が見つかりません")
 		return
 	}
 
@@ -138,7 +138,7 @@ func (h *CoffeeBeansHandler) Get(w http.ResponseWriter, r *http.Request) {
 		BeanID: beanID,
 	})
 	if err != nil {
-		handleDomainError(w, err, "コーヒー豆が見つかりません")
+		handleDomainError(w, r, err, "コーヒー豆が見つかりません")
 		return
 	}
 
@@ -173,7 +173,7 @@ func (h *CoffeeBeansHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Notes:        req.Notes,
 	})
 	if err != nil {
-		handleDomainError(w, err, "コーヒー豆が見つかりません")
+		handleDomainError(w, r, err, "コーヒー豆が見つかりません")
 		return
 	}
 
@@ -196,7 +196,7 @@ func (h *CoffeeBeansHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		UserID: userID,
 		BeanID: beanID,
 	}); err != nil {
-		handleDomainError(w, err, "コーヒー豆が見つかりません")
+		handleDomainError(w, r, err, "コーヒー豆が見つかりません")
 		return
 	}
 
